@@ -1,0 +1,89 @@
+#!/usr/bin/with-contenv bash
+#shellcheck shell=bash
+#shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164
+
+# AIS-Collect:
+# read AIS data from a AIS-Catcher web service and
+# create and maintain a CSV database with this data
+
+# If no NOTIFY_INTERVAL is defined then set it to 24 hours
+
+# redirect stderr to stdout so it's picked up in the docker logs
+exec 2>&1
+# all errors will show a line number and the command used to produce the error
+SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
+trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+
+APPNAME="$(hostname)/ais-collect"
+echo "[$(date)][$APPNAME] Started as an s6 service"
+
+[[ -z "$CHECK_INTERVAL" ]] && CHECK_INTERVAL=30 || true
+[[ -z "$SHIPDBFILE" ]] && SHIPDBFILE="/run/ship_db.csv" || true
+[[ -z "$SHIPDBLOCK" ]] && SHIPDBLOCK="/run/ship_db.lock" || true
+
+touch "$SHIPDBFILE"
+
+# This is the format of the SHIPDICT associative array records:
+# [mmsi, country, lat, lon, rssi, count, ppm, shipname, time_last_heard, notification_attributes_1, notification_attributes_2, ...]
+#   0       1      2    3     4     5     6       7           8                    9    <-- field index for BASH
+#   1       2      3    4     5     6     7       8           9                   10    <-- field index for AWK
+
+while true
+do
+    declare -a SHIPDICT=()
+
+    # If there's a lock file, wait until it's gone
+    while [[ -f  $SHIPDBLOCK ]]
+    do
+        sleep 1
+    done
+
+    # Now lock the process for myself:
+    touch "$SHIPDBLOCK"
+    # First read the existing entries in from file
+    if (( $(wc -l < "$SHIPDBFILE") > 0 ))
+    then
+        while IFS="" read -r line
+        do
+            read -d , -r mmsi <<< "$line" || continue
+            if [[ -n "$mmsi" ]]
+            then
+                SHIPDICT[${mmsi}]="$line"
+            else
+                echo "[$(date)][$APPNAME] Bad entry in $SHIPDBFILE: \"$line\""
+            fi
+        done < "$SHIPDBFILE"
+    fi
+
+    # Clean out the ones that are too old:
+    if [[ ${#SHIPDICT[@]} -gt 0 ]]
+    then
+        for mmsi in ${SHIPDICT[@]}
+        do
+            if (( $(awk -F ',' '{print $9}') + NOTIFY_EVERY < $(date +%s) ))
+            then
+                unset "SHIPDICT[$mmsi]"
+                [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $mmsi - too old, removed from DB" || true
+            fi
+        done
+    fi
+
+    # Now update it with the ones from the AIS_URL website
+    while IFS="" read -r line
+    do
+        read -d , -r mmsi <<< "$line" || continue
+        if [[ -n "$mmsi" ]]
+        then
+            SHIPDICT[${mmsi}]="$line,$(date +%s),"
+        else
+            echo "[$(date)][$APPNAME] Bad entry in $AIS_URL/ships_full.json: \"$line\""
+        fi
+    done <<< "$(curl -sSL $AIS_URL/ships_full.json | jq -r '.ships[] | [.mmsi, .country, .lat, .lon, .level, .count, .ppm, .shipname] | @csv')"
+
+    # Write back to file
+    printf "%s\n" "${SHIPDICT[@]}" > "$SHIPDBFILE"
+    rm -f "$SHIPDBLOCK"
+
+    sleep check_interval
+
+done
