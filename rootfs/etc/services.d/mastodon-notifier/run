@@ -129,12 +129,14 @@ do
 
 
             printf -v mast_str -- \
-            "#AISAlert #Ship #Vessel #VesselAlert
-             #Name: %s #MMSI: %s
+            "#VesselAlert #Ship #Vessel #AIS
+             #Name: %s #MMSI: #%s
              #Flag: %s
              Last seen: %s
              Msgs recvd: %s
-             Signal (RSSI): %s dbFS
+             Signal (RSSI): %s dbFS"
+
+
 
 
 

@@ -1,6 +1,11 @@
-# sdr-enthusiasts/docker-shipxplorer
+# sdr-enthusiasts/docker-vesselalert
 
 [![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
+
+
+
+
+# WORK IN PROGRESS -- TEXT BELOW SHOULD BE IGNORED
 
 Docker container running [AirNav ShipXplorer](https://www.shipxplorer.com)'s `sxfeeder` and `AIS-catcher`. Builds and runs on `arm64`, `armv7/armhf`, and `amd64/x86`.
 
