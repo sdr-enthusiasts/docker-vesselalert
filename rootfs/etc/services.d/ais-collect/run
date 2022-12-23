@@ -84,6 +84,6 @@ do
     printf "%s\n" "${SHIPDICT[@]}" > "$SHIPDBFILE"
     rm -f "$SHIPDBLOCK"
 
-    sleep check_interval
+    sleep $check_interval
 
 done
