@@ -61,7 +61,7 @@ echo reading shipdict from file
     then
         for mmsi in ${SHIPDICT[@]}
         do
-            if (( $(awk -F ',' '{print $9}') + NOTIFY_EVERY < $(date +%s) ))
+            if (( $(awk -F ',' '{print $9}' <<< "$mmsi") + NOTIFY_EVERY < $(date +%s) ))
             then
  echo removed $SHIPDICT[$mmsi]
                 unset "SHIPDICT[$mmsi]"
