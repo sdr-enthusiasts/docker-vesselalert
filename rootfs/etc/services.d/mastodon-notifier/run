@@ -15,14 +15,49 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
-[[ -z "$CHECK_INTERVAL" ]] && CHECK_INTERVAL=30 || true
-[[ -z "$SHIPDBFILE" ]] && SHIPDBFILE="/run/ship_db.csv" || true
-[[ -z "$SHIPDBLOCK" ]] && SHIPDBLOCK="/run/ship_db.lock" || true
+[[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
+[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/run/vessel_db.csv" || true
+[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vessel_db.lock" || true
+[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
+[[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=86400 || true
+[[ -z "${MASTODON_FORMAT}" ]] && MASTODON_FORMAT=("mast" "last_notif" "lat" "lon")
+MASTODON_SERVER="${MASTODON_SERVER,,}"
+[[ "${MASTODON_SERVER:0:7}" == "http://" ]] && MASTODON_SERVER="${MASTODON_SERVER:7}" || true
+[[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
+MASTODON_SERVER="https://${MASTODON_SERVER}"
+notification_count=0
 
-# This is the format of the SHIPDICT associative array records:
-# [mmsi, country, lat, lon, rssi, count, ppm, shipname, time_last_heard, notification_attributes_1, notification_attributes_2, ...]
-#   0       1      2    3     4     5     6       7           8                    9    <-- field index for BASH
-#   1       2      3    4     5     6     7       8           9                   10    <-- field index for AWK
+touch "$VESSELDBFILE"
+rm -f "$VESSELDBLOCK"
+
+# This is the format of the VESSELDICT associative array records:
+# [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
+#   0       1          2         3     4    5     6       7    8      9       10            11              12                          13       <-- field index for BASH
+#   1       2          3         4     5    6     7       8    9     10       11            12              13                          14       <-- field index for AWK
+
+function VESSEL_INFO()
+{
+    # VESSELINFO target_array vessel_string
+    # reads CSV values from vessel_string and prints it to stdout
+    local -a headers=("mmsi" "shipname" "callsign" "country" "lat" "lon" "level" "count" "ppm" "speed" "destination" "last_signal" "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9")
+    local tmparray
+    local -A array
+    local string
+
+    # read string into array and pad values so there's a field for each header
+    readarray -td, tmparray <<< "$2"
+    tmparray+=("" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "")
+
+    for (( value=0;  value<"${#headers[@]}"; value++ ))
+    do
+        #echo "$value: ${headers[$value]}=>${tmparray[value]}"
+        array["${headers[$value]}"]="${tmparray[value]}"
+    done
+    # clean up the last read element - it has a trailing \n :
+    array[last_signal]="$(tr -d '\n' <<< "${array[last_signal]}")"
+    string="$(declare -p array)"
+    echo ${string/declare -A array=/declare -A $1=}
+}
 
 # Define some functions to calculate distance between coordinates using Haversine:
 deg2rad () {
@@ -59,114 +94,159 @@ distance () {
     echo $distance
 }
 
+# ---------------------------------------------------------------------------------------
+
 while true
 do
-    declare -a SHIPDICT=()
+    declare -a VESSELDICT=()
+    declare -A VESSELINFO=()
+
+    # 3 main arrays:
+    # - VESSELDICT is an associative array that contains all the vessels, indexed by their MMSI.
+    #   So: ${!VESSELDICT[@]} contains the list of MMSIs, and ${VESSELDICT[$mmsi]}
+    #   contains a comma-separated list of parameter values.
+    #
+    # - vesselinfo is an associative array that contains the information of a single vessel from
+    #   the VESSELDICT array. The ${headers[@]} array contains the keys for each of these values.
+    #
+    # - mast_status is extracted from the right-most "notif_x" field from vesselinfo that starts with "mast="
+    #   This array contains information about previous notifications to Mastodon for this MMSI
+    #   The keys to this array are defined in MASTODON_FORMAT
 
     # If there's a lock file, wait until it's gone
-    while [[ -f  $SHIPDBLOCK ]]
+    while [[ -f  $VESSELDBLOCK ]]
     do
         sleep 1
     done
+
     # Now lock the process for myself:
-    touch "$SHIPDBLOCK"
+    touch "$VESSELDBLOCK"
 
     # First read the existing entries in from file
-    if (( $(wc -l < "$SHIPDBFILE") > 0 ))
+    if (( $(wc -l < "$VESSELDBFILE") > 0 ))
     then
-        while IFS="" read -r line
-        do
-            read -d , -r mmsi <<< "$line" || continue
-            if [[ -n "$mmsi" ]]
-            then
-                SHIPDICT[${mmsi}]="$line"
-            else
-                echo "[$(date)][$APPNAME] Bad entry in $SHIPDBFILE: \"$line\""
-            fi
-        done < "$SHIPDBFILE"
+        [[ -n "$DEBUG" ]] && echo reading shipdict from file || true
+        source "$VESSELDBFILE"
     fi
 
     # Iterate through the ships:
-    for ship in ${SHIPDICT[@]}
+    for vessel in ${VESSELDICT[@]}
     do
-        readarray -td, shipdata <<< "$ship"
-        # retrieve the last notification if known
-        last_notif=""
-        if (( ${#shipdata[@]} > 9 ))
+        eval "$(VESSEL_INFO vesselinfo $vessel)"
+        mssi="${vesselinfo[mssi]}"
+        declare -A mast_status=()
+        # pull Mastodon string and parse it:
+        for index1 in "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9"
+        do
+            header="${MASTODON_FORMAT[0]}|"
+            if [[ "${index1:0:${#header}}" == "$header" ]]
+            then
+                readarray -td, tmparray <<< "${vesselinfo[$index1]}"
+                counter=0
+                notif_index="$index1"
+                for index2 in "${MASTODON_FORMAT[@]}"
+                do
+                    mast_status[$index2]="${tmparray[$((counter++))]}"
+                done
+            fi
+        done
+
+        [[ -z "${mast_status[lat]}" ]] && mast_status[lat]=-1000 || true
+        [[ -z "${mast_status[lon]}" ]] && mast_status[lon]=-1000 || true
+        [[ -z "${mast_status[last_notif]}" ]] && mast_status[last_notif]=0 || true
+
+        # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
+        unset notify
+
+        # based on timing:
+        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( mast_status[last_notif] < $(date +%s) - MASTODON_NOTIFY_EVERY ))
         then
-            for ((i=9; i<${#shipdata[@]}; i++))
-            do
-                if [[ "${shipdata[$i]:0:9}" == "mastodon=" ]]
-                then
-                    last_notif="${shipdata[$i]:9}"
-                    i="${#shipdata[@]}"
-                fi
-            done
-        fi
-        # interpret the last noficition:
-        # secs_since_epoch|last_notified_lat|last_notified_lon
-        if [[ -n "$last_notif" ]]
-        then
-            secs_since_epoch="$(awk -F '|' '{print $1}' <<< "$last_notif")"
-            last_notified_lat="$(awk -F '|' '{print $2}' <<< "$last_notif")"
-            last_notified_lon="$(awk -F '|' '{print $3}' <<< "$last_notif")"
-        else
-            secs_since_epoch=0
-            last_notified_lat=-1000
-            last_notified_lon=-1000
+            notify="true"
         fi
 
-        # check if we need to notify
-        if (( $(date +%s) - secs_since_epoch > MASTODON_NOTIFY_EVERY )) || \
-           (( last_notified_lat + last_notified_lon == -2000 )) || \
-           (( $(distance $last_notified_lat $last_notified_lon ${shipdata[2]} ${shipdata[3]}) > MASTODON_MIN_DIST ))
+        # based on distance from last notification:
+        if [[ -n "${MASTODON_MIN_DIST}" ]]
+        then
+            if (( mast_status[lat] + mast_status[lon] == -2000 )) || (( $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > MASTODON_MIN_DIST ))
+            then
+                notify="true"
+            fi
+        fi
+
+        if [[ -n "$notify" ]]
         then
             # we need to notify
             # First create notification string:
             links=""
-            [[ -n "$MAST_LINK_SHIPXPLORER" ]] && links+=" https://www.shipxplorer.com/data/vessels/IMO-MMSI-${shipdata[0]}" || true
-            [[ -n "$MAST_LINK_MARINETRAFFIC" ]] && links+=" https://www.marinetraffic.com/en/ais/details/ships/${shipdata[0]}" || true
+            [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${vesselinfo[mmsi]} " || true
+            [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${vesselinfo[mmsi]} " || true
+            [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${vesselinfo[mmsi]} " || true
 
 
             printf -v mast_str -- \
             "#VesselAlert #Ship #Vessel #AIS
-             #Name: %s #MMSI: #%s
-             #Flag: %s
-             Last seen: %s
-             Msgs recvd: %s
-             Signal (RSSI): %s dbFS"
+            #Name: #%s #MMSI: #%s #Callsign: #%s
+            #Flag: %s Last seen: %s Msgs recvd: %s
+            #Speed: %s kts #Destination: #%s
+            #Signal (RSSI): %s dbFS
+            %s" \
+            "${vesselinfo[shipname]}" "${vesselinfo[mmsi]}" "${vesselinfo[callsign]}" \
+            "${vesselinfo[country]}" "$( date -d $(( $(date %s) - vesselinfo[last_signal] )) )"  "${vesselinfo[count]}" \
+            "${vesselinfo[speed]}" "${vesselinfo[destination]}" \
+            "${vesselinfo[level]}" \
+            "$links"
 
+            # Now we can finally send this to Mastodon
+            # First let's get an image if it exists from MarineVessel:
 
+            image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${vesselinfo[mmsi]}"
 
+            media_id=""    # added here for future use
+            if curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o "/tmp/vesselimg.jpg"
+            then
+                response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "https://${MASTODON_SERVER}/api/v1/media" --form file="@/tmp/vesselimg.jpg")"
+                [[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
+                rm -f "/tmp/vesselimg.jpg"
+                [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id}"
+                echo "[$(date)][$APPNAME] image uploaded to Mastodon"
+            fi
 
+            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "https://${MASTODON_SERVER}/api/v1/statuses" -X POST $mast_str $media_id -F "status=${MASTTEXT}" -F "language=eng" -F "visibility=public")"
+            # check if there was an error
+            if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
+            then
+                echo "[$(date)][$APPNAME] Mastodon post generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs)"
+            else
+                echo "[$(date)][$APPNAME] Mastodon post error. Mastodon returned this error: $(jq '.error' <<< "$response"|xargs)"
+            fi
 
+            # Update the Assoc Array with the latest values:
+            # update mast_status values:
+            mast_status[lat]="${vesselinfo[lat]}"
+            mast_status[lon]="${vesselinfo[lon]}"
+            mast_status[last_notif]="$(date %s)"
 
+            # write the mast_status back to the vessel_info
+            printf -v vesselinfo[$notif_index] -- "%s|" ${mast_status[@]}
+            vesselinfo[$notif_index]="${vesselinfo[$notif_index]%*|}"   # strip trailing "|"
 
+            # put vesselinfo back into the VESSELDICT array:
+            printf -v VESSELDICT[$mssi] -- "%s," ${vesselinfo[@]}
+            VESSELDICT[$mssi]="${VESSELDICT[$mssi]%*,}"     # strip trailing ","
 
+            # Increment notification count
+            (( notification_count++ ))
 
-
-
-
-
-
+        fi
     done
 
-    # Now update it with the ones from the AIS_URL website
-    while IFS="" read -r line
-    do
-        read -d , -r mmsi <<< "$line" || continue
-        if [[ -n "$mmsi" ]]
-        then
-            SHIPDICT[${mmsi}]="$line,$(date +%s),"
-        else
-            echo "[$(date)][$APPNAME] Bad entry in $AIS_URL/ships_full.json: \"$line\""
-        fi
-    done <<< "$(curl -sSL $AIS_URL/ships_full.json | jq -r '.ships[] | [.mmsi, .country, .lat, .lon, .level, .count, .ppm, .shipname] | @csv')"
+    # Write VESSELDICT back to the file if it was changed:
+    (( notification_count > 0 )) && declare -p VESSELDICT > "$VESSELDBFILE" 2>/dev/null || true
 
-    # Write back to file
-    printf "%s\n" ${SHIPDICT[@]} > "$SHIPDBFILE"
-    rm -f "$SHIPDBLOCK"
+    # Remove file block:
+    rm -f "$VESSELDBLOCK"
 
-    sleep check_interval
+    # Sleep a bit
+    sleep $CHECK_INTERVAL
 
 done
