@@ -43,6 +43,7 @@ do
     # First read the existing entries in from file
     if (( $(wc -l < "$SHIPDBFILE") > 0 ))
     then
+echo reading shipdict from file
         while IFS="" read -r line
         do
             read -d , -r mmsi <<< "$line" || continue
@@ -62,6 +63,7 @@ do
         do
             if (( $(awk -F ',' '{print $9}') + NOTIFY_EVERY < $(date +%s) ))
             then
+ echo removed $SHIPDICT[$mmsi]
                 unset "SHIPDICT[$mmsi]"
                 [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $mmsi - too old, removed from DB" || true
             fi
@@ -74,7 +76,9 @@ do
         read -d , -r mmsi <<< "$line" || continue
         if [[ -n "$mmsi" ]]
         then
-            SHIPDICT[${mmsi}]="$line,$(date +%s),"
+            [[ -n "$SHIPDICT[${mmsi}]" ]] && stat=",$(cut -d, -f10- <<< "$SHIPDICT[${mmsi}]")" || stat=","
+            SHIPDICT[${mmsi}]="$line,$(date +%s)$stat"
+echo updated $SHIPDICT[$mmsi]
         else
             echo "[$(date)][$APPNAME] Bad entry in $AIS_URL/ships_full.json: \"$line\""
         fi
@@ -82,6 +86,7 @@ do
 
     # Write back to file
     printf "%s\n" "${SHIPDICT[@]}" > "$SHIPDBFILE"
+echo wrote back to file
     rm -f "$SHIPDBLOCK"
 
     sleep $check_interval
