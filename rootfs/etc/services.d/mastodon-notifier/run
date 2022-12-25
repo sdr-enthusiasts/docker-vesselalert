@@ -259,7 +259,7 @@ do
             VESSELDICT[$mmsi]="${VESSELDICT[$mmsi]%*,}"     # strip trailing ","
             [[ -n "$DEBUG" ]] && echo updated VESSELDICT[$mmsi]
             # Increment notification count
-            (( notification_count++ ))
+            (( notification_count++ )) || true
 
         fi
     done
