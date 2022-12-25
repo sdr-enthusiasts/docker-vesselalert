@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164
+#shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164,SC1090
 
 # Mastodon-Notifier
 # Send notification to Mastoron
@@ -22,12 +22,12 @@ echo "[$(date)][$APPNAME] Started as an s6 service"
 [[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=86400 || true
 [[ -z "${MASTODON_FORMAT}" ]] && MASTODON_FORMAT=("mast" "last_notif" "lat" "lon")
 MASTODON_SERVER="${MASTODON_SERVER,,}"
+[[ -z "${MASTODON_SERVER}" ]] && MASTODON_SERVER="airwaves.social"
 [[ "${MASTODON_SERVER:0:7}" == "http://" ]] && MASTODON_SERVER="${MASTODON_SERVER:7}" || true
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 notification_count=0
 [[ -n "$DEBUG" ]] && mastpost_visibility="private" || mastpost_visibility="public"
-
 
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
@@ -100,8 +100,6 @@ distance () {
 
 while true
 do
-    declare -a VESSELDICT=()
-    declare -A VESSELINFO=()
 
     # 3 main arrays:
     # - VESSELDICT is an associative array that contains all the vessels, indexed by their MMSI.
@@ -115,7 +113,9 @@ do
     #   This array contains information about previous notifications to Mastodon for this MMSI
     #   The keys to this array are defined in MASTODON_FORMAT
 
-    # If there's a lock file, wait until it's gone
+    declare -A VESSELDICT=()
+
+    # If there's a lock file, wait until it's gone\
     while [[ -f  $VESSELDBLOCK ]]
     do
         sleep 1
@@ -137,6 +137,8 @@ do
         eval "$(VESSEL_INFO vesselinfo $vessel)"
         mmsi="${vesselinfo[mmsi]}"
         declare -A mast_status=()
+
+        [[ -z "$mmsi" ]] && continue || true    # capture empty mmsi and skip
         # pull Mastodon string and parse it:
         for index1 in "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9"
         do
@@ -152,7 +154,7 @@ do
                 done
             fi
         done
-        [[ -z "$notif_index" ]] && notif_index="notif_0" 
+        [[ -z "$notif_index" ]] && notif_index="notif_0"
         [[ -z "${mast_status[lat]}" ]] && mast_status[lat]=-1000 || true
         [[ -z "${mast_status[lon]}" ]] && mast_status[lon]=-1000 || true
         [[ -z "${mast_status[last_notif]}" ]] && mast_status[last_notif]=0 || true
@@ -177,6 +179,9 @@ do
             fi
         fi
 
+        # don't notify if it matches the Skip Filter
+        [[ -n "${MASTODON_SKIP_FILTER}" ]] && grep "${MASTODON_SKIP_FILTER}" <<< "$mmsi" >/dev/null 2>&1 && unset notify || true
+
         if [[ -n "$notify" ]]
         then
             # we need to notify
@@ -186,9 +191,8 @@ do
             [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${vesselinfo[mmsi]} " || true
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${vesselinfo[mmsi]} " || true
 
-
             mast_str="#VesselAlert #Ship #Vessel #AIS\n"
-            [[ -n "${vesselinfo[shipname]}" ]] && mast_str+="Name: #${vesselinfo[shipname]} " 
+            [[ -n "${vesselinfo[shipname]}" ]] && mast_str+="Name: #${vesselinfo[shipname]} "
             [[ -n "${vesselinfo[mmsi]}" ]] && mast_str+="#MMSI: #${vesselinfo[mmsi]}"
             [[ -n "${vesselinfo[callsign]}" ]] && mast_str+="Call: #${vesselinfo[callsign]}"
             mast_str+="\n"
