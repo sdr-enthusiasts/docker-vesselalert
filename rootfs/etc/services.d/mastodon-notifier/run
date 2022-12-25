@@ -163,8 +163,10 @@ do
         # based on timing:
         if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( mast_status[last_notif] < $(date +%s) - MASTODON_NOTIFY_EVERY ))
         then
-            [[ -n "$DEBUG" ]] && echo $mmsi notify based on timing
+            [[ -n "$DEBUG" ]] && echo "$mmsi notify based on timing"
             notify="true"
+        else
+            [[ -n "$DEBUG" ]] && echo "$mmsi skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${mast_status[last_notif]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
         fi
 
         # based on distance from last notification:
@@ -172,9 +174,13 @@ do
         then
             if (( mast_status[lat] + mast_status[lon] == -2000 )) || (( $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > MASTODON_MIN_DIST ))
             then
-                [[ -n "$DEBUG" ]] && echo $mmsi notify based on distance
+                [[ -n "$DEBUG" ]] && echo "$mmsi notify based on distance"
                 notify="true"
+            else
+                [[ -n "$DEBUG" ]] && echo "$mmsi skipped notify based on distance ( measured $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > allowed $MASTODON_MIN_DIST )"
             fi
+        else
+                [[ -n "$DEBUG" ]] && echo "$mmsi notify based on distance (disabled)"
         fi
 
         # don't notify if it matches the Skip Filter
@@ -184,7 +190,11 @@ do
             then
                 unset notify
                 [[ -n "$DEBUG" ]] && echo "$mmsi skipped because of filter match (${MASTODON_SKIP_FILTER})"
+            else
+                [[ -n "$DEBUG" ]] && echo "$mmsi didn't match skip filter"
             fi
+        else
+            [[ -n "$DEBUG" ]] && echo "$mmsi -> skip filter disabled"
         fi
 
         if [[ -n "$notify" ]]
