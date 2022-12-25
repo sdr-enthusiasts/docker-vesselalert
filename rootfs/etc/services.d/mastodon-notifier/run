@@ -26,6 +26,8 @@ MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 notification_count=0
+[[ -n "$DEBUG" ]] && mastpost_visibility="private" || mastpost_visibility="public"
+
 
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
@@ -133,7 +135,7 @@ do
     for vessel in ${VESSELDICT[@]}
     do
         eval "$(VESSEL_INFO vesselinfo $vessel)"
-        mssi="${vesselinfo[mssi]}"
+        mmsi="${vesselinfo[mmsi]}"
         declare -A mast_status=()
         # pull Mastodon string and parse it:
         for index1 in "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9"
@@ -161,6 +163,7 @@ do
         # based on timing:
         if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( mast_status[last_notif] < $(date +%s) - MASTODON_NOTIFY_EVERY ))
         then
+            [[ -n "$DEBUG" ]] && echo notify based on timing
             notify="true"
         fi
 
@@ -169,6 +172,7 @@ do
         then
             if (( mast_status[lat] + mast_status[lon] == -2000 )) || (( $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > MASTODON_MIN_DIST ))
             then
+                [[ -n "$DEBUG" ]] && echo notify based on distance
                 notify="true"
             fi
         fi
@@ -201,8 +205,7 @@ do
             # First let's get an image if it exists from MarineVessel:
 
             image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${vesselinfo[mmsi]}"
-
-            media_id=""    # added here for future use
+            media_id=""
             if curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o "/tmp/vesselimg.jpg"
             then
                 response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/tmp/vesselimg.jpg")"
@@ -212,7 +215,7 @@ do
                 echo "[$(date)][$APPNAME] image uploaded to Mastodon"
             fi
 
-            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=public")"
+            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=${mastpost_visibility}")"
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
@@ -230,16 +233,19 @@ do
             # write the mast_status back to the vessel_info
             printf -v vesselinfo[$notif_index] -- "%s|" ${mast_status[@]}
             vesselinfo[$notif_index]="${vesselinfo[$notif_index]%*|}"   # strip trailing "|"
+            [[ -n "$DEBUG" ]] && echo vesselinfo[$notif_index]=${vesselinfo[$notif_index]}
 
             # put vesselinfo back into the VESSELDICT array:
-            printf -v VESSELDICT[$mssi] -- "%s," ${vesselinfo[@]}
-            VESSELDICT[$mssi]="${VESSELDICT[$mssi]%*,}"     # strip trailing ","
-
+            printf -v VESSELDICT[$mmsi] -- "%s," ${vesselinfo[@]}
+            VESSELDICT[$mmsi]="${VESSELDICT[$mmsi]%*,}"     # strip trailing ","
+            [[ -n "$DEBUG" ]] && echo updated VESSELDICT[$mmsi]
             # Increment notification count
             (( notification_count++ ))
 
         fi
     done
+
+    [[ -n "$DEBUG" ]] && echo Notification count: $notification_count
 
     # Write VESSELDICT back to the file if it was changed:
     (( notification_count > 0 )) && declare -p VESSELDICT > "$VESSELDBFILE" 2>/dev/null || true
