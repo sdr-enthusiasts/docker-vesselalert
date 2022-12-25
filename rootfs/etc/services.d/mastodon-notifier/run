@@ -150,7 +150,7 @@ do
                 done
             fi
         done
-
+        [[ -z "$notif_index" ]] && notif_index="notif_0" 
         [[ -z "${mast_status[lat]}" ]] && mast_status[lat]=-1000 || true
         [[ -z "${mast_status[lon]}" ]] && mast_status[lon]=-1000 || true
         [[ -z "${mast_status[last_notif]}" ]] && mast_status[last_notif]=0 || true
@@ -183,18 +183,19 @@ do
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${vesselinfo[mmsi]} " || true
 
 
-            printf -v mast_str -- \
-            "#VesselAlert #Ship #Vessel #AIS
-            #Name: #%s #MMSI: #%s #Callsign: #%s
-            #Flag: %s Last seen: %s Msgs recvd: %s
-            #Speed: %s kts #Destination: #%s
-            #Signal (RSSI): %s dbFS
-            %s" \
-            "${vesselinfo[shipname]}" "${vesselinfo[mmsi]}" "${vesselinfo[callsign]}" \
-            "${vesselinfo[country]}" "$( date -d $(( $(date %s) - vesselinfo[last_signal] )) )"  "${vesselinfo[count]}" \
-            "${vesselinfo[speed]}" "${vesselinfo[destination]}" \
-            "${vesselinfo[level]}" \
-            "$links"
+            mast_str="#VesselAlert #Ship #Vessel #AIS\n"
+            [[ -n "${vesselinfo[shipname]}" ]] && mast_str+="Name: #${vesselinfo[shipname]} " 
+            [[ -n "${vesselinfo[mmsi]}" ]] && mast_str+="#MMSI: #${vesselinfo[mmsi]}"
+            [[ -n "${vesselinfo[callsign]}" ]] && mast_str+="Call: #${vesselinfo[callsign]}"
+            mast_str+="\n"
+            [[ -n "${vesselinfo[callsign]}" ]] && mast_str+="#Flag: #${vesselinfo[country]} "
+            mast_str+="Last seen: $(date -d @$(( $(date +%s) - vesselinfo[last_signal])) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${vesselinfo[count]}\n"
+            [[ -n "${vesselinfo[speed]}" ]] && mast_str+="speed: ${vesselinfo[speed]} kts "
+            [[ -n "${vesselinfo[destination]}" ]] && mastr_str+="Destination: ${vesselinfo[destination]}\n"
+            mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${vesselinfo[level]}")"
+            [[ -n "$links" ]] && mast_str+="\n$links"
+
+            mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
 
             # Now we can finally send this to Mastodon
             # First let's get an image if it exists from MarineVessel:
@@ -204,14 +205,14 @@ do
             media_id=""    # added here for future use
             if curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o "/tmp/vesselimg.jpg"
             then
-                response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "https://${MASTODON_SERVER}/api/v1/media" --form file="@/tmp/vesselimg.jpg")"
+                response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/tmp/vesselimg.jpg")"
                 [[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
                 rm -f "/tmp/vesselimg.jpg"
                 [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id}"
                 echo "[$(date)][$APPNAME] image uploaded to Mastodon"
             fi
 
-            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "https://${MASTODON_SERVER}/api/v1/statuses" -X POST $mast_str $media_id -F "status=${MASTTEXT}" -F "language=eng" -F "visibility=public")"
+            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=public")"
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
@@ -224,7 +225,7 @@ do
             # update mast_status values:
             mast_status[lat]="${vesselinfo[lat]}"
             mast_status[lon]="${vesselinfo[lon]}"
-            mast_status[last_notif]="$(date %s)"
+            mast_status[last_notif]="$(date +%s)"
 
             # write the mast_status back to the vessel_info
             printf -v vesselinfo[$notif_index] -- "%s|" ${mast_status[@]}
