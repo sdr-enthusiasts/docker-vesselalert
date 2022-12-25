@@ -113,8 +113,6 @@ do
     #   This array contains information about previous notifications to Mastodon for this MMSI
     #   The keys to this array are defined in MASTODON_FORMAT
 
-    declare -A VESSELDICT=()
-
     # If there's a lock file, wait until it's gone\
     while [[ -f  $VESSELDBLOCK ]]
     do

@@ -58,7 +58,7 @@ function VESSEL_INFO()
 
 while true
 do
-    declare -a VESSELDICT=()
+    declare -A VESSELDICT=()
     declare -A VESSELINFO=()
 
     # If there's a lock file, wait until it's gone
