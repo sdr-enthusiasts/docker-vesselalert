@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bash
 #shellcheck shell=bash
 #shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164,SC1090
-
+# set -x
 # AIS-Collect:
 # read AIS data from a AIS-Catcher web service and
 # create and maintain a CSV database with this data
@@ -9,13 +9,21 @@
 # If no NOTIFY_INTERVAL is defined then set it to 24 hours
 
 # redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
+##exec 2>&1
 # all errors will show a line number and the command used to produce the error
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
 trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
 
 APPNAME="$(hostname)/ais-collect"
 echo "[$(date)][$APPNAME] Started as an s6 service"
+echo "[$(date)][$APPNAME] DEBUG=$DEBUG"
+
+declare -A VESSELS
+declare -a VESSEL_INDEX
+declare -a KEY_INDEX
+
+#Add notif_key style additional keys here, as needed for each notification service:
+KEY_INDEX+=("mast_lat" "mast_lon" "mast_last")
 
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/run/vessel_db.csv" || true
@@ -26,41 +34,8 @@ echo "[$(date)][$APPNAME] Started as an s6 service"
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
-# This is the format of the VESSELDICT associative array records:
-# [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
-#   0       1          2         3     4    5     6       7    8      9       10            11              12                          13       <-- field index for BASH
-#   1       2          3         4     5    6     7       8    9     10       11            12              13                          14       <-- field index for AWK
-
-function VESSEL_INFO()
-{
-    # VESSELINFO target_array vessel_string
-    # reads CSV values from vessel_string and prints it to stdout
-    local -a headers=("mmsi" "shipname" "callsign" "country" "lat" "lon" "level" "count" "ppm" "speed" "destination" "last_signal" "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9")
-    local tmparray
-    local -A array
-    local string
-
-    # read string into array and pad values so there's a field for each header
-    readarray -td, tmparray <<< "$2"
-    tmparray+=("" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "")
-
-    for (( value=0;  value<"${#headers[@]}"; value++ ))
-    do
-        #echo "$value: ${headers[$value]}=>${tmparray[value]}"
-        array["${headers[$value]}"]="${tmparray[value]}"
-    done
-    # clean up the last read element - it has a trailing \n :
-    array[last_signal]="$(tr -d '\n' <<< "${array[last_signal]}")"
-    string="$(declare -p array)"
-    echo ${string/declare -A array=/declare -A $1=}
-}
-
-
 while true
 do
-    declare -A VESSELDICT=()
-    declare -A VESSELINFO=()
-
     # If there's a lock file, wait until it's gone
     while [[ -f  $VESSELDBLOCK ]]
     do
@@ -73,49 +48,65 @@ do
     # First read the existing entries in from file
     if (( $(wc -l < "$VESSELDBFILE") > 0 ))
     then
-        [[ -n "$DEBUG" ]] && echo reading shipdict from file || true
+        [[ -n "$DEBUG" ]] && echo reading VESSELS dict from file || true
         source "$VESSELDBFILE"
     fi
 
-    # Now update it with the ones from the AIS_URL website
-    #set -x
-    while IFS="" read -r vessel
+    # Now update it with the ones from the AIS_URL website.
+    # The curl ... | jq ... command below creates a vertical list of key=value strings
+    # from the JSON file in the AIS_URL. Each new ship starts with its mmsi as first key so we can use that as index.
+    # The result is 3 arrays:
+    # - VESSEL_INDEX contains a list of all MMSIs
+    # - KEY_INDEX contains a list of all keys
+    # - VESSELS[$mmsi:$key] contains values for mmsi=$mmsi and key=$key
+    while read -r keyvalue
     do
-        # remove quotes, encapsulated commas, spaces, etc:
-        vessel="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "$vessel")"
-        eval "$(VESSEL_INFO NEWINFO $vessel)"
-        mmsi="${NEWINFO["mmsi"]}"
-        [[ -n "$DEBUG" ]] && declare -p VESSELINFO
-        [[ -z "$mmsi" ]] && continue || true
-        stat=",$(cut -d, -f13- <<< "${VESSELDICT["mmsi"]}")"
-        [[ -n "$DEBUG" ]] && echo stat=$stat
-        VESSELDICT[$mmsi]="$vessel,$stat"
-        [[ -n "$DEBUG" ]] && echo updated ${VESSELDICT[$mmsi]}
-    done <<< "$(curl -sSL $AIS_URL/ships_full.json | jq -r '.ships[] | [.mmsi, .shipname, .callsign, .country, .lat, .lon, .level, .count, .ppm, .speed, .destination, .last_signal] | @csv') | tr -d '\n'"
+        key="${keyvalue%%=*}"
+        value="${keyvalue#*=}"
+        if [[ "$key" == "mmsi" ]]
+        then
+            mmsi="$value"
+            [[ -n "$mmsi" ]] && VESSEL_INDEX+=("$mmsi")
+        fi
+        [[ ! " ${KEY_INDEX[*]} " =~ " ${key} " ]] && KEY_INDEX+=("${key}")
+        [[ -n "$mmsi" ]] && VESSELS["$mmsi:$key"]="$value"
+
+    done <<< "$(curl -sL "$AIS_URL/ships_full.json" | jq -r ".ships[]|to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")"
 
     # Clean out the ones that are too old or that don't have enough messages:
-    if [[ ${#VESSELDICT[@]} -gt 0 ]]
-    then
-        for vessel in "${VESSELDICT[@]}"
-        do
-            eval "$(VESSEL_INFO VESSELINFO $vessel)"
-            mmsi="${VESSELINFO["mmsi"]}"
-            [[ -z "$mmsi" ]] && continue || true
+    for vessel in "${VESSEL_INDEX[@]}"
+    do
 
-            if [[ ! ${VESSELINFO["last_signal"]} =~ ^[0-9]+$ ]] || [[ ! ${VESSELINFO["last_signal"]} =~ ^[0-9]+$ ]] || (( VESSELINFO["last_signal"] > MAX_MSG_AGE )) || (( VESSELINFO["count"] < MIN_MSG_COUNT ))
-            then
-                [[ -n "$DEBUG" ]] && echo removed ${VESSELDICT[$mmsi]}
-                unset "VESSELDICT[$mmsi]"
-                [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $mmsi - removed from DB $( (( VESSELINFO["last_signal"] > MAX_MSG_AGE )) && echo -n "- too old (${VESSELINFO["last_signal"]} > $MAX_MSG_AGE)" || true )$( (( VESSELINFO["count"] < MIN_MSG_COUNT )) && echo -n "- too few messages (<$MIN_MSG_COUNT)" || true )" || true
-            fi
+    age="${VESSELS[${vessel}:last_signal]}"
+    count="${VESSELS[${vessel}:count]}"
+
+    [[ -z "$age" ]] && age=0
+    [[ -z $count ]] && count=$MIN_MSG_COUNT
+
+    if [[ ! $age =~ ^[0-9]+$ ]] \
+    || (( age > MAX_MSG_AGE )) \
+    || (( count < MIN_MSG_COUNT ))
+    then
+        [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( $age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( $count < MIN_MSG_COUNT )) && echo true || echo false)"
+        for key in "${KEY_INDEX[@]}"
+        do
+            unset "VESSELS[${vessel}:${key}]"
         done
+        [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $vessel - removed from DB $( (( ${VESSELS["${vessel}:last_signal"]} > MAX_MSG_AGE )) && echo -n "- too old (${VESSELS["${vessel}:last_signal"]} > $MAX_MSG_AGE)" || true )$( (( ${VESSELS["${vessel}:count"]} < MIN_MSG_COUNT )) && echo -n "- too few messages (<$MIN_MSG_COUNT)" || true )" || true
+    else
+        [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
     fi
 
-    # Write back to file
-    declare -p VESSELDICT > "$VESSELDBFILE" 2>/dev/null
-    [[ -n "$DEBUG" ]] && echo wrote back to file
-    rm -f "$VESSELDBLOCK"
+    done
 
-    sleep $CHECK_INTERVAL
+# Write back to file
+declare -p KEY_INDEX > "$VESSELDBFILE" 2>/dev/null
+declare -p VESSEL_INDEX >> "$VESSELDBFILE" 2>/dev/null
+declare -p VESSELS >> "$VESSELDBFILE" 2>/dev/null
+
+[[ -n "$DEBUG" ]] && echo wrote back to file
+rm -f "$VESSELDBLOCK"
+
+sleep $CHECK_INTERVAL
 
 done
