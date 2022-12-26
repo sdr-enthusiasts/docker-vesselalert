@@ -21,8 +21,6 @@ sleep infinity
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
-[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
-[[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=86400 || true
 [[ -z "${MASTODON_FORMAT}" ]] && MASTODON_FORMAT=("mast" "last_notif" "lat" "lon")
 MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ -z "${MASTODON_SERVER}" ]] && MASTODON_SERVER="airwaves.social"
@@ -30,7 +28,7 @@ MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 notification_count=0
-[[ -n "$DEBUG" ]] && mastpost_visibility="private" || mastpost_visibility="public"
+[[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
 
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
@@ -133,9 +131,11 @@ do
         # based on distance from last notification:
         if [[ -n "${MASTODON_MIN_DIST}" ]]
         then
-            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] || (( $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > MASTODON_MIN_DIST ))
+            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] \
+                ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] \
+                || [[ "$(bc <<<"($(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > $MASTODON_MIN_DIST)" )" == "1" ]]
             then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
                 notify="true"
             else
                 [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
@@ -205,7 +205,7 @@ do
             fi
 
             #shellcheck disable=SC2086
-            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=${mastpost_visibility}")"
+            response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=${MASTODON_POST_VISIBILITY}")"
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
