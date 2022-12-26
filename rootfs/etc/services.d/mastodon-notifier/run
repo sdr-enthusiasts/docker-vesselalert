@@ -201,7 +201,7 @@ do
                 [[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
                 rm -f "/tmp/vesselimg.jpg"
                 [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id}"
-                echo "[$(date)][$APPNAME] image uploaded to Mastodon"
+                echo "[$(date)][$APPNAME] image for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) uploaded to Mastodon"
             fi
 
             #shellcheck disable=SC2086
@@ -209,9 +209,9 @@ do
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
-                echo "[$(date)][$APPNAME] Mastodon post generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs)"
+                echo "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs)"
             else
-                echo "[$(date)][$APPNAME] Mastodon post error. Mastodon returned this error: $(jq '.error' <<< "$response"|xargs)"
+                echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}). Mastodon returned this error: $(jq '.error' <<< "$response"|xargs)"
             fi
 
             # Update the Assoc Array with the latest values:

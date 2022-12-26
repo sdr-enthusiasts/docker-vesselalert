@@ -17,7 +17,9 @@ services:
       - MASTODON_SKIP_FILTER
       - MASTODON_MIN_DISTANCE=
       - MASTODON_POST_VISIBILITY=public
-
+      - MASTODON_LINK_SHIPXPLORER=on
+      - MASTODON_LINK_MARINETRAFFIC=on
+      - MASTODON_LINK_VESSELFINDER=on
     tmpfs:
       - /tmp
       - /run
