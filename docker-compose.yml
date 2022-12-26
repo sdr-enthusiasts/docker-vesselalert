@@ -16,6 +16,7 @@ services:
       - MASTODON_ACCESS_TOKEN=my_mastodon_token
       - MASTODON_SKIP_FILTER
       - MASTODON_MIN_DISTANCE=
+      - MASTODON_POST_VISIBILITY=public
 
     tmpfs:
       - /tmp

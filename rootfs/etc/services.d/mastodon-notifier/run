@@ -16,7 +16,7 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
-sleep infinity
+#sleep infinity
 
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
