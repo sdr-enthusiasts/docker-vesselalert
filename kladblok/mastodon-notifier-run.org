@@ -15,11 +15,9 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
-sleep infinity
-
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/run/vessel_db.csv" || true
+[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vessel_db.lock" || true
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
 [[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=86400 || true
 [[ -z "${MASTODON_FORMAT}" ]] && MASTODON_FORMAT=("mast" "last_notif" "lat" "lon")
@@ -38,6 +36,30 @@ rm -f "$VESSELDBLOCK"
 # [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
 #   0       1          2         3     4    5     6       7    8      9       10            11              12                          13       <-- field index for BASH
 #   1       2          3         4     5    6     7       8    9     10       11            12              13                          14       <-- field index for AWK
+
+function VESSEL_INFO()
+{
+    # VESSELINFO target_array vessel_string
+    # reads CSV values from vessel_string and prints it to stdout
+    local -a headers=("mmsi" "shipname" "callsign" "country" "lat" "lon" "level" "count" "ppm" "speed" "destination" "last_signal" "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9")
+    local tmparray
+    local -A array
+    local string
+
+    # read string into array and pad values so there's a field for each header
+    readarray -td, tmparray <<< "$2"
+    tmparray+=("" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "")
+
+    for (( value=0;  value<"${#headers[@]}"; value++ ))
+    do
+        #echo "$value: ${headers[$value]}=>${tmparray[value]}"
+        array["${headers[$value]}"]="${tmparray[value]}"
+    done
+    # clean up the last read element - it has a trailing \n :
+    array[last_signal]="$(tr -d '\n' <<< "${array[last_signal]}")"
+    string="$(declare -p array)"
+    echo ${string/declare -A array=/declare -A $1=}
+}
 
 # Define some functions to calculate distance between coordinates using Haversine:
 deg2rad () {
@@ -108,83 +130,92 @@ do
     fi
 
     # Iterate through the ships:
-    for vessel in "${VESSEL_INDEX[@]}"
+    for vessel in ${VESSELDICT[@]}
     do
+        eval "$(VESSEL_INFO vesselinfo $vessel)"
+        mmsi="${vesselinfo[mmsi]}"
+        declare -A mast_status=()
 
-        [[ -z "${VESSELS[$vessel:mmsi]}" ]] && continue || true    # capture empty mmsi and skip
+        [[ -z "$mmsi" ]] && continue || true    # capture empty mmsi and skip
+        # pull Mastodon string and parse it:
+        for index1 in "notif_0" "notif_1" "notif_2" "notif_3" "notif_4" "notif_5" "notif_6" "notif_7" "notif_8" "notif_9"
+        do
+            header="${MASTODON_FORMAT[0]}|"
+            if [[ "${index1:0:${#header}}" == "$header" ]]
+            then
+                readarray -td, tmparray <<< "${vesselinfo[$index1]}"
+                counter=0
+                notif_index="$index1"
+                for index2 in "${MASTODON_FORMAT[@]}"
+                do
+                    mast_status[$index2]="${tmparray[$((counter++))]}"
+                done
+            fi
+        done
+        [[ -z "$notif_index" ]] && notif_index="notif_0"
+        [[ -z "${mast_status[lat]}" ]] && mast_status[lat]=-1000 || true
+        [[ -z "${mast_status[lon]}" ]] && mast_status[lon]=-1000 || true
+        [[ -z "${mast_status[last_notif]}" ]] && mast_status[last_notif]=0 || true
+
         # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
         unset notify
 
-        # do some safeguarding:
-        [[ -z "${VESSELS[$vessel:mast_lat]}" ]] && VESSELS[$vessel:mast_lat]="false" && true
-        [[ -z "${VESSELS[$vessel:mast_lon]}" ]] && VESSELS[$vessel:mast_lon]="false" && true
-        [[ -z "${VESSELS[$vessel:mast_last]}" ]] && VESSELS[$vessel:mast_last]="$MASTODON_NOTIFY_EVERY" && true
-
         # based on timing:
-        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( ${VESSELS[$vessel:mast_last]} < $(date +%s) - MASTODON_NOTIFY_EVERY ))
+        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( mast_status[last_notif] < $(date +%s) - MASTODON_NOTIFY_EVERY ))
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on timing"
+            [[ -n "$DEBUG" ]] && echo "$mmsi notify based on timing"
             notify="true"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${mast_status[last_notif]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
+            [[ -n "$DEBUG" ]] && echo "$mmsi skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${mast_status[last_notif]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
         fi
 
         # based on distance from last notification:
         if [[ -n "${MASTODON_MIN_DIST}" ]]
         then
-            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] || (( $(distance ${VESSELS[$vessel:mast_lat]} ${VESSELS[$vessel:mast_lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) > MASTODON_MIN_DIST ))
+            if (( mast_status[lat] + mast_status[lon] == -2000 )) || (( $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > MASTODON_MIN_DIST ))
             then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance"
+                [[ -n "$DEBUG" ]] && echo "$mmsi notify based on distance"
                 notify="true"
             else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on distance ( measured $(distance ${VESSELS[$vessel:mast_lat]} ${VESSELS[$vessel:mast_lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) > allowed $MASTODON_MIN_DIST )"
+                [[ -n "$DEBUG" ]] && echo "$mmsi skipped notify based on distance ( measured $(distance ${mast_status[lat]} ${mast_status[lon]} ${vesselinfo[lat]} ${vesselinfo[lon]}) > allowed $MASTODON_MIN_DIST )"
             fi
         else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance (disabled)"
+                [[ -n "$DEBUG" ]] && echo "$mmsi notify based on distance (disabled)"
         fi
 
         # don't notify if it matches the Skip Filter
         if [[ -n "${MASTODON_SKIP_FILTER}" ]]
         then
-            if [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
+            if grep "${MASTODON_SKIP_FILTER}" <<< "$mmsi" >/dev/null 2>&1
             then
                 unset notify
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
+                [[ -n "$DEBUG" ]] && echo "$mmsi skipped because of filter match (${MASTODON_SKIP_FILTER})"
             else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} didn't match mmsi skip filter (${MASTODON_SKIP_FILTER})"
+                [[ -n "$DEBUG" ]] && echo "$mmsi didn't match skip filter"
             fi
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter disabled"
+            [[ -n "$DEBUG" ]] && echo "$mmsi -> skip filter disabled"
         fi
 
         if [[ -n "$notify" ]]
         then
             # we need to notify
-            # First create notification string
-            # These are the valid fields:
-            # mmsi lat lon distance mmsi_type level count ppm heading cog speed to_bow to_stern to_starboard to_port shiptype msg_type country status callsign shipname destination last_signal mast_lat mast_lon mast_last
+            # First create notification string:
             links=""
-            [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$vessel:mmsi]} " || true
-            [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$vessel:mmsi]} " || true
-            [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]} " || true
+            [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${vesselinfo[mmsi]} " || true
+            [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${vesselinfo[mmsi]} " || true
+            [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${vesselinfo[mmsi]} " || true
 
             mast_str="#VesselAlert #Ship #Vessel #AIS\n"
-            [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #${VESSELS[$vessel:shipname]} "
-            [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]} "
-            [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Call: #${VESSELS[$vessel:callsign]} "
-            [[ -n "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
+            [[ -n "${vesselinfo[shipname]}" ]] && mast_str+="Name: #${vesselinfo[shipname]} "
+            [[ -n "${vesselinfo[mmsi]}" ]] && mast_str+="#MMSI: #${vesselinfo[mmsi]}"
+            [[ -n "${vesselinfo[callsign]}" ]] && mast_str+="Call: #${vesselinfo[callsign]}"
             mast_str+="\n"
-
-            [[ -n "${VESSELS[$vessel:country]}" ]] && mast_str+="#Flag: #${VESSELS[$vessel:country]} "
-            mast_str+="Last seen: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
-            mast_str+="\n"
-
-            [[ -n "${VESSELS[$vessel:speed]}" ]] && mast_str+="Speed: ${VESSELS[$vessel:speed]} kts "
-            [[ -n "${VESSELS[$vessel:heading]}" ]] && mast_str+="Heading: ${VESSELS[$vessel:speed]} deg "
-            [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: ${VESSELS[$vessel:destination]}"
-            mast_str+="\n"
-
-            mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
+            [[ -n "${vesselinfo[callsign]}" ]] && mast_str+="#Flag: #${vesselinfo[country]} "
+            mast_str+="Last seen: $(date -d @$(( $(date +%s) - vesselinfo[last_signal])) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${vesselinfo[count]}\n"
+            [[ -n "${vesselinfo[speed]}" ]] && mast_str+="speed: ${vesselinfo[speed]} kts "
+            [[ -n "${vesselinfo[destination]}" ]] && mastr_str+="Destination: ${vesselinfo[destination]}\n"
+            mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${vesselinfo[level]}")"
             [[ -n "$links" ]] && mast_str+="\n$links"
 
             mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
@@ -192,7 +223,7 @@ do
             # Now we can finally send this to Mastodon
             # First let's get an image if it exists from MarineVessel:
 
-            image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${VESSELS[$vessel:mmsi]}"
+            image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${vesselinfo[mmsi]}"
             media_id=""
             if curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o "/tmp/vesselimg.jpg"
             then
@@ -214,10 +245,25 @@ do
 
             # Update the Assoc Array with the latest values:
             # update mast_status values:
-            VESSELS[$vessel:mast_lat]="${VESSELS[$vessel:lat]}"
-            VESSELS[$vessel:mast_lon]="${VESSELS[$vessel:lon]}"
-            VESSELS[$vessel:mast_last]="$(date +%s)"
+            mast_status[lat]="${vesselinfo[lat]}"
+            mast_status[lon]="${vesselinfo[lon]}"
+            mast_status[last_notif]="$(date +%s)"
 
+            # write the mast_status back to the vessel_info
+            printf -v vesselinfo[$notif_index] -- "%s|" ${mast_status[@]}
+            vesselinfo[$notif_index]="${vesselinfo[$notif_index]%*|}"   # strip trailing "|"
+            [[ -n "$DEBUG" ]] && echo vesselinfo[$notif_index]=${vesselinfo[$notif_index]}
+
+            # put vesselinfo back into the VESSELDICT array
+            # the params need to be printed one by one to because the order is fixed and not associative
+            # [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
+
+            VESSELDICT[$mmsi]=""
+            for param in "${headers[@]}"
+            do
+                VESSELDICT[$mmsi]+="${vesselinfo[$param]},"
+            done
+            VESSELDICT[$mmsi]="${VESSELDICT[$mmsi]%*,}"     # strip trailing ","
             [[ -n "$DEBUG" ]] && echo updated VESSELDICT[$mmsi]
             # Increment notification count
             (( notification_count++ )) || true
@@ -228,17 +274,7 @@ do
     [[ -n "$DEBUG" ]] && echo Notification count: $notification_count
 
     # Write VESSELDICT back to the file if it was changed:
-    if (( notification_count > 0 ))
-    then
-        # Write back to file
-        {
-          declare -p KEY_INDEX
-          declare -p VESSEL_INDEX
-          declare -p VESSELS
-          declare -p SHIPTYPE
-        } > "$VESSELDBFILE" 2>/dev/null
-        unset notification_count
-    fi
+    (( notification_count > 0 )) && declare -p VESSELDICT > "$VESSELDBFILE" 2>/dev/null || true
 
     # Remove file block:
     rm -f "$VESSELDBLOCK"

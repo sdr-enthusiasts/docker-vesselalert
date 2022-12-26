@@ -10,6 +10,10 @@ declare -A VESSELS
 declare -a VESSEL_INDEX
 declare -a KEY_INDEX
 
+# add any extra indexes for notification mechanisms below.
+# use syntax "mechanism_key" - example for last notification sent time at mastodon: mast_last
+KEY_INDEX+=("mast_lat" "mast_lon" "mast_last")
+
 while read -r keyvalue
 do
     key="${keyvalue%%=*}"

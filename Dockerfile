@@ -14,6 +14,7 @@ RUN set -x && \
     KEPT_PACKAGES+=(jq) && \
     KEPT_PACKAGES+=(git) && \
     KEPT_PACKAGES+=(nano) && \
+    KEPT_PACKAGES+=(curl) && \
     #
     # install packages
     apt-get update && \
