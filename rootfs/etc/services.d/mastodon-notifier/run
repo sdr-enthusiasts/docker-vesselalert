@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164,SC1090
+#shellcheck disable=SC2015,SC1090,SC2164,SC2001
+###shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164,SC1090,SC2001
 
 # Mastodon-Notifier
 # Send notification to Mastoron
@@ -60,18 +61,18 @@ distance () {
     lon_2="$4"
     delta_lat="$(bc <<<"$lat_2 - $lat_1")"
     delta_lon="$(bc <<<"$lon_2 - $lon_1")"
-    lat_1="$(deg2rad $lat_1)"
-    lon_1="$(deg2rad $lon_1)"
-    lat_2="$(deg2rad $lat_2)"
-    lon_2="$(deg2rad $lon_2)"
-    delta_lat="$(deg2rad $delta_lat)"
-    delta_lon="$(deg2rad $delta_lon)"
+    lat_1="$(deg2rad "$lat_1")"
+    lon_1="$(deg2rad "$lon_1")"
+    lat_2="$(deg2rad "$lat_2")"
+    lon_2="$(deg2rad "$lon_2")"
+    delta_lat="$(deg2rad "$delta_lat")"
+    delta_lon="$(deg2rad "$delta_lon")"
     distance="$(bc -l <<< "s($lat_1) * s($lat_2) + c($lat_1) * c($lat_2) * c($delta_lon)")"
-    distance="$(acos $distance)"
-    distance="$(rad2deg $distance)"
+    distance="$(acos "$distance")"
+    distance="$(rad2deg "$distance")"
     distance="$(bc -l <<< "$distance * 60")"
     distance="$(bc <<<"scale=4; $distance / 1")"
-    echo $distance
+    echo "$distance"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -126,18 +127,18 @@ do
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on timing"
             notify="true"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${mast_status[last_notif]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast_last]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
         fi
 
         # based on distance from last notification:
         if [[ -n "${MASTODON_MIN_DIST}" ]]
         then
-            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] || (( $(distance ${VESSELS[$vessel:mast_lat]} ${VESSELS[$vessel:mast_lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) > MASTODON_MIN_DIST ))
+            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] || (( $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > MASTODON_MIN_DIST ))
             then
                 [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance"
                 notify="true"
             else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on distance ( measured $(distance ${VESSELS[$vessel:mast_lat]} ${VESSELS[$vessel:mast_lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) > allowed $MASTODON_MIN_DIST )"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
             fi
         else
                 [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance (disabled)"
@@ -203,6 +204,7 @@ do
                 echo "[$(date)][$APPNAME] image uploaded to Mastodon"
             fi
 
+            #shellcheck disable=SC2086
             response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=${mastpost_visibility}")"
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
@@ -218,14 +220,14 @@ do
             VESSELS[$vessel:mast_lon]="${VESSELS[$vessel:lon]}"
             VESSELS[$vessel:mast_last]="$(date +%s)"
 
-            [[ -n "$DEBUG" ]] && echo updated VESSELDICT[$mmsi]
+            [[ -n "$DEBUG" ]] && echo "updated VESSELDICT[$mmsi]"
             # Increment notification count
             (( notification_count++ )) || true
 
         fi
     done
 
-    [[ -n "$DEBUG" ]] && echo Notification count: $notification_count
+    [[ -n "$DEBUG" ]] && echo "Notification count: $notification_count"
 
     # Write VESSELDICT back to the file if it was changed:
     if (( notification_count > 0 ))
