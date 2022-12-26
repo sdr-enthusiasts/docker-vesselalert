@@ -32,7 +32,7 @@ then
     sleep infinity
 fi
 
-if [[ -n "$MASTODON" ]] && { [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]] }
+if [[ -n "$MASTODON" ]] && { [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]] ;}
 then
     [[ -z "$MASTODON_ACCESS_TOKEN" ]] && echo -n "FATAL: MASTODON_ACCESS_TOKEN not defined. You must create an application in your Mastodon account"
     [[ -z "$MASTODON_SERVER" ]] && echo -n "FATAL: MASTODON_SERVER not defined. You must create an application in your Mastodon account"
