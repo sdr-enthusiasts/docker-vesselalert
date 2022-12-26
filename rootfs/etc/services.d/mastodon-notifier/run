@@ -254,8 +254,15 @@ do
             vesselinfo[$notif_index]="${vesselinfo[$notif_index]%*|}"   # strip trailing "|"
             [[ -n "$DEBUG" ]] && echo vesselinfo[$notif_index]=${vesselinfo[$notif_index]}
 
-            # put vesselinfo back into the VESSELDICT array:
-            printf -v VESSELDICT[$mmsi] -- "%s," ${vesselinfo[@]}
+            # put vesselinfo back into the VESSELDICT array
+            # the params need to be printed one by one to because the order is fixed and not associative
+            # [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
+
+            VESSELDICT[$mmsi]=""
+            for param in "${headers[@]}"
+            do
+                VESSELDICT[$mmsi]+="${vesselinfo[$param]},"
+            done
             VESSELDICT[$mmsi]="${VESSELDICT[$mmsi]%*,}"     # strip trailing ","
             [[ -n "$DEBUG" ]] && echo updated VESSELDICT[$mmsi]
             # Increment notification count
