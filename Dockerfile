@@ -3,6 +3,8 @@ FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 ENV MASTODON_NOTIFY_EVERY=86400
 ENV MASTODON_MIN_DIST=0
 
+LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/docker-vesselalert"
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN set -x && \
