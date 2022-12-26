@@ -22,5 +22,6 @@ services:
       - /tmp
       - /run
     volumes:
+      - /opt/ais/data:/data
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
