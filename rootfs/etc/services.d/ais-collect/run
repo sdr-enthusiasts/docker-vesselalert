@@ -79,40 +79,44 @@ do
     for vessel in "${VESSEL_INDEX[@]}"
     do
 
-    age="${VESSELS[${vessel}:last_signal]}"
-    count="${VESSELS[${vessel}:count]}"
+        age="${VESSELS[${vessel}:last_signal]}"
+        count="${VESSELS[${vessel}:count]}"
 
-    [[ -z "$age" ]] && age=0
-    [[ -z $count ]] && count=$MIN_MSG_COUNT
+        [[ -z "$age" ]] && age=0
+        [[ -z $count ]] && count=$MIN_MSG_COUNT
 
-    if [[ ! $age =~ ^[0-9]+$ ]] \
-    || (( age > MAX_MSG_AGE )) \
-    || (( count < MIN_MSG_COUNT ))
-    then
-        [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( count < MIN_MSG_COUNT )) && echo true || echo false)"
-        for key in "${KEY_INDEX[@]}"
-        do
-            unset "VESSELS[${vessel}:${key}]"
-        done
-        [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $vessel - removed from DB $( (( ${VESSELS["${vessel}:last_signal"]} > MAX_MSG_AGE )) && echo -n "- too old (${VESSELS["${vessel}:last_signal"]} > $MAX_MSG_AGE)" || true )$( (( ${VESSELS["${vessel}:count"]} < MIN_MSG_COUNT )) && echo -n "- too few messages (<$MIN_MSG_COUNT)" || true )" || true
-    else
-        [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
-    fi
+        if [[ ! $age =~ ^[0-9]+$ ]] \
+        || (( age > MAX_MSG_AGE )) \
+        || (( count < MIN_MSG_COUNT ))
+        then
+            [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( count < MIN_MSG_COUNT )) && echo true || echo false)"
+            for key in "${KEY_INDEX[@]}"
+            do
+                unset "VESSELS[${vessel}:${key}]"
+            done
+            [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $vessel - removed from DB $( (( ${VESSELS["${vessel}:last_signal"]} > MAX_MSG_AGE )) && echo -n "- too old (${VESSELS["${vessel}:last_signal"]} > $MAX_MSG_AGE)" || true )$( (( ${VESSELS["${vessel}:count"]} < MIN_MSG_COUNT )) && echo -n "- too few messages (<$MIN_MSG_COUNT)" || true )" || true
+        else
+            [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
+        fi
+
+        # while we are at it, clean up the vessel neam and destination:
+        [[ -n "${VESSELS[$vessel:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
+        [[ -n "${VESSELS[$vessel:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
 
     done
 
-# Write back to file
-# Write back to file
-{
-  declare -p KEY_INDEX
-  declare -p VESSEL_INDEX
-  declare -p VESSELS
-  declare -p SHIPTYPE
-} > "$VESSELDBFILE" 2>/dev/null
+    # Write back to file
+    # Write back to file
+    {
+        declare -p KEY_INDEX
+        declare -p VESSEL_INDEX
+        declare -p VESSELS
+        declare -p SHIPTYPE
+    } > "$VESSELDBFILE" 2>/dev/null
 
-[[ -n "$DEBUG" ]] && echo wrote back to file
-rm -f "$VESSELDBLOCK"
+    [[ -n "$DEBUG" ]] && echo wrote back to file
+    rm -f "$VESSELDBLOCK"
 
-sleep $CHECK_INTERVAL
+    sleep $CHECK_INTERVAL
 
 done

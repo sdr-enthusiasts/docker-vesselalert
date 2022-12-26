@@ -120,45 +120,57 @@ do
         [[ -z "${VESSELS[$vessel:mast_last]}" ]] && VESSELS[$vessel:mast_last]="$MASTODON_NOTIFY_EVERY" && true
 
         # based on timing:
-        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && (( ${VESSELS[$vessel:mast_last]} < $(date +%s) - MASTODON_NOTIFY_EVERY ))
+        if [[ -n "$MASTODON_NOTIFY_EVERY" ]]
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on timing"
-            notify="true"
+            if (( ${VESSELS[$vessel:mast_last]} < $(date +%s) - MASTODON_NOTIFY_EVERY ))
+            then
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on timing"
+                notify="true"
+            else
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast_last]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
+                notify="false"
+            fi
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast_last]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notification based on timing disabled"
         fi
 
         # based on distance from last notification:
-        if [[ -n "${MASTODON_MIN_DIST}" ]]
+        if [[ -n "${MASTODON_MIN_DIST}" ]] && [[ "$notify" != "false" ]]
         then
             if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] \
                 ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] \
                 || [[ "$(bc <<<"($(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > $MASTODON_MIN_DIST)" )" == "1" ]]
             then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
                 notify="true"
             else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
+                notify="false"
             fi
         else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} notify based on distance (disabled)"
+                if [[ -n "$DEBUG" ]] && [[ "$notify" != "false" ]]
+                then
+                    echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance (disabled)"
+                else
+                    echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance not checked because notify was already set to false"
+                fi
         fi
 
         # don't notify if it matches the Skip Filter
-        if [[ -n "${MASTODON_SKIP_FILTER}" ]]
+        if [[ -n "${MASTODON_SKIP_FILTER}" ]] && [[ "$notify" != "false" ]]
         then
             if [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
             then
-                unset notify
+                notify="false"
                 [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
             else
                 [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} didn't match mmsi skip filter (${MASTODON_SKIP_FILTER})"
             fi
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter disabled"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter disabled or notify already set to false"
         fi
 
-        if [[ -n "$notify" ]]
+        if [[ "$notify" == "true" ]]
         then
             # we need to notify
             # First create notification string
@@ -170,7 +182,7 @@ do
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]} " || true
 
             mast_str="#VesselAlert #Ship #Vessel #AIS\n"
-            [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #${VESSELS[$vessel:shipname]} "
+            [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
             [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]} "
             [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Call: #${VESSELS[$vessel:callsign]} "
             [[ -n "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
@@ -182,7 +194,7 @@ do
 
             [[ -n "${VESSELS[$vessel:speed]}" ]] && mast_str+="Speed: ${VESSELS[$vessel:speed]} kts "
             [[ -n "${VESSELS[$vessel:heading]}" ]] && mast_str+="Heading: ${VESSELS[$vessel:speed]} deg "
-            [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: ${VESSELS[$vessel:destination]}"
+            [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
             mast_str+="\n"
 
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
