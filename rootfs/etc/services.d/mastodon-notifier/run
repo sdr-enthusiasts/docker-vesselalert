@@ -128,15 +128,16 @@ do
         fi
 
         # based on distance from last notification:
+        #shellcheck disable=SC2086
         if [[ -n "${MASTODON_MIN_DIST}" ]] \
             && [[ "$notify" != "false" ]] \
             && [[ -n "${VESSELS[$vessel:lat]}" ]] && [[ -n "${VESSELS[$vessel:lon]}" ]] \
             && [[ "${VESSELS[$vessel:lat]}" != "null" ]] && [[ "${VESSELS[$vessel:lon]}" != "null" ]] \
             && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]] \
-            && [[ "$(bc -l <<<"$(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") < $MASTODON_MIN_DIST")" == "1" ]]
+            && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[$vessel:mast:lat]} ${VESSELS[$vessel:mast:lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) < $MASTODON_MIN_DIST")" == "1" ]]
         then
             notify="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify false based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) traveled distance too short - do not notify ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
         else
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify not affected by distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") vs. allowed $MASTODON_MIN_DIST )"
         fi
