@@ -193,6 +193,7 @@ do
             image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${VESSELS[$vessel:mmsi]}"
             media_id=""
 
+            # Try to get an image if there isn't already one:
             if [[ ! -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" ]]
             then
                 if ! curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o  "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
@@ -200,7 +201,13 @@ do
                     rm -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
                 fi
             fi
+            # If the file starts with <!DOCTYPE html>, we know it was an error message and we can erase it:
+            if grep '<!DOCTYPE html>' < <(dd bs=1 count=15 if="$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" 2>/dev/null) >/dev/null 2>&1
+            then
+                rm -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
+            fi
 
+            # If the image still exists, then upload it to Mastodon:
             if [[ -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" ]]
             then
                 response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg")"
@@ -209,6 +216,7 @@ do
                 echo "[$(date)][$APPNAME] image for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) uploaded to Mastodon"
             fi
 
+            # Now send a Toot:
             #shellcheck disable=SC2086
             response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST $media_id -F "status=${mast_str}" -F "language=eng" -F "visibility=${MASTODON_POST_VISIBILITY}")"
             # check if there was an error
