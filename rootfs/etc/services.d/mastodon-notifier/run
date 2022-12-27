@@ -139,7 +139,7 @@ do
             notify="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) traveled distance too short - do not notify ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify not affected by distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") vs. allowed $MASTODON_MIN_DIST )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify not affected by distance"
         fi
 
         # don't notify if it matches the Skip Filter
@@ -151,7 +151,7 @@ do
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) -> skip filter not match or disabled or notify already set to false"
         fi
 
-        if [[ "$notify" == "true" ]]
+        if [[ -n "$notify" ]]
         then
             # we need to notify
             # First create notification string
