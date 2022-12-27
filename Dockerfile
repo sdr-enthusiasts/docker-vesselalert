@@ -42,7 +42,7 @@ COPY rootfs/ /
 # Add Container Version
 RUN set -x && \
 pushd /tmp && \
-    git clone --depth=1 https://github.com/sdr-enthusiasts/docker-ais-notify.git && \
+    git clone --depth=1 https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
     cd docker-shipxplorer && \
     branch="##BRANCH##" && \
     [[ ! "${branch:0:1}" == "#" ]] && git checkout "$branch" || true && \
