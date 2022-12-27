@@ -33,7 +33,7 @@ Please follow the instructions [here](README-Mastodon.md).
 ## Up-and-Running with Docker Compose
 An example `docker-compose.yml` can be found [here](docker-compose.yml).
 
-Make sure to map the `/data` directory to a volume, as per the example [here](docker-compose.yml) file. If you forget to do this, the ships database will be erased upon container recreation, and a new notification will be sent for every ship that is heard after restart. This will probably spam your Mastodon account!
+Make sure to map the `/data` directory to a volume, as per the [example file](docker-compose.yml). If you forget to do this, the ships database will be erased upon container recreation, and a new notification will be sent for every ship that is heard after restart. This will probably spam your Mastodon account!
 
 ## Runtime Environment Variables
 
@@ -51,12 +51,12 @@ There are a series of available environment variables:
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
-| `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | 5 | no |
+| `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `5` | no |
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `86400` | no |
-| `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | 30 | no |
+| `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
 
-\* You probably shouldn't change the value of these parameter unless you really know what you are doing.
+\* You probably shouldn't change the value of these parameters unless you really know what you are doing.
 
 ## Logging
 
@@ -64,9 +64,9 @@ There are a series of available environment variables:
 
 ## Acknowledgements
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
-- @jvde-github for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
-- @kevinelliott for his help during the design phase of the project, and to bounce ideas of
-- @hdziban303 for his help testing the early releases and providing feedback
+- [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
+- [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
+- [@hdziban303](https://github.com/hdziban303) for his help testing the early releases and providing feedback
 - The engineers at AirNav who helped me understand things through their ShipXplorer project
 
 ## Getting Help
