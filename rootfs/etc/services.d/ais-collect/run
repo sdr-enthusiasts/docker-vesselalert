@@ -98,9 +98,8 @@ do
             do
                 unset "VESSELS[${vessel}:${key}]"
             done
-            [[ "${VERBOSELOGS,,}" == "on" ]] && echo "[$(date)][$APPNAME] $vessel - removed from DB $( (( ${VESSELS["${vessel}:last_signal"]} > MAX_MSG_AGE )) && echo -n "- too old (${VESSELS["${vessel}:last_signal"]} > $MAX_MSG_AGE)" || true )$( (( ${VESSELS["${vessel}:count"]} < MIN_MSG_COUNT )) && echo -n "- too few messages (<$MIN_MSG_COUNT)" || true )" || true
-        else
-            [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
+        # else
+        #    [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
         fi
 
         # while we are at it, clean up the vessel neam and destination:

@@ -119,7 +119,9 @@ do
         unset notify
 
         # based on timing:
-        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && [[ -n "${VESSELS[$vessel:mast:last]}" ]] && (( $(date +%s) <= ${VESSELS[$vessel:mast:last]} + MASTODON_NOTIFY_EVERY ))
+        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] \
+            && [[ -n "${VESSELS[$vessel:mast:last]}" ]] \
+            && (( $(date +%s) <= ${VESSELS[$vessel:mast:last]} + MASTODON_NOTIFY_EVERY ))
         then
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast:last]} >= $(date +%s) - $MASTODON_NOTIFY_EVERY )"
             notify="false"
@@ -143,15 +145,17 @@ do
         fi
 
         # don't notify if it matches the Skip Filter
-        if [[ -n "${MASTODON_SKIP_FILTER}" ]] && [[ "$notify" != "false" ]] && [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
+        if [[ -n "${MASTODON_SKIP_FILTER}" ]] \
+            && [[ "$notify" != "false" ]] \
+            && [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
         then
             notify="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) -> skip filter not match or disabled or notify already set to false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) mmsi skip filter not match or disabled or notify already set to false"
         fi
 
-        if [[ -n "$notify" ]]
+        if [[ -z "$notify" ]]
         then
             # we need to notify
             # First create notification string
