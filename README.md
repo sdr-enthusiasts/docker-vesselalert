@@ -53,6 +53,7 @@ There are a series of available environment variables:
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
 | `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | 5 | no |
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `86400` | no |
+| `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | 30 | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
 
 \* You probably shouldn't change the value of these parameter unless you really know what you are doing.

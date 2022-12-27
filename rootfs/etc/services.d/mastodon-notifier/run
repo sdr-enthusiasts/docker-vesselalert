@@ -16,7 +16,8 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
-#sleep infinity
+# Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
+
 
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
@@ -36,6 +37,9 @@ touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
 mkdir -p "${VESSELDBFILE%/*}/imagecache"
+
+# Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
+sleep $CHECK_INTERVAL
 
 # This is the format of the VESSELDICT associative array records:
 # [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
@@ -123,7 +127,7 @@ do
             && [[ -n "${VESSELS[$vessel:mast:last]}" ]] \
             && (( $(date +%s) <= ${VESSELS[$vessel:mast:last]} + MASTODON_NOTIFY_EVERY ))
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing. (Last notification was $(( ${VESSELS[$vessel:mast:last]} - $(date +%s) )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[$vessel:mast:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify="false"
         else
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notification based on timing disabled or still too soon for re-notification"
