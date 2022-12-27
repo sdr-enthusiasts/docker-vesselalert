@@ -29,9 +29,12 @@ MASTODON_SERVER="${MASTODON_SERVER,,}"
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 notification_count=0
 [[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
+IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
+
+mkdir -p "${VESSELDBFILE%/*}/imagecache"
 
 # This is the format of the VESSELDICT associative array records:
 # [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
@@ -114,60 +117,38 @@ do
         # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
         unset notify
 
-        # do some safeguarding:
-        [[ -z "${VESSELS[$vessel:mast_lat]}" ]] && VESSELS[$vessel:mast_lat]="false" && true
-        [[ -z "${VESSELS[$vessel:mast_lon]}" ]] && VESSELS[$vessel:mast_lon]="false" && true
-        [[ -z "${VESSELS[$vessel:mast_last]}" ]] && VESSELS[$vessel:mast_last]="$MASTODON_NOTIFY_EVERY" && true
-
         # based on timing:
-        if [[ -n "$MASTODON_NOTIFY_EVERY" ]]
+        if [[ -n "$MASTODON_NOTIFY_EVERY" ]] && [[ -n "${VESSELS[$vessel:mast:last]}" ]] && (( $(date +%s) <= ${VESSELS[$vessel:mast:last]} + MASTODON_NOTIFY_EVERY ))
         then
-            if (( ${VESSELS[$vessel:mast_last]} < $(date +%s) - MASTODON_NOTIFY_EVERY ))
-            then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on timing"
-                notify="true"
-            else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast_last]} < $(date +%s) - $MASTODON_NOTIFY_EVERY )"
-                notify="false"
-            fi
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing ( MASTODON_NOTIFY_EVERY=$MASTODON_NOTIFY_EVERY, ${VESSELS[$vessel:mast:last]} >= $(date +%s) - $MASTODON_NOTIFY_EVERY )"
+            notify="false"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notification based on timing disabled"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notification based on timing disabled or still too soon for re-notification"
         fi
 
         # based on distance from last notification:
-        if [[ -n "${MASTODON_MIN_DIST}" ]] && [[ "$notify" != "false" ]]
+        if [[ -n "${MASTODON_MIN_DIST}" ]] \
+            && [[ "$notify" != "false" ]] \
+            && [[ -n "${VESSELS[$vessel:lat]}" ]] && [[ -n "${VESSELS[$vessel:lon]}" ]] \
+            && [[ "${VESSELS[$vessel:lat]}" != "null" ]] && [[ "${VESSELS[$vessel:lon]}" != "null" ]] \
+            && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]]
         then
-            if [[ "${VESSELS[$vessel:mast_lat]}" == "false" ]] \
-                ||  [[ "${VESSELS[$vessel:mast_lon]}" == "false" ]] \
-                || [[ "$(bc <<<"($(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > $MASTODON_MIN_DIST)" )" == "1" ]]
+            if [[ "$(bc -l <<<"($(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") >= $MASTODON_MIN_DIST)" )" == "1" ]]
             then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
                 notify="true"
             else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast_lat]}" "${VESSELS[$vessel:mast_lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
-                notify="false"
+                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
             fi
-        else
-                if [[ -n "$DEBUG" ]] && [[ "$notify" != "false" ]]
-                then
-                    echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance (disabled)"
-                else
-                    echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance not checked because notify was already set to false"
-                fi
         fi
 
         # don't notify if it matches the Skip Filter
-        if [[ -n "${MASTODON_SKIP_FILTER}" ]] && [[ "$notify" != "false" ]]
+        if [[ -n "${MASTODON_SKIP_FILTER}" ]] && [[ "$notify" != "false" ]] && [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
         then
-            if [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
-            then
-                notify="false"
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
-            else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} didn't match mmsi skip filter (${MASTODON_SKIP_FILTER})"
-            fi
+            notify="false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter disabled or notify already set to false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter not match or disabled or notify already set to false"
         fi
 
         if [[ "$notify" == "true" ]]
@@ -175,7 +156,7 @@ do
             # we need to notify
             # First create notification string
             # These are the valid fields:
-            # mmsi lat lon distance mmsi_type level count ppm heading cog speed to_bow to_stern to_starboard to_port shiptype msg_type country status callsign shipname destination last_signal mast_lat mast_lon mast_last
+            # mmsi lat lon distance mmsi_type level count ppm heading cog speed to_bow to_stern to_starboard to_port shiptype msg_type country status callsign shipname destination last_signal mast:lat mast:lon mast:last
             links=""
             [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$vessel:mmsi]} " || true
             [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$vessel:mmsi]} " || true
@@ -207,11 +188,19 @@ do
 
             image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${VESSELS[$vessel:mmsi]}"
             media_id=""
-            if curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o "/tmp/vesselimg.jpg"
+
+            if [[ ! -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" ]]
             then
-                response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/tmp/vesselimg.jpg")"
+                if I ! curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o  "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
+                then
+                    rm -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
+                fi
+            fi
+
+            if [[ -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" ]]
+            then
+                response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg")"
                 [[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
-                rm -f "/tmp/vesselimg.jpg"
                 [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id}"
                 echo "[$(date)][$APPNAME] image for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) uploaded to Mastodon"
             fi
@@ -228,20 +217,19 @@ do
 
             # Update the Assoc Array with the latest values:
             # update mast_status values:
-            VESSELS[$vessel:mast_lat]="${VESSELS[$vessel:lat]}"
-            VESSELS[$vessel:mast_lon]="${VESSELS[$vessel:lon]}"
-            VESSELS[$vessel:mast_last]="$(date +%s)"
+            VESSELS[$vessel:mast:lat]="${VESSELS[$vessel:lat]}"
+            VESSELS[$vessel:mast:lon]="${VESSELS[$vessel:lon]}"
+            VESSELS[$vessel:mast:last]="$(date +%s)"
 
-            [[ -n "$DEBUG" ]] && echo "updated VESSELDICT[$mmsi]"
+            [[ -n "$DEBUG" ]] && echo "updated VESSELS[$mmsi]"
             # Increment notification count
             (( notification_count++ )) || true
-
         fi
     done
 
     [[ -n "$DEBUG" ]] && echo "Notification count: $notification_count"
 
-    # Write VESSELDICT back to the file if it was changed:
+    # Write arrays back to the file if it was changed:
     if (( notification_count > 0 ))
     then
         # Write back to file

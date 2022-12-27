@@ -21,8 +21,8 @@ echo "[$(date)][$APPNAME] DEBUG=$DEBUG"
 declare -A VESSELS
 declare -a VESSEL_INDEX
 declare -a KEY_INDEX
-declare -A SHIPTYPE=([85]="#Tanker" [84]="#Tanker" [87]="#Tanker" [86]="#Tanker" [81]="#Tanker #Hazard cat A" [80]="#Tanker" [83]="#Tanker #Hazard cat C" [82]="#Tanker #Hazard cat B" [89]="#Tanker" [88]="#Tanker" [34]="#Diving" [35]="#Military #Mil" [36]="#Sailing" [37]="#Pleasure Craft" [30]="#Fishing" [31]="#Towing" [32]="#Towing (Large)" [33]="#Dredging" [38]="#Reserved" [39]="#Reserved" [58]="#Medical pransport" [9]="#Reserved" [59]="#Special vessel" [8]="#Reserved" [56]="#Local vessel" [7]="#Reserved" [57]="#Local vessel" [6]="#Reserved" [54]="#Anti_Pollution" [5]="#Reserved" [55]="#Law #Enforcement" [4]="#Reserved" [52]="#Tug" [3]="#Reserved" [53]="#Port_Tender" [2]="#Reserved" [50]="#Pilot vessel" [1]="#Reserved" [51]="#SAR" [0]="Not Available" [78]="#Cargo" [79]="#Cargo" [70]="#Cargo" [71]="#Cargo #Hazard cat A" [72]="#Cargo #Hazard cat B" [73]="#Cargo #Hazard cat C" [74]="#Cargo #Hazard cat D" [75]="#Cargo" [76]="#Cargo" [77]="#Cargo" [27]="#WIG #Reserved" [26]="#WIG #Reserved" [25]="#WIG #Reserved" [24]="#WIG #Hazard cat D" [23]="#WIG #Hazard cat B" [22]="#WIG #Hazard cat B" [21]="#WIG #Hazard cat A" [20]="#WIG (Wing in ground)" [29]="#WIG #Reserved" [28]="#WIG #Reserved" [41]="#HiSpeed" [40]="#HiSpeed" [43]="#HiSpeed" [42]="#HiSpeed" [45]="#HiSpeed" [44]="#HiSpeed" [47]="#HiSpeed" [46]="#HiSpeed" [49]="#HiSpeed" [48]="#HiSpeed" [92]="#Other" [93]="#Other" [90]="#Tanker" [91]="#Other" [96]="#Other" [97]="#Other" [94]="#Other" [95]="#Other" [98]="#Other" [99]="#Other" [18]="#Reserved" [19]="#Reserved" [12]="#Reserved" [13]="#Reserved" [10]="#Reserved" [11]="#Reserved" [16]="#Reserved" [17]="#Reserved" [14]="#Reserved" [15]="#Reserved" [69]="#Passenger vessel" [68]="#Passenger vessel" [63]="#Passenger vessel" [62]="#Passenger vessel" [61]="#Passenger vessel" [60]="#Passenger vessel" [67]="#Passenger vessel" [66]="#Passenger vessel" [65]="#Passenger vessel" [64]="#Passenger vessel" )
 
+declare -A SHIPTYPE=([0]="Not Available" [1]="#Reserved" [2]="#Reserved" [3]="#Reserved" [4]="#Reserved" [5]="#Reserved" [6]="#Reserved" [7]="#Reserved" [8]="#Reserved" [9]="#Reserved" [10]="#Reserved" [11]="#Reserved" [12]="#Reserved" [13]="#Reserved" [14]="#Reserved" [15]="#Reserved" [16]="#Reserved" [17]="#Reserved" [18]="#Reserved" [19]="#Reserved" [20]="#WIG (Wing in ground)" [21]="#WIG #Hazard cat A" [22]="#WIG #Hazard cat B" [23]="#WIG #Hazard cat B" [24]="#WIG #Hazard cat D" [25]="#WIG #Reserved" [26]="#WIG #Reserved" [27]="#WIG #Reserved" [28]="#WIG #Reserved" [29]="#WIG #Reserved" [30]="#Fishing" [31]="#Towing" [32]="#Towing (Large)" [33]="#Dredging" [34]="#Diving" [35]="#Military #Mil" [36]="#Sailing" [37]="#Pleasure Craft" [38]="#Reserved" [39]="#Reserved" [40]="#HiSpeed" [41]="#HiSpeed" [42]="#HiSpeed" [43]="#HiSpeed" [44]="#HiSpeed" [45]="#HiSpeed" [46]="#HiSpeed" [47]="#HiSpeed" [48]="#HiSpeed" [49]="#HiSpeed" [50]="#Pilot vessel" [51]="#SAR" [52]="#Tug" [53]="#Port_Tender" [54]="#Anti_Pollution" [55]="#Law #Enforcement" [56]="#Local vessel" [57]="#Local vessel" [58]="#Medical pransport" [59]="#Special vessel" [60]="#Passenger vessel" [61]="#Passenger vessel" [62]="#Passenger vessel" [63]="#Passenger vessel" [64]="#Passenger vessel" [65]="#Passenger vessel" [66]="#Passenger vessel" [67]="#Passenger vessel" [68]="#Passenger vessel" [69]="#Passenger vessel" [70]="#Cargo" [71]="#Cargo #Hazard cat A" [72]="#Cargo #Hazard cat B" [73]="#Cargo #Hazard cat C" [74]="#Cargo #Hazard cat D" [75]="#Cargo" [76]="#Cargo" [77]="#Cargo" [78]="#Cargo" [79]="#Cargo" [80]="#Tanker" [81]="#Tanker #Hazard cat A" [82]="#Tanker #Hazard cat B" [83]="#Tanker #Hazard cat C" [84]="#Tanker" [85]="#Tanker" [86]="#Tanker" [87]="#Tanker" [88]="#Tanker" [89]="#Tanker" [90]="#Tanker" [91]="#Other" [92]="#Other" [93]="#Other" [94]="#Other" [95]="#Other" [96]="#Other" [97]="#Other" [98]="#Other" [99]="#Other" )
 
 #Add notif_key style additional keys here, as needed for each notification service:
 KEY_INDEX+=("mast_lat" "mast_lon" "mast_last")
@@ -32,6 +32,8 @@ KEY_INDEX+=("mast_lat" "mast_lon" "mast_last")
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
 [[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=86400
+[[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
+[[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
@@ -61,29 +63,31 @@ do
     # - VESSEL_INDEX contains a list of all MMSIs
     # - KEY_INDEX contains a list of all keys
     # - VESSELS[$mmsi:$key] contains values for mmsi=$mmsi and key=$key
-    while read -r keyvalue
-    do
-        key="${keyvalue%%=*}"
-        value="${keyvalue#*=}"
-        if [[ "$key" == "mmsi" ]]
-        then
-            mmsi="$value"
-            [[ -n "$mmsi" ]] && VESSEL_INDEX+=("$mmsi")
-        fi
-        [[ ! " ${KEY_INDEX[*]} " =~ " ${key} " ]] && KEY_INDEX+=("${key}")
-        [[ -n "$mmsi" ]] && VESSELS["$mmsi:$key"]="$value"
 
-    done <<< "$(curl -sL "$AIS_URL/ships_full.json" | jq -r ".ships[]|to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")"
+    # Read VESSELS from the AIS_URL:
+    ships_json="$(curl -sSL $AIS_URL)"
+    eval "$(jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
+    # Add a last_updated field to all the newly entered or updated vessels:
+    eval "$(jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
+
+    # create the indices and clean up text
+    for keyvalue in ${!VESSELS[@]}
+    do
+        # add key to KEY_INDEX:
+        [[ -n "${keyvalue##*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue##*:} " ]] && KEY_INDEX+=("${keyvalue##*:}") || true
+        # add mmsi to VESSEL_INDEX:
+        [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]] && VESSEL_INDEX+=("${keyvalue%%:*}") || true
+        # if the key is "shipname" or "destination", then clean up the text to ensure hashtagging works
+        [[ "${keyvalue##*:}" ==  "shipname" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$keyvalue]}")"
+        [[ "${keyvalue##*:}" ==  "destination" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$keyvalue]}")"
+    done
 
     # Clean out the ones that are too old or that don't have enough messages:
     for vessel in "${VESSEL_INDEX[@]}"
     do
 
-        age="${VESSELS[${vessel}:last_signal]}"
-        count="${VESSELS[${vessel}:count]}"
-
-        [[ -z "$age" ]] && age=0
-        [[ -z $count ]] && count=$MIN_MSG_COUNT
+        [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
+        [[ -n "${VESSELS[${vessel}:count]}" ]] && count="${VESSELS[${vessel}:count]}" || count=$MIN_MSG_COUNT
 
         if [[ ! $age =~ ^[0-9]+$ ]] \
         || (( age > MAX_MSG_AGE )) \

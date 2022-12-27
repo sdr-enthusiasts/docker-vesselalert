@@ -1,28 +1,32 @@
 version: '3.8'
 services:
-  shipxplorer:
+  vesselalert:
     image: ghcr.io/sdr-enthusiasts/vesselalert
     container_name: vesselalert
     hostname: vesselalert
     restart: always
     environment:
+      # mandatory parameters:
       - AIS_URL=http://my.ais-catcher/website
+      - MASTODON_SERVER=airwaves.social
+      - MASTODON_ACCESS_TOKEN=my_mastodon_token
+      # optional parameters that you may want to set:
+      - MASTODON_SKIP_FILTER=
+      - MASTODON_MIN_DISTANCE=
+      - MASTODON_NOTIFY_EVERY=86400
+      - MASTODON_POST_VISIBILITY=public
+      - MASTODON_LINK_SHIPXPLORER=on
+      - MASTODON_LINK_MARINETRAFFIC=on
+      - MASTODON_LINK_VESSELFINDER=on
+      # optional parameters that you probably don't want to touch unless you really know what you are doing:
       - CHECK_INTERVAL=30
       - VESSELDBFILE=/data/vessel.db
       - VESSELDBLOCK=/run/vesseldb.lock
       - MIN_MSG_COUNT=5
       - MAX_MSG_AGE=86400
-      - MASTODON_SERVER=airwaves.social
-      - MASTODON_ACCESS_TOKEN=my_mastodon_token
-      - MASTODON_SKIP_FILTER
-      - MASTODON_MIN_DISTANCE=
-      - MASTODON_POST_VISIBILITY=public
-      - MASTODON_LINK_SHIPXPLORER=on
-      - MASTODON_LINK_MARINETRAFFIC=on
-      - MASTODON_LINK_VESSELFINDER=on
+      - DEBUG=
     tmpfs:
       - /tmp
-      - /run
     volumes:
       - /opt/ais/data:/data
       - "/etc/localtime:/etc/localtime:ro"
