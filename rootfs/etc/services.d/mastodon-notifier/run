@@ -28,6 +28,7 @@ MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 notification_count=0
+[[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=public
 [[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
@@ -131,24 +132,22 @@ do
             && [[ "$notify" != "false" ]] \
             && [[ -n "${VESSELS[$vessel:lat]}" ]] && [[ -n "${VESSELS[$vessel:lon]}" ]] \
             && [[ "${VESSELS[$vessel:lat]}" != "null" ]] && [[ "${VESSELS[$vessel:lon]}" != "null" ]] \
-            && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]]
+            && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]] \
+            && [[ "$(bc -l <<<"$(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") < $MASTODON_MIN_DIST")" == "1" ]]
         then
-            if [[ "$(bc -l <<<"($(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") >= $MASTODON_MIN_DIST)" )" == "1" ]]
-            then
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
-                notify="true"
-            else
-                [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") > allowed $MASTODON_MIN_DIST )"
-            fi
+            notify="false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify false based on distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") <= allowed $MASTODON_MIN_DIST )"
+        else
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) notify not affected by distance ( measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") vs. allowed $MASTODON_MIN_DIST )"
         fi
 
         # don't notify if it matches the Skip Filter
         if [[ -n "${MASTODON_SKIP_FILTER}" ]] && [[ "$notify" != "false" ]] && [[ ${VESSELS[$vessel:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
         then
             notify="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} -> skip filter not match or disabled or notify already set to false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) -> skip filter not match or disabled or notify already set to false"
         fi
 
         if [[ "$notify" == "true" ]]

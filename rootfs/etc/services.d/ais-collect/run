@@ -78,8 +78,8 @@ do
         # add mmsi to VESSEL_INDEX:
         [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]] && VESSEL_INDEX+=("${keyvalue%%:*}") || true
         # if the key is "shipname" or "destination", then clean up the text to ensure hashtagging works
-        [[ "${keyvalue##*:}" ==  "shipname" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$keyvalue]}")"
-        [[ "${keyvalue##*:}" ==  "destination" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$keyvalue]}")"
+        [[ "${keyvalue##*:}" ==  "shipname" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' -e 's|\.||g' <<< "${VESSELS[$keyvalue]}")"
+        [[ "${keyvalue##*:}" ==  "destination" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' -e 's|\.||g' <<< "${VESSELS[$keyvalue]}")"
     done
 
     # Clean out the ones that are too old or that don't have enough messages:
