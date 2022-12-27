@@ -195,7 +195,7 @@ do
 
             if [[ ! -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg" ]]
             then
-                if I ! curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o  "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
+                if ! curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o  "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
                 then
                     rm -f "$IMAGECACHE/${VESSELS[$vessel:mmsi]}.jpg"
                 fi
