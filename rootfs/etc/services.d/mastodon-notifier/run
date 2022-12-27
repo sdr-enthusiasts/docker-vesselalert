@@ -255,7 +255,7 @@ do
           declare -p VESSELS
           declare -p SHIPTYPE
         } > "$VESSELDBFILE" 2>/dev/null
-        unset notification_count
+        notification_count=0
     fi
 
     # Remove file block:
