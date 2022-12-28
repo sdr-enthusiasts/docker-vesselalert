@@ -190,8 +190,8 @@ do
         [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
 
-        [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will do a Mastodon notification"
-        [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will not do a Mastodon notification"
+        [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter)"
+        [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter)"
 
         if [[ -n "$notify_now" ]]
         then
