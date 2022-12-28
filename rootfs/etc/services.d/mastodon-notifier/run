@@ -143,7 +143,7 @@ do
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[$vessel:mast:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify_timing="false"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify based on timing (or MASTODON_NOTIFY_EVERY is off). (Last notification was $(( $(date +%s) - ${VESSELS[$vessel:mast:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify based on timing (or MASTODON_NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[$vessel:mast:last]}" && echo "$(( $(date +%s) - ${VESSELS[$vessel:mast:last]} )) secs ago" || echo "never"), minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify_timing="true"
         fi
 
