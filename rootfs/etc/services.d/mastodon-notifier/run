@@ -157,10 +157,16 @@ do
         then
             notify_distance="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) traveled distance too short - do not notify (measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") < allowed $MASTODON_MIN_DIST )"
-        else
+        elif [[ -n "${MASTODON_MIN_DIST}" ]] \
+            && [[ -n "${VESSELS[$vessel:lat]}" ]] && [[ -n "${VESSELS[$vessel:lon]}" ]] \
+            && [[ "${VESSELS[$vessel:lat]}" != "null" ]] && [[ "${VESSELS[$vessel:lon]}" != "null" ]] \
+            && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]]
+        then
             notify_distance="true"
-            [[ -n "$DEBUG" ]] && [[ -z "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify by distance: MASTODON_MIN_DIST not defined"
             [[ -n "$DEBUG" ]] && [[ -n "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify by distance: traveled distance far enough (measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") >= allowed $MASTODON_MIN_DIST )"
+        else
+            notify_distance="false"
+            [[ -n "$DEBUG" ]] && [[ -z "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) no need to notify by distance: MASTODON_MIN_DIST not defined"
         fi
 
         # dont notify if it matches the Skip Filter
@@ -169,15 +175,22 @@ do
         then
             notify_filter="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
+        elif [[ -n "${MASTODON_SKIP_FILTER}" ]]
+        then
+            notify_filter="true"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
         else
             notify_filter="true"
-            [[ -n "$DEBUG" ]] && [[ -z "${MASTODON_SKIP_FILTER}" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify: no MASTODON_SKIP_FILTER defined"
-            [[ -n "$DEBUG" ]] && [[ -n "${MASTODON_SKIP_FILTER}" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
         fi
 
-        if     [[ "$notify_timing" == "true" ]] \
-            || [[ "$notify_distance" == "true" ]] \
-            || [[ "$notify_filter" == "true" ]]
+        # Notification logic here for clarity:
+        unset notify_now
+        [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
+        [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
+        [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
+
+        if [[ -n "$notify_now" ]]
         then
             # we need to notify
             # First create notification string
