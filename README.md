@@ -73,3 +73,19 @@ Without the help, advice, testing, and kicking the tires of these people, things
 
 You can [log an issue](https://github.com/sdr-enthusiasts/docker-vesselalert/issues) on the project's GitHub.
 I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The #ais-catcher channel is appropriate for conversations about this package.
+
+## Summary of License Terms
+Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
