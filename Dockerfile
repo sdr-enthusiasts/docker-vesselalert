@@ -43,7 +43,7 @@ COPY rootfs/ /
 RUN set -x && \
 pushd /tmp && \
     git clone --depth=1 https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
-    cd docker-shipxplorer && \
+    cd docker-vesselalert && \
     branch="##BRANCH##" && \
     [[ ! "${branch:0:1}" == "#" ]] && git checkout "$branch" || true && \
     echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION && \
