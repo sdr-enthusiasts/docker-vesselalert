@@ -192,7 +192,7 @@ do
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:country]}" ]] && mast_str+="#Flag: #${VESSELS[$vessel:country]} "
-            mast_str+="Last seen: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
+            mast_str+="Seen: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:speed]}" ]] && [[ "${VESSELS[$vessel:speed]}" != "0" ]] && [[ "${VESSELS[$vessel:speed]}" != "null" ]] && mast_str+="Speed: ${VESSELS[$vessel:speed]} kts "
