@@ -29,7 +29,7 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 
 APPNAME="$(hostname)/ais-collect"
 echo "[$(date)][$APPNAME] Started as an s6 service"
-echo "[$(date)][$APPNAME] DEBUG=$DEBUG"
+[[ -n "$DEBUG" ]] && echo "[$(date)][$APPNAME] DEBUG=ON" || echo "[$(date)][$APPNAME] DEBUG=OFF"
 
 declare -A VESSELS
 declare -a VESSEL_INDEX
