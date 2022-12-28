@@ -101,6 +101,8 @@ do
 
         [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
         [[ -n "${VESSELS[${vessel}:count]}" ]] && count="${VESSELS[${vessel}:count]}" || count=$MIN_MSG_COUNT
+        (( count < MIN_MSG_COUNT )) && [[ -n "${VESSELS[${vessel}:min_count_exceeded]}" ]] && count=$MIN_MSG_COUNT 
+        (( count >= MIN_MSG_COUNT )) && VESSELS[${vessel}:min_count_exceeded]="true"
 
         if [[ ! $age =~ ^[0-9]+$ ]] \
         || (( age > MAX_MSG_AGE )) \
