@@ -282,6 +282,13 @@ do
             [[ -n "$DEBUG" ]] && echo "updated VESSELS[$mmsi]"
             # Increment notification count
             (( notification_count++ )) || true
+
+            if [[ -n "$MASTODON_THROTTLE" ]] && [[ "$(bc <<< "$notification_count%10")" == "0" ]]
+            then
+                # we need to throttle - let's wait 15 seconds
+                [[ -n "$DEBUG" ]] && echo "Notification Count is $notification_count; throttling for 15 seconds"
+                sleep 15
+            fi
         fi
     done
 

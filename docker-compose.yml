@@ -19,6 +19,7 @@ services:
       - MASTODON_LINK_SHIPXPLORER=on
       - MASTODON_LINK_MARINETRAFFIC=on
       - MASTODON_LINK_VESSELFINDER=on
+      - MASTODON_THROTTLE=on
       # optional parameters that you probably don't want to touch unless you really know what you are doing:
       - CHECK_INTERVAL=30
       - VESSELDBFILE=/data/vessel.db
