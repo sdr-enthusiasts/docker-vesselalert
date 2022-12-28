@@ -30,14 +30,6 @@ then
     sleep infinity
 fi
 
-if [[ ! $MASTODON_MIN_DIST =~ ^[0-9.]+$ ]]
-then
-    echo "[$(date)][$APPNAME] FATAL: MASTODON_MIN_DIST is set to \"$MASTODON_MIN_DIST\"; expecting a distance in Nautical Miles."
-    echo "[$(date)][$APPNAME]        Please correct and restart the container. (Note - removal will default this parameter to 0.)"
-    echo "[$(date)][$APPNAME] Container execution is HALTED."
-    sleep infinity
-fi
-
 AIS_URL="${AIS_URL,,}"
 if [[ "${AIS_URL:0:4}" != "http" ]]
 then
@@ -48,7 +40,7 @@ then
     sleep infinity
 fi
 
-if [[ -n "$MASTODON" ]] && { [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]] ;}
+if  [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]]
 then
     [[ -z "$MASTODON_ACCESS_TOKEN" ]] && echo -n "FATAL: MASTODON_ACCESS_TOKEN not defined. You must create an application in your Mastodon account"
     [[ -z "$MASTODON_SERVER" ]] && echo -n "FATAL: MASTODON_SERVER not defined. You must create an application in your Mastodon account"

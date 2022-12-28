@@ -47,6 +47,11 @@ notification_count=0
 # [[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
+if [[ -z "$MASTODON_MIN_DIST" ]] || [[ "$MASTODON_MIN_DIST" == "0" ]]
+then
+    unset MASTODON_MIN_DIST
+fi
+
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
