@@ -153,7 +153,7 @@ do
             && [[ -n "${VESSELS[$vessel:lat]}" ]] && [[ -n "${VESSELS[$vessel:lon]}" ]] \
             && [[ "${VESSELS[$vessel:lat]}" != "null" ]] && [[ "${VESSELS[$vessel:lon]}" != "null" ]] \
             && [[ -n "${VESSELS[$vessel:mast:lat]}" ]] && [[ -n "${VESSELS[$vessel:mast:lon]}" ]] \
-            && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[$vessel:mast:lat]} ${VESSELS[$vessel:mast:lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) < $MASTODON_MIN_DIST")" == "1" ]]
+            && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[$vessel:mast:lat]} ${VESSELS[$vessel:mast:lon]} ${VESSELS[$vessel:lat]} ${VESSELS[$vessel:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) traveled distance too short - do not notify (measured $(distance "${VESSELS[$vessel:mast:lat]}" "${VESSELS[$vessel:mast:lon]}" "${VESSELS[$vessel:lat]}" "${VESSELS[$vessel:lon]}") < allowed $MASTODON_MIN_DIST )"
@@ -189,6 +189,9 @@ do
         [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
         [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
+
+        [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will do a Mastodon notification"
+        [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) Final result: Will not do a Mastodon notification"
 
         if [[ -n "$notify_now" ]]
         then
