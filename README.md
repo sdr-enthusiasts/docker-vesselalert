@@ -45,7 +45,7 @@ There are a series of available environment variables:
 | `MASTODON_SERVER` | Name (URL) of the Mastodon Server | `airwaves.social` | no |
 | `MASTODON_ACCESS_TOKEN` | The access token of the Mastodon Application you are using. See above for instructions. | empty | yes |
 | `MASTODON_SKIP_FILTER` | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. | empty | no |
-| `MASTODON_MIN_DISTANCE` | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
+| `MASTODON_MIN_DIST` | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `MASTODON_NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
 | `MASTODON_POST_VISIBILITY` | `visibility` setting for the Mastodon notification. Valid values are `public`, `unlisted`, and `private`. | `public` | no |
 | `MASTODON_CUSTOM_FIELD` | Custom field attached to the end of the Mastodon notification. Please keep it short and clear-text only. | empty | no |

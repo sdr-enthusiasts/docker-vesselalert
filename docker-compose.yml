@@ -12,7 +12,7 @@ services:
       - MASTODON_ACCESS_TOKEN=my_mastodon_token
       # optional parameters that you may want to set:
       - MASTODON_SKIP_FILTER=
-      - MASTODON_MIN_DISTANCE=
+      - MASTODON_MIN_DIST=
       - MASTODON_NOTIFY_EVERY=86400
       - MASTODON_CUSTOM_FIELD=
       - MASTODON_POST_VISIBILITY=public
