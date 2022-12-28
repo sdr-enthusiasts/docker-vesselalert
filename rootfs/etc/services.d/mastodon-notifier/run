@@ -183,10 +183,10 @@ do
         elif [[ -n "${MASTODON_SKIP_FILTER}" ]]
         then
             notify_filter="true"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
         else
             notify_filter="true"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
         fi
 
         # Notification logic here for clarity:
