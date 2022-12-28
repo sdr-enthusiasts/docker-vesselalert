@@ -48,6 +48,7 @@ There are a series of available environment variables:
 | `MASTODON_MIN_DISTANCE` | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `MASTODON_NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
 | `MASTODON_POST_VISIBILITY` | `visibility` setting for the Mastodon notification. Valid values are `public`, `unlisted`, and `private`. | `public` | no |
+| `MASTODON_CUSTOM_FIELD` | Custom field attached to the end of the Mastodon notification. Please keep it short and clear-text only. | empty | no |
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
