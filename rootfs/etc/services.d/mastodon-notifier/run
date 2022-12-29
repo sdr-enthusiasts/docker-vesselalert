@@ -227,7 +227,7 @@ do
 
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
             [[ -n "$links" ]] && mast_str+="\n$links"
-            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
+            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$(eval echo "$MASTODON_CUSTOM_FIELD")"
 
             mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
 
