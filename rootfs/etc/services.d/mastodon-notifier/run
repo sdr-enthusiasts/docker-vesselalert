@@ -226,8 +226,11 @@ do
             mast_str+="\n"
 
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
-            [[ -n "$links" ]] && mast_str+="\n$links"
-            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$(eval echo "$MASTODON_CUSTOM_FIELD")"
+            [[ -n "${links}" ]] && mast_str+="${links}\n"
+            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\n${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
+            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
+
+            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$(eval echo $MASTODON_CUSTOM_FIELD)"
 
             mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
 

@@ -19,6 +19,7 @@ services:
       - MASTODON_LINK_SHIPXPLORER=on
       - MASTODON_LINK_MARINETRAFFIC=on
       - MASTODON_LINK_VESSELFINDER=on
+      - MASTODON_MAPURL=
       - MASTODON_THROTTLE=on
       - MASTODON_ONLY_NEW_ON_STARTUP=on
       # optional parameters that you probably don't want to touch unless you really know what you are doing:
