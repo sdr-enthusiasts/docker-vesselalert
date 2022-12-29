@@ -87,7 +87,7 @@ do
     for keyvalue in ${!VESSELS[@]}
     do
         # add key to KEY_INDEX:
-        [[ -n "${keyvalue##*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue##*:} " ]] && KEY_INDEX+=("${keyvalue##*:}") || true
+        [[ -n "${keyvalue#*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue#*:} " ]] && KEY_INDEX+=("${keyvalue#*:}") || true
         # add mmsi to VESSEL_INDEX:
         [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]] && VESSEL_INDEX+=("${keyvalue%%:*}") || true
         # if the key is "shipname" or "destination", then clean up the text to ensure hashtagging works
@@ -143,8 +143,7 @@ do
         declare -p KEY_INDEX
         declare -p VESSEL_INDEX
         declare -p VESSELS
-        declare -p SHIPTYPE
-    } > "$VESSELDBFILE" 2>/dev/null
+        declare -p SHIPTYPE ;} > "$VESSELDBFILE"
 
     [[ -n "$DEBUG" ]] && echo "wrote back to file"
     rm -f "$VESSELDBLOCK"
