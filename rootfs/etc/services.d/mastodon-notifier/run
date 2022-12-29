@@ -211,18 +211,18 @@ do
 
             mast_str="#VesselAlert #Ship #Vessel #AIS\n"
             [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
-            [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]} "
-            [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Call: #${VESSELS[$vessel:callsign]} "
+            [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]}\n"
+            [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$vessel:callsign]} "
             [[ -n "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:country]}" ]] && mast_str+="#Flag: #${VESSELS[$vessel:country]} "
-            mast_str+="Seen: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
+            mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:speed]}" ]] && [[ "${VESSELS[$vessel:speed]}" != "0" ]] && [[ "${VESSELS[$vessel:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$vessel:speed]}") kts "
-            [[ -n "${VESSELS[$vessel:heading]}" ]] && [[ "${VESSELS[$vessel:heading]}" != "0" ]] && [[ "${VESSELS[$vessel:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$vessel:heading]} deg "
-            [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
+            [[ -n "${VESSELS[$vessel:heading]}" ]] && [[ "${VESSELS[$vessel:heading]}" != "0" ]] && [[ "${VESSELS[$vessel:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$vessel:heading]} deg"
+            [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")\n"
             mast_str+="\n"
 
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
