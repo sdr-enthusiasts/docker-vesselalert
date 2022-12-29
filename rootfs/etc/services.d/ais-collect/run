@@ -122,7 +122,9 @@ do
         if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \
             && [[ ! -f /data/container_has_run_before ]]
         then
-            VESSELS[${vessel}:mast:last]="$(date +%s)"
+            spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
+	    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
+            VESSELS[${vessel}:mast:last]="$(( $(date +%s) + adjust ))"
         fi
 
         # while we are at it, clean up the vessel neam and destination:
