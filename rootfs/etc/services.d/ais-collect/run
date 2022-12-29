@@ -101,27 +101,41 @@ do
 
         [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
         [[ -n "${VESSELS[${vessel}:count]}" ]] && count="${VESSELS[${vessel}:count]}" || count=$MIN_MSG_COUNT
-        (( count < MIN_MSG_COUNT )) && [[ -n "${VESSELS[${vessel}:min_count_exceeded]}" ]] && count=$MIN_MSG_COUNT 
+        (( count < MIN_MSG_COUNT )) && [[ -n "${VESSELS[${vessel}:min_count_exceeded]}" ]] && count=$MIN_MSG_COUNT
         (( count >= MIN_MSG_COUNT )) && VESSELS[${vessel}:min_count_exceeded]="true"
 
-        if [[ ! $age =~ ^[0-9]+$ ]] \
-        || (( age > MAX_MSG_AGE )) \
-        || (( count < MIN_MSG_COUNT ))
+        if     [[ ! $age =~ ^[0-9]+$ ]] \
+            || (( age > MAX_MSG_AGE )) \
+            || (( count < MIN_MSG_COUNT ))
         then
             [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( count < MIN_MSG_COUNT )) && echo true || echo false)"
             for key in "${KEY_INDEX[@]}"
             do
                 unset "VESSELS[${vessel}:${key}]"
             done
-        # else
-        #    [[ -n "$DEBUG" ]] && echo "kept ${vessel}"
+        fi
+
+        # Make sure that no notifications will be sent if MASTODON_ONLY_NEW_ON_STARTUP is set and this is the first run ever:
+        # Note -- this code has cross-contamination from the Mastodon-Notifier and will need to be updated if new
+        # notification media are added. This is unfortunate but to avoid it means adding a LOT more logic.
+        # If the criteria are met, we will tag the last notification time to the current time, so it won't renotify until much later.
+        if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \
+            && [[ ! -f /data/container_has_run_before ]]
+        then
+            VESSELS[${vessel}:mast:last]="$(date +%s)"
         fi
 
         # while we are at it, clean up the vessel neam and destination:
-        [[ -n "${VESSELS[$vessel:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
-        [[ -n "${VESSELS[$vessel:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
-
+        [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
+        [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
     done
+
+    if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \
+        && [[ ! -f /data/container_has_run_before ]]
+    then
+        touch /data/container_has_run_before
+        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and MASTODON_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:mast:last]}"
+    fi
 
     # Write back to file
     # Write back to file
@@ -132,7 +146,7 @@ do
         declare -p SHIPTYPE
     } > "$VESSELDBFILE" 2>/dev/null
 
-    [[ -n "$DEBUG" ]] && echo wrote back to file
+    [[ -n "$DEBUG" ]] && echo "wrote back to file"
     rm -f "$VESSELDBLOCK"
 
     sleep $CHECK_INTERVAL
