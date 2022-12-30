@@ -230,7 +230,7 @@ do
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\n${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
 
-            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$(eval echo $MASTODON_CUSTOM_FIELD)"
+            [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
 
             mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
 
