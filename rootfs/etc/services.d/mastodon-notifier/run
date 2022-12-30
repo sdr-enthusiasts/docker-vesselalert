@@ -205,9 +205,9 @@ do
             # These are the valid fields:
             # mmsi lat lon distance mmsi_type level count ppm heading cog speed to_bow to_stern to_starboard to_port shiptype msg_type country status callsign shipname destination last_signal mast:lat mast:lon mast:last
             links=""
-            [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$vessel:mmsi]} " || true
-            [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$vessel:mmsi]} " || true
-            [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]} " || true
+            [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$vessel:mmsi]}\n" || true
+            [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$vessel:mmsi]}\n" || true
+            [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]}\n" || true
 
             mast_str="#VesselAlert #Ship #Vessel #AIS"
 						[[ -z "${VESSELS[$vessel:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
