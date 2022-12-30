@@ -223,6 +223,7 @@ do
             mast_str+="Msgs recvd: ${VESSELS[$vessel:count]}\n"
             mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
+            [[ -n "${VESSELS[$vessel:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$vessel:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[$vessel:status]}]}\n"
             [[ -n "${VESSELS[$vessel:speed]}" ]] && [[ "${VESSELS[$vessel:speed]}" != "0" ]] && [[ "${VESSELS[$vessel:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$vessel:speed]}") kts "
             [[ -n "${VESSELS[$vessel:heading]}" ]] && [[ "${VESSELS[$vessel:heading]}" != "0" ]] && [[ "${VESSELS[$vessel:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$vessel:heading]} deg"
             [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")\n"
@@ -309,11 +310,11 @@ do
     then
         # Write back to file
         {
-          declare -p KEY_INDEX
-          declare -p VESSEL_INDEX
-          declare -p VESSELS
-          declare -p SHIPTYPE
-        } > "$VESSELDBFILE" 2>/dev/null
+            declare -p KEY_INDEX
+            declare -p VESSEL_INDEX
+            declare -p VESSELS
+            declare -p SHIPTYPE
+            declare -p SHIPSTATUS ;} > "$VESSELDBFILE" 2>/dev/null
         notification_count=0
     fi
 

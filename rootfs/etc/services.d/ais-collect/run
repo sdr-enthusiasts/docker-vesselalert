@@ -35,11 +35,6 @@ declare -A VESSELS
 declare -a VESSEL_INDEX
 declare -a KEY_INDEX
 
-declare -A SHIPTYPE=([0]="" [1]="" [2]="" [3]="" [4]="" [5]="" [6]="" [7]="" [8]="" [9]="" [10]="" [11]="" [12]="" [13]="" [14]="" [15]="" [16]="" [17]="" [18]="" [19]="" [20]="#WIG (Wing in ground)" [21]="#WIG #Hazard cat A" [22]="#WIG #Hazard cat B" [23]="#WIG #Hazard cat B" [24]="#WIG #Hazard cat D" [25]="#WIG" [26]="#WIG" [27]="#WIG" [28]="#WIG" [29]="#WIG" [30]="#Fishing" [31]="#Towing" [32]="#Towing (Large)" [33]="#Dredging" [34]="#Diving" [35]="#Military #Mil" [36]="#Sailing" [37]="#Pleasure Craft" [38]="" [39]="" [40]="#HiSpeed" [41]="#HiSpeed" [42]="#HiSpeed" [43]="#HiSpeed" [44]="#HiSpeed" [45]="#HiSpeed" [46]="#HiSpeed" [47]="#HiSpeed" [48]="#HiSpeed" [49]="#HiSpeed" [50]="#Pilot vessel" [51]="#SAR" [52]="#Tug" [53]="#Port_Tender" [54]="#Anti_Pollution" [55]="#Law #Enforcement" [56]="#Local vessel" [57]="#Local vessel" [58]="#Medical pransport" [59]="#Special vessel" [60]="#Passenger vessel" [61]="#Passenger vessel" [62]="#Passenger vessel" [63]="#Passenger vessel" [64]="#Passenger vessel" [65]="#Passenger vessel" [66]="#Passenger vessel" [67]="#Passenger vessel" [68]="#Passenger vessel" [69]="#Passenger vessel" [70]="#Cargo" [71]="#Cargo #Hazard cat A" [72]="#Cargo #Hazard cat B" [73]="#Cargo #Hazard cat C" [74]="#Cargo #Hazard cat D" [75]="#Cargo" [76]="#Cargo" [77]="#Cargo" [78]="#Cargo" [79]="#Cargo" [80]="#Tanker" [81]="#Tanker #Hazard cat A" [82]="#Tanker #Hazard cat B" [83]="#Tanker #Hazard cat C" [84]="#Tanker" [85]="#Tanker" [86]="#Tanker" [87]="#Tanker" [88]="#Tanker" [89]="#Tanker" [90]="#Tanker" [91]="" [92]="" [93]="" [94]="" [95]="" [96]="" [97]="" [98]="" [99]="" )
-
-#Add notif_key style additional keys here, as needed for each notification service:
-KEY_INDEX+=("mast_lat" "mast_lon" "mast_last")
-
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
@@ -68,6 +63,7 @@ do
         [[ -n "$DEBUG" ]] && echo reading VESSELS dict from file || true
         source "$VESSELDBFILE"
     fi
+
 
     # Now update it with the ones from the AIS_URL website.
     # The curl ... | jq ... command below creates a vertical list of key=value strings
@@ -140,12 +136,12 @@ do
     fi
 
     # Write back to file
-    # Write back to file
     {
         declare -p KEY_INDEX
         declare -p VESSEL_INDEX
         declare -p VESSELS
-        declare -p SHIPTYPE ;} > "$VESSELDBFILE"
+        declare -p SHIPTYPE
+        declare -p SHIPSTATUS ;} > "$VESSELDBFILE"
 
     [[ -n "$DEBUG" ]] && echo "wrote back to file"
     rm -f "$VESSELDBLOCK"
