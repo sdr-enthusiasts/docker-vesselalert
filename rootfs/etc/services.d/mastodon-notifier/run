@@ -225,7 +225,7 @@ do
             [[ -n "${VESSELS[$vessel:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")\n"
             mast_str+="\n"
 
-            mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")"
+            mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")\n"
             [[ -n "${links}" ]] && mast_str+="${links}\n"
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\n${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
