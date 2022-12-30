@@ -217,8 +217,8 @@ do
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:country]}" ]] && mast_str+="#Flag: #${VESSELS[$vessel:country]} "
-            mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z") Msgs recvd: ${VESSELS[$vessel:count]}"
-            mast_str+="\n"
+            mast_str+="Msgs recvd: ${VESSELS[$vessel:count]}\n"
+            mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$vessel:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
             [[ -n "${VESSELS[$vessel:speed]}" ]] && [[ "${VESSELS[$vessel:speed]}" != "0" ]] && [[ "${VESSELS[$vessel:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$vessel:speed]}") kts "
             [[ -n "${VESSELS[$vessel:heading]}" ]] && [[ "${VESSELS[$vessel:heading]}" != "0" ]] && [[ "${VESSELS[$vessel:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$vessel:heading]} deg"
@@ -228,7 +228,7 @@ do
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")\n"
             [[ -n "${links}" ]] && mast_str+="${links}\n"
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\n${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
-            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
+            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\nStation map: ${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
 
             [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
 
