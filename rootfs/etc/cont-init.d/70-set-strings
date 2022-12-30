@@ -29,6 +29,8 @@ then
     source "$VESSELDBFILE"
 fi
 
+# Both for SHIPTYPE and SHIPSTATUS -- comment out those values that you do not want to see appear in notifications
+# This is mostly for "Not Available", "Reserved", etc.
 unset SHIPTYPE
 declare -A SHIPTYPE
 #SHIPTYPE[0]="Not Available"
@@ -138,7 +140,7 @@ SHIPSTATUS[0]="#under_way_using_engine"
 SHIPSTATUS[1]="#anchored"
 SHIPSTATUS[2]="#not_under_command "
 SHIPSTATUS[3]="#restricted_maneuverability"
-SHIPSTATUS[4]="#draught_constrainedc"
+SHIPSTATUS[4]="#draught_constrained"
 SHIPSTATUS[5]="#moored"
 SHIPSTATUS[6]="#aground "
 SHIPSTATUS[7]="#fishing"
@@ -150,6 +152,11 @@ SHIPSTATUS[12]="#tow_pushing"
 #SHIPSTATUS[13]="reserved for future use"
 SHIPSTATUS[14]="#AIS-SART #MOB-AIS #EPIRB-AIS"
 #SHIPSTATUS[15]="undefined = default (also used by AIS-SART, MOB-AIS and EPIRB-AIS under test)"
+
+# Make sure the other arrays have been declared if they don't already exist:
+! declare -p VESSELS >/dev/null 2>&1 && declare -A VESSELS || true
+! declare -p KEY_INDEX >/dev/null 2>&1 && declare -a KEY_INDEX || true
+! declare -p VESSEL_INDEX >/dev/null 2>&1 && declare -a VESSEL_INDEX || true
 
 # write back to file
 {
