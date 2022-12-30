@@ -44,7 +44,7 @@ There are a series of available environment variables:
 | `AIS_URL` | Indicates the URL of the AIS-Catcher website. For example, `https://myserver.com/ais` | empty | yes |
 | `MASTODON_SERVER` | Name (URL) of the Mastodon Server | `airwaves.social` | no |
 | `MASTODON_ACCESS_TOKEN` | The access token of the Mastodon Application you are using. See above for instructions. | empty | yes |
-| `MASTODON_SKIP_FILTER` | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. | empty | no |
+| `MASTODON_SKIP_FILTER` | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. An example of a filter that filters out MMSIs that are 7 digits (too short), and any navigational aids (MMSI starts with 99) is `MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$|^[0-9]{7}$`| empty | no |
 | `MASTODON_MIN_DIST` | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `MASTODON_NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
 | `MASTODON_POST_VISIBILITY` | `visibility` setting for the Mastodon notification. Valid values are `public`, `unlisted`, and `private`. | `public` | no |
