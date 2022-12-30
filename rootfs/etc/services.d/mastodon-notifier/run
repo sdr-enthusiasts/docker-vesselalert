@@ -210,6 +210,7 @@ do
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]} " || true
 
             mast_str="#VesselAlert #Ship #Vessel #AIS\n"
+						[[ -z "${VESSELS[$vessel:mast:last]}" ]] && mast_str+="#NEW #FIRST Observation\n"
             [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
             [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]}\n"
             [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$vessel:callsign]} "
