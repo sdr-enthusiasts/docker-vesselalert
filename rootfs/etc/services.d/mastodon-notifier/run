@@ -209,9 +209,11 @@ do
             [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$vessel:mmsi]} " || true
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$vessel:mmsi]} " || true
 
-            mast_str="#VesselAlert #Ship #Vessel #AIS\n"
-						[[ -z "${VESSELS[$vessel:mast:last]}" ]] && mast_str+="#NEW #FIRST Observation\n"
-            [[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
+            mast_str="#VesselAlert #Ship #Vessel #AIS"
+						[[ -z "${VESSELS[$vessel:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
+            [[ "$notify_distance" == "true" ]] && mast_str+=" #OnTheMove"
+						mast_str+="\n"
+						[[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
             [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]}\n"
             [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$vessel:callsign]} "
             [[ -n "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
