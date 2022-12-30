@@ -276,7 +276,7 @@ do
             then
                 echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs). "
 								 [[ -z "${VESSELS[$vessel:mast:last]}" ]] && echo -n "#NEW "
-								 [[ "$notify_timing" == "true" ]] && echo -n "#OLD "
+								 [[ "$notify_timing" == "true" ]] && [[ -n "${VESSELS[$vessel:mast:last]}" ]] && echo -n "#OLD "
 								 [[ "$notify_distance" == "true" ]] && echo -n "#ONTHEMOVE"
 								 echo ""
             else
