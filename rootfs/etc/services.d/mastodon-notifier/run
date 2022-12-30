@@ -216,7 +216,7 @@ do
 						[[ -n "${VESSELS[$vessel:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}") "
             [[ -n "${VESSELS[$vessel:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$vessel:mmsi]}\n"
             [[ -n "${VESSELS[$vessel:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$vessel:callsign]} "
-            [[ -n "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
+            [[ -n "${VESSELS[$vessel:shiptype],,}" != "not available" ]] && [[ "${VESSELS[$vessel:shiptype]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$vessel:shiptype]}]}"
             mast_str+="\n"
 
             [[ -n "${VESSELS[$vessel:country]}" ]] && mast_str+="#Flag: #${VESSELS[$vessel:country]} "
