@@ -230,7 +230,7 @@ do
 
             mast_str+="#Signal (#RSSI): $(printf "%.1f dBFS" "${VESSELS[$vessel:level]}")\n"
             [[ -n "${links}" ]] && mast_str+="${links}\n"
-            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\n${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
+            [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\nVessel location: ${AIS_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
             [[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\nVessel location: ${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$vessel:mmsi]}"
 
             [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
@@ -274,7 +274,11 @@ do
             # check if there was an error
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
-                echo "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs)"
+                echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs). "
+								 [[ -z "${VESSELS[$vessel:mast:last]}" ]] && echo -n "#NEW "
+								 [[ "$notify_timing" == "true" ]] && echo -n "#OLD "
+								 [[ "$notify_distance" == "true" ]] && echo -n "#ONTHEMOVE"
+								 echo ""
             else
                 echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}). Mastodon returned this error: $(jq '.error' <<< "$response"|xargs)"
             fi
