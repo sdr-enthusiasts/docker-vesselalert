@@ -58,7 +58,7 @@ mkdir -p "${IMAGECACHE}/screenshots"
 CHECK_INTERVAL="$(bc -l <<<"scale=0; x=$RANDOM % 50; scale=1; $CHECK_INTERVAL + x/10")"
 
 # Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
-sleep $CHECK_INTERVAL
+sleep "$CHECK_INTERVAL"
 
 # Define some functions to calculate distance between coordinates using Haversine:
 deg2rad () {
@@ -137,8 +137,8 @@ do
 
         # based on timing:
         if     [[ -n "$MASTODON_NOTIFY_EVERY" ]] \
-            && [[ -n "${VESSELS[${vessel}:mast:last]}" ]] \
-            && (( $(date +%s) <= ${VESSELS[${vessel}:mast:last]} + MASTODON_NOTIFY_EVERY ))
+        && [[ -n "${VESSELS[${vessel}:mast:last]}" ]] \
+        && (( $(date +%s) <= ${VESSELS[${vessel}:mast:last]} + MASTODON_NOTIFY_EVERY ))
         then
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:mast:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify_timing="false"
@@ -150,17 +150,17 @@ do
         # based on distance from last notification:
         #shellcheck disable=SC2086
         if     [[ -n "${MASTODON_MIN_DIST}" ]] \
-            && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
-            && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
-            && [[ -n "${VESSELS[${vessel}:mast:lat]}" ]] && [[ -n "${VESSELS[${vessel}:mast:lon]}" ]] \
-            && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[${vessel}:mast:lat]} ${VESSELS[${vessel}:mast:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
+        && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
+        && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
+        && [[ -n "${VESSELS[${vessel}:mast:lat]}" ]] && [[ -n "${VESSELS[${vessel}:mast:lon]}" ]] \
+        && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[${vessel}:mast:lat]} ${VESSELS[${vessel}:mast:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(distance "${VESSELS[${vessel}:mast:lat]}" "${VESSELS[${vessel}:mast:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $MASTODON_MIN_DIST )"
         elif [[ -n "${MASTODON_MIN_DIST}" ]] \
-            && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
-            && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
-            && [[ -n "${VESSELS[${vessel}:mast:lat]}" ]] && [[ -n "${VESSELS[${vessel}:mast:lon]}" ]]
+        && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
+        && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
+        && [[ -n "${VESSELS[${vessel}:mast:lat]}" ]] && [[ -n "${VESSELS[${vessel}:mast:lon]}" ]]
         then
             notify_distance="true"
             [[ -n "$DEBUG" ]] && [[ -n "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(distance "${VESSELS[${vessel}:mast:lat]}" "${VESSELS[${vessel}:mast:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $MASTODON_MIN_DIST )"
@@ -171,7 +171,7 @@ do
 
         # dont notify if it matches the Skip Filter
         if     [[ -n "${MASTODON_SKIP_FILTER}" ]] \
-            && [[ ${VESSELS[${vessel}:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
+        && [[ ${VESSELS[${vessel}:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
         then
             notify_filter="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
@@ -184,20 +184,23 @@ do
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
         fi
 
-	# check once more the min_msg_count. Too few messages means the screenshot won't be complete and it'd be better to wait
-	if [[ ! ${VESSELS[${vessel}:count]}  =~ ^[0-9]+$ ]] || (( ${VESSELS[${vessel}:count]} < MIN_MSG_COUNT ))
-	then
-		notify_count="false"
-	else
-		notify_count="true"
-	fi
+        # check once more the min_msg_count. Too few messages means the screenshot won't be complete and it'd be better to wait
+        if [[ ! ${VESSELS[${vessel}:count]}  =~ ^[0-9]+$ ]] || (( ${VESSELS[${vessel}:count]} < MIN_MSG_COUNT ))
+        then
+            notify_count="false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"
+        else
+            notify_count="true"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
+
+        fi
 
         # Notification logic here for clarity:
         unset notify_now
         [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
         [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
-	[[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
+        [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
 
         [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
         [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
@@ -214,10 +217,10 @@ do
             [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[${vessel}:mmsi]}\n" || true
 
             mast_str="#VesselAlert #Ship #Vessel #AIS"
-						[[ -z "${VESSELS[${vessel}:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
+            [[ -z "${VESSELS[${vessel}:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
             [[ "$notify_distance" == "true" ]] && mast_str+=" #OnTheMove"
-						mast_str+="\n"
-						[[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[${vessel}:shipname]}") "
+            mast_str+="\n"
+            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[${vessel}:shipname]}") "
             [[ -n "${VESSELS[${vessel}:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[${vessel}:mmsi]}\n"
             [[ -n "${VESSELS[${vessel}:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[${vessel}:callsign]} "
             [[ -n "${VESSELS[${vessel}:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}"
@@ -273,19 +276,19 @@ do
                 echo "[$(date)][$APPNAME] no image available for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
 
-	    if [[ -n "$SCREENSHOT_URL" ]]
-	    then
-		# get a screenshot
-                rm -f /${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg
-		if curl -sSL "$SCREENSHOT_URL/snap/${VESSELS[${vessel}:mmsi]}" -o /${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg
-		then
-			response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg")"
-                	[[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
-                	[[ -n "${mast_id}" ]] && media_id+=" -F media_ids[]=${mast_id}"
-                	echo "[$(date)][$APPNAME] screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) uploaded to Mastodon with ID ${mast_id}"
-		else
-			echo "[$(date)][$APPNAME] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) upload to Mastodon"
-		fi
+            if [[ -n "$SCREENSHOT_URL" ]]
+            then
+                # get a screenshot
+                rm -f "/${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg"
+                if curl -sSL "$SCREENSHOT_URL/snap/${VESSELS[${vessel}:mmsi]}" -o "${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg"
+                then
+                    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg")"
+                    [[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
+                    [[ -n "${mast_id}" ]] && media_id+=" -F media_ids[]=${mast_id}"
+                    echo "[$(date)][$APPNAME] screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) uploaded to Mastodon with ID ${mast_id}"
+                else
+                    echo "[$(date)][$APPNAME] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) upload to Mastodon"
+                fi
             else
                 echo "[$(date)][$APPNAME] no screenshot available for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
@@ -297,10 +300,10 @@ do
             if [[ "$(jq '.error' <<< "$response"|xargs)" == "null" ]]
             then
                 echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "$response"|xargs). "
-								 [[ -z "${VESSELS[${vessel}:mast:last]}" ]] && echo -n "#NEW "
-								 [[ "$notify_timing" == "true" ]] && [[ -n "${VESSELS[${vessel}:mast:last]}" ]] && echo -n "#OLD "
-								 [[ "$notify_distance" == "true" ]] && echo -n "#ONTHEMOVE"
-								 echo ""
+                [[ -z "${VESSELS[${vessel}:mast:last]}" ]] && echo -n "#NEW "
+                [[ "$notify_timing" == "true" ]] && [[ -n "${VESSELS[${vessel}:mast:last]}" ]] && echo -n "#OLD "
+                [[ "$notify_distance" == "true" ]] && echo -n "#ONTHEMOVE"
+                echo ""
             else
                 echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}). Mastodon returned this error: $(jq '.error' <<< "$response"|xargs)"
             fi
@@ -336,13 +339,13 @@ do
             declare -p VESSELS
             declare -p SHIPTYPE
             declare -p SHIPSTATUS ;} > "$VESSELDBFILE" 2>/dev/null
-        notification_count=0
-    fi
+            notification_count=0
+        fi
 
-    # Remove file block:
-    rm -f "$VESSELDBLOCK"
+        # Remove file block:
+        rm -f "$VESSELDBLOCK"
 
-    # Sleep a bit
-    sleep $CHECK_INTERVAL
+        # Sleep a bit
+        sleep "$CHECK_INTERVAL"
 
-done
+    done
