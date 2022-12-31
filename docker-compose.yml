@@ -22,6 +22,7 @@ services:
       - MASTODON_MAPURL=
       - MASTODON_THROTTLE=on
       - MASTODON_ONLY_NEW_ON_STARTUP=on
+      - SCREENSHOT_URL=http://ais-screenshot:5042
       # optional parameters that you probably don't want to touch unless you really know what you are doing:
       - CHECK_INTERVAL=30
       - VESSELDBFILE=/data/vessel.db
