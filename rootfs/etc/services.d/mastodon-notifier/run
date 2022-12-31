@@ -54,13 +54,11 @@ rm -f "$VESSELDBLOCK"
 
 mkdir -p "${IMAGECACHE}/screenshots"
 
+# add some random time to the check interval (0-5 secs)
+CHECK_INTERVAL="$(bc -l <<<"scale=0; x=$RANDOM % 50; scale=1; $CHECK_INTERVAL + x/10")"
+
 # Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
 sleep $CHECK_INTERVAL
-
-# This is the format of the VESSELDICT associative array records:
-# [mmsi, shipname, callsign, country, lat, lon, level, count, ppm, speed, destination, last_signal, notification_attributes_1, notification_attributes_2, ...]
-#   0       1          2         3     4    5     6       7    8      9       10            11              12                          13       <-- field index for BASH
-#   1       2          3         4     5    6     7       8    9     10       11            12              13                          14       <-- field index for AWK
 
 # Define some functions to calculate distance between coordinates using Haversine:
 deg2rad () {
