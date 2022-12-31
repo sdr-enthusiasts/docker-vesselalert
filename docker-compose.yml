@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       # mandatory parameters:
-      - AIS_URL=http://my.ais-catcher/website
+      - AIS_URL=http://my.ais-catcher/website:8100
       - MASTODON_SERVER=airwaves.social
       - MASTODON_ACCESS_TOKEN=my_mastodon_token
       # optional parameters that you may want to set:
@@ -55,7 +55,7 @@ services:
     shm_size: 1gb
     environment:
       - LOAD_SLEEP_TIME=10
-      - BASE_URL=http://myaiscatcherurl:8100
+      - BASE_URL=http://my.ais-catcher/website:8100
       - MAXTIME=60
     ports:
       - 5042:5042
