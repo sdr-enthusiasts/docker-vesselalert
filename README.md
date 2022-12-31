@@ -65,11 +65,8 @@ There are a series of available environment variables:
 
 ## Adding screenshots to your notifications
 VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is  large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, Thu units will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
-
 The screenshot container had an internal website that is used by VesselAlert to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
-
 A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
-
 The screenshot container is Open Source and can be found [here](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
 
 Please note that you must use the screenshot container's `aiscatcher` tag and branch as these include special configuration options for use with VesselAlert.
@@ -77,6 +74,12 @@ Please note that you must use the screenshot container's `aiscatcher` tag and br
 ## Logging
 
 * All processes are logged to the container's stdout, and can be viewed with `docker logs [-f] container`.
+
+## Modifications of Ship Status and Ship Type descriptions
+In your `opt/ais/data` directory (if you followed the volume mappings as recommended), there are two files:
+- `shipstatus.db` contains the descriptions of the Ship Status for each status ID number
+- `shiptype.db` contains the descriptions of the Ship Type for each type number
+You can change those with a text editor. Lines that start with "#" are ignored, and you can hashtag words in the description.
 
 ## Acknowledgements
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
