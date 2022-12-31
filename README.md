@@ -55,12 +55,24 @@ There are a series of available environment variables:
 | `MASTODON_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
 | `MASTODON_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `MASTODON_MAPURL` | If set to a URL, a link `$MASTODON_MAPURL/mmsi=$mmsi` will be added to the toot. If the value doesn't start with "http", `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
+| `SCREENSHOT_URL` | If set to the URL of a screenshot container, the notifier will attempt to get a screenshot to add to the notification. See below for explanation on how to configure | empty | no | 
 | `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `5` | no |
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
 
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
+
+## Adding screenshots to your notifications
+VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is  large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, Thu units will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
+
+The screenshot container had an internal website that is used by VesselAlert to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
+
+A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
+
+The screenshot container is Open Source and can be found [here](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
+
+Please note that you must use the screenshot container's `aiscatcher` tag and branch as these include special configuration options for use with VesselAlert. 
 
 ## Logging
 

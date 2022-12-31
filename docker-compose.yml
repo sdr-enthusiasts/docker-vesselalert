@@ -35,3 +35,28 @@ services:
       - /opt/ais/data:/data
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
+
+# Optional Screenshot container
+# We recommend using this only if your system has sufficient resources
+# Note that is this container is ~250-300 Mb in download size
+# and requires a lot of system resources when an image is retrieved
+#
+# To configure:
+# - replace BASE_URL with the URL of your AIS-Catcher website.
+# - you can add additional HTTP GET parameters to the MAP_ARGS variable
+#   For example: - MAP_ARGS=zoom=11&map=mapnik
+#
+  ais-screenshot:
+    image: ghcr.io/sdr-enthusiasts/screenshot:aiscatcher
+    tty: true
+    container_name: ais-screenshot
+    hostname: ais-screenshot
+    restart: always
+    shm_size: 1gb
+    environment:
+      - LOAD_SLEEP_TIME=5
+      - BASE_URL=http://myaiscatcherurl:8100
+      - MAXTIME=60
+    ports:
+      - 5043:5042
+

@@ -30,9 +30,6 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
-# Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
-
-
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
@@ -55,7 +52,7 @@ fi
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
-mkdir -p "${VESSELDBFILE%/*}/imagecache"
+mkdir -p "${IMAGECACHE}/screenshots"
 
 # Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
 sleep $CHECK_INTERVAL
@@ -267,6 +264,20 @@ do
                 echo "[$(date)][$APPNAME] image for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) uploaded to Mastodon"
             else
                 echo "[$(date)][$APPNAME] no image available for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]})"
+            fi
+
+	    if [[ -n "$SCREENSHOT_URL" ]]
+	    then
+		# get a screenshot
+                rm -f /${IMAGECACHE}/screenshots/${VESSELS[$vessel:mmsi]}.jpg
+		if curl -sSL "$SCREENSHOT_URL/snap/${VESSELS[$vessel:mmsi]}" -o /${IMAGECACHE}/screenshots/${VESSELS[$vessel:mmsi]}.jpg
+		then
+			response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@/${IMAGECACHE}/screenshots/${VESSELS[$vessel:mmsi]}.jpg")"
+                	[[ "$(jq '.id' <<< "$response" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "$response" | xargs)" || mast_id=""
+                	[[ -n "${mast_id}" ]] && media_id+=" -F media_ids[]=${mast_id}"
+                	echo "[$(date)][$APPNAME] screenshot for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]}) uploaded to Mastodon"
+            else
+                echo "[$(date)][$APPNAME] no screenshot available for ${VESSELS[$vessel:mmsi]} (${VESSELS[$vessel:shipname]})"
             fi
 
             # Now send a Toot:
