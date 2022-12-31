@@ -54,9 +54,8 @@ services:
     restart: always
     shm_size: 1gb
     environment:
-      - LOAD_SLEEP_TIME=5
+      - LOAD_SLEEP_TIME=10
       - BASE_URL=http://myaiscatcherurl:8100
       - MAXTIME=60
     ports:
-      - 5043:5042
-
+      - 5042:5042
