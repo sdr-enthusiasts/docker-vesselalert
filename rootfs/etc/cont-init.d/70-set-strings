@@ -418,4 +418,4 @@ fi
 ! declare -p VESSEL_INDEX >/dev/null 2>&1 && declare -a VESSEL_INDEX || true
 
 # write back to file
-source "/use/share/vesselalert/save_databases"
+source "/usr/share/vesselalert/save_databases"
