@@ -77,9 +77,9 @@ do
 
     # Read VESSELS from the AIS_URL:
     ships_json="$(curl -sSL $AIS_URL)"
-    eval "$(nice 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
+    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
-    eval "$(nice 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
+    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
     # create the indices and clean up text
     for keyvalue in ${!VESSELS[@]}
