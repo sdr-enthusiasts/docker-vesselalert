@@ -238,7 +238,7 @@ do
             [[ -n "${VESSELS[${vessel}:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}"
             mast_str+="\n"
 
-            [[ -n "${VESSELS[${vessel}:country]}" ]] && mast_str+="#Flag: #${VESSELS[${vessel}:country]} "
+            [[ -n "${VESSELS[${vessel}:country]}" ]] && mast_str+="#Flag: #${COUNTRY[${VESSELS[${vessel}:country]}]} "
             mast_str+="Msgs recvd: ${VESSELS[${vessel}:count]}\n"
             mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[${vessel}:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
