@@ -97,7 +97,7 @@ do
         [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
 
         if     [[ ! $age =~ ^[0-9]+$ ]] \
-            || (( age > MAX_MSG_AGE )) \
+            || (( age > MAX_MSG_AGE ))
         then
             [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( count < MIN_MSG_COUNT )) && echo true || echo false)"
             for key in "${KEY_INDEX[@]}"
