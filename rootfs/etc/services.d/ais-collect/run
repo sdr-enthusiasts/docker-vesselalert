@@ -31,6 +31,8 @@ APPNAME="$(hostname)/ais-collect"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 [[ -n "$DEBUG" ]] && echo "[$(date)][$APPNAME] DEBUG=ON" || echo "[$(date)][$APPNAME] DEBUG=OFF"
 
+renice -n 10 -p $$ >/dev/null 2>&1
+
 declare -A VESSELS
 declare -a VESSEL_INDEX
 declare -a KEY_INDEX
@@ -75,9 +77,9 @@ do
 
     # Read VESSELS from the AIS_URL:
     ships_json="$(curl -sSL $AIS_URL)"
-    eval "$(jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
+    eval "$(nice 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
-    eval "$(jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
+    eval "$(nice 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
     # create the indices and clean up text
     for keyvalue in ${!VESSELS[@]}
@@ -86,23 +88,16 @@ do
         [[ -n "${keyvalue#*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue#*:} " ]] && KEY_INDEX+=("${keyvalue#*:}") || true
         # add mmsi to VESSEL_INDEX:
         [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]] && VESSEL_INDEX+=("${keyvalue%%:*}") || true
-        # if the key is "shipname" or "destination", then clean up the text to ensure hashtagging works
-        [[ "${keyvalue##*:}" ==  "shipname" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' -e 's|\.||g' <<< "${VESSELS[$keyvalue]}")"
-        [[ "${keyvalue##*:}" ==  "destination" ]] && VESSELS[$keyvalue]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' -e 's|\.||g' <<< "${VESSELS[$keyvalue]}")"
     done
 
-    # Clean out the ones that are too old or that don't have enough messages:
+    # Clean out the ones that are too old:
     for vessel in "${VESSEL_INDEX[@]}"
     do
 
         [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
-        [[ -n "${VESSELS[${vessel}:count]}" ]] && count="${VESSELS[${vessel}:count]}" || count=$MIN_MSG_COUNT
-        (( count < MIN_MSG_COUNT )) && [[ -n "${VESSELS[${vessel}:min_count_exceeded]}" ]] && count=$MIN_MSG_COUNT
-        (( count >= MIN_MSG_COUNT )) && VESSELS[${vessel}:min_count_exceeded]="true"
 
         if     [[ ! $age =~ ^[0-9]+$ ]] \
             || (( age > MAX_MSG_AGE )) \
-            || (( count < MIN_MSG_COUNT ))
         then
             [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false) MINMSGCNT ($count<$MIN_MSG_COUNT)=$( (( count < MIN_MSG_COUNT )) && echo true || echo false)"
             for key in "${KEY_INDEX[@]}"
@@ -122,10 +117,6 @@ do
 	    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
             VESSELS[${vessel}:mast:last]="$(( $(date +%s) + adjust ))"
         fi
-
-        # while we are at it, clean up the vessel neam and destination:
-        [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
-        [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
     done
 
     if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \

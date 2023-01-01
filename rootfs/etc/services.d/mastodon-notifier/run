@@ -30,6 +30,8 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/mastodon-notifier"
 echo "[$(date)][$APPNAME] Started as an s6 service"
 
+renice -n 10 -p $$ >/dev/null 2>&1
+
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
@@ -208,9 +210,12 @@ do
         if [[ -n "$notify_now" ]]
         then
             # we need to notify
-            # First create notification string
+	    # First do some clean up
+            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
+            [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
+
+            # Create notification string
             # These are the valid fields:
-            # mmsi lat lon distance mmsi_type level count ppm heading cog speed to_bow to_stern to_starboard to_port shiptype msg_type country status callsign shipname destination last_signal mast:lat mast:lon mast:last
             links=""
             [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[${vessel}:mmsi]}\n" || true
             [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[${vessel}:mmsi]}\n" || true
@@ -220,7 +225,7 @@ do
             [[ -z "${VESSELS[${vessel}:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
             [[ "$notify_distance" == "true" ]] && mast_str+=" #OnTheMove"
             mast_str+="\n"
-            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[${vessel}:shipname]}") "
+            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #${VESSELS[${vessel}:shipname]}"
             [[ -n "${VESSELS[${vessel}:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[${vessel}:mmsi]}\n"
             [[ -n "${VESSELS[${vessel}:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[${vessel}:callsign]} "
             [[ -n "${VESSELS[${vessel}:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}"
@@ -233,7 +238,7 @@ do
             [[ -n "${VESSELS[${vessel}:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[${vessel}:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[${vessel}:status]}]}\n"
             [[ -n "${VESSELS[${vessel}:speed]}" ]] && [[ "${VESSELS[${vessel}:speed]}" != "0" ]] && [[ "${VESSELS[${vessel}:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[${vessel}:speed]}") kts "
             [[ -n "${VESSELS[${vessel}:heading]}" ]] && [[ "${VESSELS[${vessel}:heading]}" != "0" ]] && [[ "${VESSELS[${vessel}:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[${vessel}:heading]} deg"
-            [[ -n "${VESSELS[${vessel}:destination]}" ]] && mastr_str+="Destination: $(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[${vessel}:destination]}")\n"
+            [[ -n "${VESSELS[${vessel}:destination]}" ]] && mast_str+="Destination: ${VESSELS[${vessel}:destination]}\n"
             mast_str+="\n"
 
             mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[${vessel}:level]}")\n"
