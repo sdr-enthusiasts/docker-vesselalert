@@ -57,23 +57,23 @@ rm -f "$VESSELDBLOCK"
 mkdir -p "${IMAGECACHE}/screenshots"
 
 # add some random time to the check interval (0-5 secs)
-CHECK_INTERVAL="$(bc -l <<<"scale=0; x=$RANDOM % 50; scale=1; $CHECK_INTERVAL + x/10")"
+CHECK_INTERVAL="$(nice -n 20 bc -l <<<"scale=0; x=$RANDOM % 50; scale=1; $CHECK_INTERVAL + x/10")"
 
 # Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
 sleep "$CHECK_INTERVAL"
 
 # Define some functions to calculate distance between coordinates using Haversine:
 deg2rad () {
-    bc -l <<< "$1 * 0.0174532925"
+    nice -n 20 bc -l <<< "$1 * 0.0174532925"
 }
 
 rad2deg () {
-    bc -l <<< "$1 * 57.2957795"
+    nice -n 20 bc -l <<< "$1 * 57.2957795"
 }
 
 acos () {
     pi="3.141592653589793"
-    bc -l <<< "$pi / 2 - a($1 / sqrt(1 - $1 * $1))"
+    nice -n 20 bc -l <<< "$pi / 2 - a($1 / sqrt(1 - $1 * $1))"
 }
 
 distance () {
@@ -81,19 +81,19 @@ distance () {
     lon_1="$2"
     lat_2="$3"
     lon_2="$4"
-    delta_lat="$(bc <<<"$lat_2 - $lat_1")"
-    delta_lon="$(bc <<<"$lon_2 - $lon_1")"
+    delta_lat="$(nice -n 20 bc <<<"$lat_2 - $lat_1")"
+    delta_lon="$(nice -n 20 bc <<<"$lon_2 - $lon_1")"
     lat_1="$(deg2rad "$lat_1")"
     lon_1="$(deg2rad "$lon_1")"
     lat_2="$(deg2rad "$lat_2")"
     lon_2="$(deg2rad "$lon_2")"
     delta_lat="$(deg2rad "$delta_lat")"
     delta_lon="$(deg2rad "$delta_lon")"
-    distance="$(bc -l <<< "s($lat_1) * s($lat_2) + c($lat_1) * c($lat_2) * c($delta_lon)")"
+    distance="$(nice -n 20 bc -l <<< "s($lat_1) * s($lat_2) + c($lat_1) * c($lat_2) * c($delta_lon)")"
     distance="$(acos "$distance")"
     distance="$(rad2deg "$distance")"
-    distance="$(bc -l <<< "$distance * 60")"
-    distance="$(bc <<<"scale=4; $distance / 1")"
+    distance="$(nice -n 20 bc -l <<< "$distance * 60")"
+    distance="$(nice -n 20 bc <<<"scale=4; $distance / 1")"
     echo "$distance"
 }
 
@@ -156,7 +156,7 @@ do
         && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
         && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
         && [[ -n "${VESSELS[${vessel}:mast:lat]}" ]] && [[ -n "${VESSELS[${vessel}:mast:lon]}" ]] \
-        && [[ "$(bc -l <<<"scale=2; $(distance ${VESSELS[${vessel}:mast:lat]} ${VESSELS[${vessel}:mast:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
+        && [[ "$(nice -n 20 bc -l <<<"scale=2; $(distance ${VESSELS[${vessel}:mast:lat]} ${VESSELS[${vessel}:mast:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(distance "${VESSELS[${vessel}:mast:lat]}" "${VESSELS[${vessel}:mast:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $MASTODON_MIN_DIST )"
@@ -226,7 +226,7 @@ do
             [[ -z "${VESSELS[${vessel}:mast:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
             [[ "$notify_distance" == "true" ]] && mast_str+=" #OnTheMove"
             mast_str+="\n"
-            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #${VESSELS[${vessel}:shipname]}"
+            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #${VESSELS[${vessel}:shipname]} "
             [[ -n "${VESSELS[${vessel}:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[${vessel}:mmsi]}\n"
             [[ -n "${VESSELS[${vessel}:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[${vessel}:callsign]} "
             [[ -n "${VESSELS[${vessel}:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}"
@@ -324,7 +324,7 @@ do
             # Increment notification count
             (( notification_count++ )) || true
 
-            if [[ -n "$MASTODON_THROTTLE" ]] && [[ "$(bc <<< "$notification_count%10")" == "0" ]]
+            if [[ -n "$MASTODON_THROTTLE" ]] && [[ "$(nice -n 20 bc <<< "$notification_count%10")" == "0" ]]
             then
                 # we need to throttle - let's wait 15 seconds
                 [[ -n "$DEBUG" ]] && echo "Notification Count is $notification_count; throttling for 15 seconds"
