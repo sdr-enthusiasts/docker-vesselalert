@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2015,SC1090,SC2164,SC2001
+#shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091
 
 
 # Mastodon-Notifier
@@ -345,13 +345,8 @@ do
     if (( notification_count > 0 ))
     then
         # Write back to file
-        {
-            declare -p KEY_INDEX
-            declare -p VESSEL_INDEX
-            declare -p VESSELS
-            declare -p SHIPTYPE
-            declare -p SHIPSTATUS ;} > "$VESSELDBFILE" 2>/dev/null
-            notification_count=0
+        source /usr/share/vesselalert/save_databases
+        notification_count=0
         fi
 
         # Remove file block:
