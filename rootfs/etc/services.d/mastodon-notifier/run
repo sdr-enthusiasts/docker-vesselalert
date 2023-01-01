@@ -154,7 +154,7 @@ do
         then
 	    [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
             notify_timing="false"
-       	fi	
+       	fi
 
         # based on distance from last notification:
         #shellcheck disable=SC2086
@@ -218,8 +218,8 @@ do
         then
             # we need to notify
 	    # First do some clean up
-            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
-            [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\'']||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
+            [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
+            [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
 
             # Create notification string
             # These are the valid fields:
