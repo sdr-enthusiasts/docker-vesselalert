@@ -26,4 +26,4 @@
     declare -p SHIPSTATUS
     declare -p COUNTRY ;} > "$VESSELDBFILE" 2>/dev/null
 
-[[ -n "$DEBUG" ]] && echo "wrote back to file"
+[[ -n "$DEBUG" ]] && echo "wrote back to file" || true
