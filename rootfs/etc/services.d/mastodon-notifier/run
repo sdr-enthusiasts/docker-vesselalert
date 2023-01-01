@@ -140,7 +140,8 @@ do
         # based on timing:
         if     [[ -n "$MASTODON_NOTIFY_EVERY" ]] \
         && [[ -n "${VESSELS[${vessel}:mast:last]}" ]] \
-        && (( $(date +%s) <= ${VESSELS[${vessel}:mast:last]} + MASTODON_NOTIFY_EVERY ))
+        && (( $(date +%s) <= ${VESSELS[${vessel}:mast:last]} + MASTODON_NOTIFY_EVERY )) \\
+        && (( ${VESSELS[${vessel}:last_signal]} > 600 ))
         then
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:mast:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify_timing="false"
