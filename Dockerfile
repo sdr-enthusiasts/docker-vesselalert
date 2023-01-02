@@ -5,7 +5,7 @@ RUN set -x && \
     apt-get install -q -o Dpkg::Options::="--force-confnew" -y \
         git gcc && \
     cd / && \
-    git clone --depth=1 -b develop --single-branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
+    git clone --depth=1 --single-branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
     cd /docker-vesselalert/src && \
     gcc -static distance.c -o distance -lm -Ofast
 
