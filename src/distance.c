@@ -64,6 +64,6 @@ int main(int argc, char *argv[])
     double lon2 = atof(argv[4]);
 
     double d = distance(lat1, lon1, lat2, lon2);
-    printf("%f", d);
+    printf("%f\n", d);
     return 0;
 }

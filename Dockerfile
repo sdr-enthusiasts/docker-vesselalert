@@ -50,7 +50,7 @@ RUN set -x && \
 
 COPY rootfs/ /
 
-COPY --from=build /docker-vesselalert/distance /usr/share/vesselalert/distance
+COPY --from=build /docker-vesselalert/src/distance /usr/share/vesselalert/distance
 
 # Add Container Version
 RUN set -x && \
