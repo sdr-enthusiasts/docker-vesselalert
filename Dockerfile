@@ -1,3 +1,13 @@
+FROM debian:bullseye-slim AS build
+
+RUN set -x && \
+    apt-get update -y && \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y \
+        git gcc && \
+    git clone --depth=1 -b develop --single-branch https://github.com/sdr-enthusiasts/docker-vesselalert.git / && \
+    cd /docker-vesselalert/src && \
+    gcc -static distance.c -o distance -lm -Ofast
+
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 
 ENV MASTODON_NOTIFY_EVERY=86400
@@ -38,6 +48,8 @@ RUN set -x && \
     rm -rf /src/* /tmp/* /var/lib/apt/lists/*
 
 COPY rootfs/ /
+
+COPY --from=build /docker-vesselalert/distance /usr/share/vesselalert/distance
 
 # Add Container Version
 RUN set -x && \
