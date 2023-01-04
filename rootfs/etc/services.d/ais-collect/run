@@ -40,7 +40,7 @@ declare -a KEY_INDEX
 [[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
-[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
+[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
 	[[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=604800    # 1 week before a record gets erased from the database
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"

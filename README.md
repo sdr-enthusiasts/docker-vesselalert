@@ -56,7 +56,7 @@ There are a series of available environment variables:
 | `MASTODON_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `MASTODON_MAPURL` | If set to a URL, a link `$MASTODON_MAPURL/mmsi=$mmsi` will be added to the toot. If the value doesn't start with "http", `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
 | `SCREENSHOT_URL` | If set to the URL of a screenshot container, the notifier will attempt to get a screenshot to add to the notification. See below for explanation on how to configure | empty | no |
-| `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `5` | no |
+| `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `10` | no |
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |

@@ -40,7 +40,7 @@ notification_count=0
 
 # [[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
-[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=5 || true
+[[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
 if [[ -z "$MASTODON_MIN_DIST" ]] || [[ "$MASTODON_MIN_DIST" == "0" ]]
 then
     unset MASTODON_MIN_DIST
