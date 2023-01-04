@@ -112,8 +112,9 @@ notif_json="$(jq -c . <<< "${notif_json}")"
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
 do
-    echo "[$(date)][$APPNAME] Curl command: curl -sSL ${SCREENSHOTCURL} -F \"payload_json=${notif_json}\" ${url}"
+    set -x
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
+    set +x
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
