@@ -105,7 +105,7 @@
                 },
                 {
                     "name": "Heading",
-                    "value": "##HEADING## deg",
+                    "value": "##HEADING## ",
                     "inline": false
                 }
             ],
