@@ -51,7 +51,11 @@ then
     exit 1
 fi
 
-# First - build the message - create notification string
+# First do some clean up
+[[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
+[[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
+
+# Build the message - create notification string
 
 links=""
 [[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
