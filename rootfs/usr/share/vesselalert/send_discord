@@ -97,7 +97,12 @@ notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
 flag="${COUNTRY[${VESSELS[$1:country]}]}"; notif_json="${notif_json//##FLAG##/${flag}}"
 notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 printf -v signal -- "%.1f" "${VESSELS[$1:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
-status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}"; status="${status//_/ }";notif_json="${notif_json//##STATUS##/${status}}"
+status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";
+    status="${status//_/ }";
+    [[ -z "${VESSELS[$1:notification:last]}" ]] && status+=" #New"
+    [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && status+=" #SeenBefore"
+    [[ "${notify_distance}" == "true" ]] && status+=" #OnTheMove"
+    notif_json="${notif_json//##STATUS##/${status}}"
 notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
@@ -120,7 +125,7 @@ do
     if [[ "${result}" != "null" ]]
     then
         echo -n "[$(date)][$APPNAME] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result}. "
-        [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n "\#NEW "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
         [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
         [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
