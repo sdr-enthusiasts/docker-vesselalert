@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with this program.
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
-# This script sends a Mastodon notification (toot)
+# This script sends a Discord notification
 
 # redirect stderr to stdout so it's picked up in the docker logs
 exec 2>&1
@@ -39,7 +39,7 @@ fi
 
 if [[ -z "${DISCORD_WEBHOOKS}" ]]
 then
-    echo "[$(date)][$APPNAME] Error: DISCORD_WEBHOOKS not defined. Cannot send a Mastodon notification"
+    echo "[$(date)][$APPNAME] Error: DISCORD_WEBHOOKS not defined. Cannot send a Discord notification"
     exit 1
 fi
 
@@ -89,6 +89,6 @@ do
         [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
         echo ""
     else
-        echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
+        echo "[$(date)][$APPNAME] Discord post error for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}). Discord returned this error: $(jq '.error' <<< "${response}"|xargs)"
     fi
 done

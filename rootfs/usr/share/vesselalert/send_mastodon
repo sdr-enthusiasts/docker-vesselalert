@@ -25,7 +25,6 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 
 APPNAME="$(hostname)/send-mastodon"
 
-NL="$'\n'"
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=public
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
@@ -35,7 +34,6 @@ MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 
-
 source "$VESSELDBFILE"
 
 if [[ -z "$1" ]]
@@ -43,6 +41,8 @@ then
     echo "$0 - send a Mastodon notification for a specific MMSI"
     echo "Usage: $0 mmsi"
     exit 1
+else
+    echo "[$(date)][$APPNAME] Attempting Mastodon notification for $1 (${VESSELS[$1:shipname]})"
 fi
 
 if [[ -z "${MASTODON_ACCESS_TOKEN}" ]]
@@ -54,55 +54,58 @@ fi
 # First - build the message - create notification string
 
 links=""
-[[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[${vessel}:mmsi]}${NL}" || true
-[[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[${vessel}:mmsi]}${NL}" || true
-[[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[${vessel}:mmsi]}${NL}" || true
+[[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
+[[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
+[[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
 
 mast_str="#VesselAlert #Ship #Vessel #AIS"
-[[ -z "${VESSELS[${vessel}:notification:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
+[[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
 #shellcheck disable=SC2154
 [[ "${notify_distance}" == "true" ]] && mast_str+=" #OnTheMove"
-mast_str+="${NL}"
-[[ -n "${VESSELS[${vessel}:shipname]}" ]] && mast_str+="Name: #${VESSELS[${vessel}:shipname]} "
-[[ -n "${VESSELS[${vessel}:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[${vessel}:mmsi]}${NL}"
-[[ -n "${VESSELS[${vessel}:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[${vessel}:callsign]} "
-[[ -n "${VESSELS[${vessel}:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[${vessel}:shiptype]}]}"
-mast_str+="${NL}"
+mast_str+="\n"
+[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="Name: #$(jq -sRr @uri <<<"${VESSELS[$1:shipname]}") "
+[[ -n "${VESSELS[$1:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"
+[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$1:callsign]} "
+[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
+mast_str+="\n"
 
-[[ -n "${VESSELS[${vessel}:country]}" ]] && mast_str+="#Flag: #${COUNTRY[${VESSELS[${vessel}:country]}]} "
-mast_str+="Msgs recvd: ${VESSELS[${vessel}:count]}${NL}"
-mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[${vessel}:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")${NL}"
+[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#Flag: #${COUNTRY[${VESSELS[$1:country]}]} "
+mast_str+="Msgs recvd: ${VESSELS[$1:count]}\n"
+mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
-[[ -n "${VESSELS[${vessel}:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[${vessel}:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[${vessel}:status]}]}${NL}"
-[[ -n "${VESSELS[${vessel}:speed]}" ]] && [[ "${VESSELS[${vessel}:speed]}" != "0" ]] && [[ "${VESSELS[${vessel}:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[${vessel}:speed]}") kts "
-[[ -n "${VESSELS[${vessel}:heading]}" ]] && [[ "${VESSELS[${vessel}:heading]}" != "0" ]] && [[ "${VESSELS[${vessel}:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[${vessel}:heading]} deg "
-[[ -n "${VESSELS[${vessel}:destination]}" ]] && mast_str+="Destination: ${VESSELS[${vessel}:destination]}${NL}"
-mast_str+="${NL}"
+[[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"
+[[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$1:speed]}") kts "
+[[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$1:heading]} deg "
+[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="Destination: $(jq -sRr @uri <<< "${VESSELS[$1:destination]}")\n"
+mast_str+="\n"
 
-mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[${vessel}:level]}")${NL}"
-[[ -n "${links}" ]] && mast_str+="${links}${NL}"
-[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="${NL}Vessel location: ${AIS_URL}?mmsi=${VESSELS[${vessel}:mmsi]}"
-[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="${NL}Vessel location: ${MASTODON_MAPURL_URL}?mmsi=${VESSELS[${vessel}:mmsi]}"
+mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
+[[ -n "${links}" ]] && mast_str+="${links}\n"
+[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\nVessel location: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\nVessel location: ${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$1:mmsi]}"
 
-[[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="${NL}$MASTODON_CUSTOM_FIELD"
+[[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
+
+#shellcheck disable=SC2001
+mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
 
 # Now we have the notification string, lets upload an image if one exists:
 
 # If the image still exists, then upload it to Mastodon:
-if [[ -f "$IMAGECACHE/${VESSELS[${vessel}:mmsi]}.jpg" ]]
+if [[ -f "$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg" ]]
 then
-    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[${vessel}:mmsi]}.jpg")"
+    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg")"
     [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
     [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id} "
-    echo "[$(date)][$APPNAME] image for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) uploaded to Mastodon"
+    echo "[$(date)][$APPNAME] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
 else
-    echo "[$(date)][$APPNAME] no image available for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
+    echo "[$(date)][$APPNAME] no image available for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]})"
 fi
 
 # If a screenshot exists, then upload it to Mastodon:
-if [[ -f "${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg" ]]
+if [[ -f "${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg" ]]
 then
-    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg")"
+    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg")"
     [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
     [[ -n "${mast_id}" ]] && media_id+="-F media_ids[]=${mast_id} "
 fi
@@ -113,12 +116,12 @@ response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTO
 # check if there was an error
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
-    echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
-    [[ -z "${VESSELS[${vessel}:notification:last]}" ]] && echo -n "#NEW "
+    echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
+    [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n "#NEW "
     #shellcheck disable=SC2154
-    [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo -n "#OLD "
+    [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
     [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
     echo ""
 else
-    echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
+    echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
 fi
