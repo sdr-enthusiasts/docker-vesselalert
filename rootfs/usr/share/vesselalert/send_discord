@@ -54,8 +54,8 @@ fi
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 
 # First do some clean up
-[[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
-[[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
+[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
+[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
 
 set -x
 # load the notification JSON from the template:
@@ -93,7 +93,7 @@ notif_json="${notif_json//##TYPE##/${VESSELS[$1:shiptype]}}"
 notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]}}"
 flag="${COUNTRY[${VESSELS[$1:country]}]}"; notif_json="${notif_json//##FLAG##/$flag}"
 notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
-printf -v signal -- "%.1f" "${VESSELS[${vessel}:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
+printf -v signal -- "%.1f" "${VESSELS[$1:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
 notif_json="${notif_json//##STATUS##/${VESSELS[$1:status]}}"
 notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]}}"
@@ -103,13 +103,15 @@ echo "$notif_json" > /data/notif.json
 
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
+# final safety - make sure that any double quotes are escaped:
+notif_json="${notif_json//\"/\\\"}"
 set +x
 # Now send the Discord notification:
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
 do
-    echo "[$(date)][$APPNAME] Curl command: curl -sSL ${SCREENSHOTCURL} -F \'payload_json=${notif_json}\' ${url}"
-    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=\'${notif_json}\'" ${url})"
+    echo "[$(date)][$APPNAME] Curl command: curl -sSL ${SCREENSHOTCURL} -F \"payload_json=${notif_json}\" ${url}"
+    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
