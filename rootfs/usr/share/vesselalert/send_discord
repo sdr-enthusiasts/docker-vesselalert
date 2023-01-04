@@ -99,10 +99,10 @@ notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]}}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
 
+echo "$notif_json" > /data/notif.json
+
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
-
-echo "$notif_json" > /data/notif.json
 
 # Now send the Discord notification:
 #shellcheck disable=SC2086
