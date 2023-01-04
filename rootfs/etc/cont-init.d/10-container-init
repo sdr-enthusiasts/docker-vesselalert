@@ -3,5 +3,5 @@
 
 echo "Starting VesselAlert version $(cat /.CONTAINER_VERSION)"
 
-# Put country databases in place but don't overwrite any existing ones as they may have been changed by the user
+# Put databases in place but don't overwrite any existing ones as they may have been changed by the user
 cp -u --backup=numbered /opt/data/* /data >/dev/null 2>&1
