@@ -92,12 +92,12 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 notif_json="${notif_json//##MMSI##/$1}"
 notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]}}"
 notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
-type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"; notif_json="${notif_json//##TYPE##/${type}}"
+type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"; type="${type#*#}"; notif_json="${notif_json//##TYPE##/${type}}"
 notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]}}"
 flag="${COUNTRY[${VESSELS[$1:country]}]}"; notif_json="${notif_json//##FLAG##/${flag}}"
 notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 printf -v signal -- "%.1f" "${VESSELS[$1:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
-status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; notif_json="${notif_json//##STATUS##/${status}}"
+status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";notif_json="${notif_json//##STATUS##/${status}}"
 notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
@@ -112,9 +112,9 @@ notif_json="$(jq -c . <<< "${notif_json}")"
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
 do
-    set -x
+#    set -x
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
-    set +x
+#    set +x
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
