@@ -1,5 +1,5 @@
 #!/usr/bin/with-contenv bash
-#shellcheck shell=bash disable=SC2015,SC2164,SC1090
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC2154
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -25,9 +25,6 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 
 APPNAME="$(hostname)/send-discord"
 
-renice -n 10 -p $$ >/dev/null 2>&1
-
-NL="$'\n'"
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
