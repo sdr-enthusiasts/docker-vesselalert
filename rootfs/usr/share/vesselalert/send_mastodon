@@ -1,5 +1,5 @@
 #!/usr/bin/with-contenv bash
-#shellcheck shell=bash disable=SC2015,SC2164,SC1090
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC1091
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -67,7 +67,7 @@ mast_str="#VesselAlert #Ship #Vessel #AIS"
 #shellcheck disable=SC2154
 [[ "${notify_distance}" == "true" ]] && mast_str+=" #OnTheMove"
 mast_str+="\n"
-[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="Name: #$(jq -sRr @sh <<<"${VESSELS[$1:shipname]}") "
+[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="Name: #${VESSELS[$1:shipname]} "
 [[ -n "${VESSELS[$1:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"
 [[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$1:callsign]} "
 [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
@@ -80,7 +80,7 @@ mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +
 [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"
 [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$1:speed]}") kts "
 [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$1:heading]} deg "
-[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="Destination: $(jq -sRr @sh <<< "${VESSELS[$1:destination]}")\n"
+[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="Destination: ${VESSELS[$1:destination]}\n"
 mast_str+="\n"
 
 mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
@@ -126,6 +126,13 @@ then
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
     [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
     echo ""
+
+    # Update the Assoc Array with the latest values:
+    VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
+    VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
+    VESSELS[$1:notification:last]="$(date +%s)"
+
+    source /usr/share/vesselalert/save_databases
 else
     echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
 fi

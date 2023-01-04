@@ -1,5 +1,5 @@
 #!/usr/bin/with-contenv bash
-#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC2154
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC2154,SC1091
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -104,7 +104,7 @@ echo "$notif_json" > /data/notif.json
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
 # final safety - make sure that any double quotes are escaped:
-notif_json="${notif_json//\"/\\\"}"
+#notif_json="${notif_json//\"/\\\"}"
 # Now send the Discord notification:
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
@@ -121,6 +121,13 @@ do
         [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
         [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
         echo ""
+        
+        # Update the Assoc Array with the latest values:
+        VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
+        VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
+        VESSELS[$1:notification:last]="$(date +%s)"
+
+        source /usr/share/vesselalert/save_databases
     else
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
     fi
