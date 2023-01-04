@@ -62,7 +62,7 @@ set -x
 notif_json="$(</data/discord.template)"
 
 # If a screenshot exists, then make sure we'll include it:
-if [[ -f "$${IMAGECACHE}/screenshots/$1.jpg" ]]
+if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
 then
     SCREENSHOTCURL="-F \"file1=@${IMAGECACHE}/screenshots/$1.jpg\""
     notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
