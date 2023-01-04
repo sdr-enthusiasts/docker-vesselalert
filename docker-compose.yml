@@ -19,9 +19,9 @@ services:
       - MASTODON_LINK_SHIPXPLORER=on
       - MASTODON_LINK_MARINETRAFFIC=on
       - MASTODON_LINK_VESSELFINDER=on
-      - MASTODON_MAPURL=
+      - NOTIFICATION_MAPURL=yes
       - NOTIFICATION_THROTTLE=on
-      - MASTODON_ONLY_NEW_ON_STARTUP=on
+      - NOTIFY_ONLY_NEW_ON_STARTUP=on
       - SCREENSHOT_URL=http://ais-screenshot:5042
       # optional parameters that you probably don't want to touch unless you really know what you are doing:
       - CHECK_INTERVAL=30

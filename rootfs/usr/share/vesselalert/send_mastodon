@@ -85,8 +85,8 @@ mast_str+="\n"
 
 mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 [[ -n "${links}" ]] && mast_str+="${links}\n"
-[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" != "http" ]] && mast_str+="\nVessel location: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
-[[ -n "${MASTODON_MAPURL}" ]] && [[ "${MASTODON_MAPURL:0:4}" == "http" ]] && mast_str+="\nVessel location: ${MASTODON_MAPURL_URL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && mast_str+="\nVessel location: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && mast_str+="\nVessel location: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}"
 
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
 

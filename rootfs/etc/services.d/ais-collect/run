@@ -98,11 +98,11 @@ do
             done
         fi
 
-        # Make sure that no notifications will be sent if MASTODON_ONLY_NEW_ON_STARTUP is set and this is the first run ever:
+        # Make sure that no notifications will be sent if NOTIFY_ONLY_NEW_ON_STARTUP is set and this is the first run ever:
         # Note -- this code has cross-contamination from the Mastodon-Notifier and will need to be updated if new
         # notification media are added. This is unfortunate but to avoid it means adding a LOT more logic.
         # If the criteria are met, we will tag the last notification time to the current time, so it won't renotify until much later.
-        if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \
+        if     [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
             && [[ ! -f /data/container_has_run_before ]]
         then
             spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
@@ -111,11 +111,11 @@ do
         fi
     done
 
-    if     [[ -n "$MASTODON_ONLY_NEW_ON_STARTUP" ]] \
+    if     [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
         && [[ ! -f /data/container_has_run_before ]]
     then
         touch /data/container_has_run_before
-        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and MASTODON_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
+        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
     fi
 
     # Write back to file

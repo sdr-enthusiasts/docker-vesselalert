@@ -8,6 +8,13 @@
       "components": [
         {
           "style": 5,
+          "label": "ShipSpotting photo gallery",
+          "url": "##STNMAP##",
+          "disabled": ##STNMAPDISABLED##,
+          "type": 2
+        }
+        {
+          "style": 5,
           "label": "ShipXplorer",
           "url": "https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##",
           "disabled": false,

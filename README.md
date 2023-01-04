@@ -39,9 +39,20 @@ Make sure to map the `/data` directory to a volume, as per the [example file](do
 
 There are a series of available environment variables:
 
+### General parameters:
+
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
 | `AIS_URL` | Indicates the URL of the AIS-Catcher website. For example, `https://myserver.com/ais` | empty | yes |
+| `SCREENSHOT_URL` | If set to the URL of a screenshot container, the notifier will attempt to get a screenshot to add to the notification. See below for explanation on how to configure | empty | no |
+| `NOTIFICATION_MAPURL` | If set to a URL, a link `$NOTIFICATION_MAPURL/mmsi=$mmsi` will be added to the notification. If the value is non-empty but doesn't start with "http" (e.g., if it's set to `on`, `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
+| `NOTIFY_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
+| `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
+
+### Mastodon notifications related parameters:
+
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
 | `MASTODON_SERVER` | Name (URL) of the Mastodon Server | `airwaves.social` | no |
 | `MASTODON_ACCESS_TOKEN` | The access token of the Mastodon Application you are using. See above for instructions. | empty | yes |
 | `MASTODON_SKIP_FILTER` | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. An example of a filter that filters out MMSIs that are 7 digits (too short), and any navigational aids (MMSI starts with 99) is ` MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$\|^[0-9]{7}$ `| empty | no |
@@ -52,10 +63,18 @@ There are a series of available environment variables:
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
-| `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
-| `MASTODON_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
-| `MASTODON_MAPURL` | If set to a URL, a link `$MASTODON_MAPURL/mmsi=$mmsi` will be added to the toot. If the value doesn't start with "http", `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
-| `SCREENSHOT_URL` | If set to the URL of a screenshot container, the notifier will attempt to get a screenshot to add to the notification. See below for explanation on how to configure | empty | no |
+
+## Discord notifications related parameters:
+
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
+| `DISCORD_WEBHOOKS` | Comma separated list of Discord Webhook URLs. If omitted, no Discord Notifications will be sent. | empty | no |
+| `DISCORD_NAME` | Station name. Use something descriptive of who and where you are, e.g., `kx1t - Boston Harbor` | empty | yes (if Discord notifications are enabled) |
+| `DISCORD_AVATAR_URL` | URL to an avatar used with the notification message | empty | no |
+
+### Expert Parameters (only change/set if you know what you're doing)
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
 | `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `10` | no |
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |

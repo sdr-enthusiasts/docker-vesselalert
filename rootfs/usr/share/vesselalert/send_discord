@@ -45,6 +45,12 @@ then
     exit 1
 fi
 
+if [[ -z "${DISCORD_NAME}" ]]
+then
+    echo "[$(date)][$APPNAME] Error: DISCORD_NAME not defined. Cannot send a Discord notification"
+    exit 1
+fi
+
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 
 # First do some clean up
@@ -67,6 +73,16 @@ else
     echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
 fi
 
+# Add a Map URL if configured:
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && NOTIFICATION_MAPURL="${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && NOTIFICATION_MAPURL="${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
+if [[ -n "${NOTIFICATION_MAPURL}" ]]
+then
+    notif_json="${notif_json//##STNMAP##/${NOTIFICATION_MAPURL}}"
+    notif_json="${notif_json//##STNMAPDISABLED##/false}"
+else
+    notif_json="${notif_json//##STNMAPDISABLED##/true}"
+fi
 # Now replace a bunch of parameters in the template:
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 [[ -n "${DISCORD_AVATAR_URL}" ]] && notif_json="${notif_json//##AVATAR##/${DISCORD_AVATAR_URL}}" || notif_json="${notif_json//\"avatar_url\": \"##AVATAR##\",/}"
