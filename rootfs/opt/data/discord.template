@@ -55,37 +55,37 @@
             "fields": [
                 {
                     "name": "Vessel Name",
-                    "value": "##VESSELNAME## ",
+                    "value": "##VESSELNAME##",
                     "inline": true
                 },
                 {
                     "name": "MMSI",
-                    "value": "##MMSI## ",
+                    "value": "##MMSI##",
                     "inline": true
                 },
                 {
                     "name": "Callsign",
-                    "value": "##CALLSIGN## ",
+                    "value": "##CALLSIGN##",
                     "inline": true
                 },
                 {
                     "name": "Type",
-                    "value": "##TYPE## ",
+                    "value": "##TYPE##",
                     "inline": true
                 },
                 {
                     "name": "Destination",
-                    "value": "##DESTINATION## ",
+                    "value": "##DESTINATION##",
                     "inline": false
                 },
                 {
                     "name": "Flag",
-                    "value": "##FLAG## ",
+                    "value": "##FLAG##",
                     "inline": true
                 },
                 {
                     "name": "Msgs rcvd",
-                    "value": "##COUNT## ",
+                    "value": "##COUNT##",
                     "inline": true
                 },
                 {
@@ -95,17 +95,17 @@
                 },
                 {
                     "name": "Status",
-                    "value": "##STATUS## ",
+                    "value": "##STATUS##",
                     "inline": false
                 },
                 {
                     "name": "Speed",
-                    "value": "##SPEED## kt",
+                    "value": "##SPEED##",
                     "inline": true
                 },
                 {
                     "name": "Heading",
-                    "value": "##HEADING## ",
+                    "value": "##HEADING##",
                     "inline": false
                 }
             ],

@@ -103,7 +103,13 @@ status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && status+=" #SeenBefore"
     [[ "${notify_distance}" == "true" ]] && status+=" #OnTheMove"
     notif_json="${notif_json//##STATUS##/${status}}"
-notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
+if [[ "${notify_distance}" == "true" ]]
+then
+    speed="${VESSELS[$1:speed]} kts - moved $(printf -- "%.1f" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]} ${VESSELS[$1:lon]}")") nm since last notification"
+else 
+    speed="${VESSELS[$1:speed]} kts"
+fi
+notif_json="${notif_json//##SPEED##/${speed}}"
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
 
@@ -118,7 +124,7 @@ notif_json="$(jq -c . <<< "${notif_json}")"
 for url in "${webhooks[@]}"
 do
 #    set -x
-    url="${url//$'\n\/}"    # remove any stray newlines from the URL
+    url="${url//$'\n'\/}"    # remove any stray newlines from the URL
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
 #    set +x
     # check if there was an error
