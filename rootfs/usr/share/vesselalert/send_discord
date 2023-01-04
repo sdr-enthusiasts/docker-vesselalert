@@ -60,12 +60,16 @@ if [[ -f "$${IMAGECACHE}/screenshots/$1.jpg" ]]
 then
     SCREENSHOTCURL="-F \"file1=@${IMAGECACHE}/screenshots/$1.jpg\""
     notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
+    echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
 else
     SCREENSHOTCURL=""
+    notif_json="${notif_json//, \"image\":{\"url\":\"attachment:\/\/##SCREENSHOTFILE##\"}/}"
+    echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
 fi
 
 # Now replace a bunch of parameters in the template:
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
+[[ -n "${DISCORD_AVATAR_URL}" ]] && notif_json="${notif_json//##AVATAR##/${DISCORD_AVATAR_URL}}" || notif_json="${notif_json//\"avatar_url\": \"##AVATAR##\",/}"
 notif_json="${notif_json//##MMSI##/$1}"
 notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]}}"
 notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
@@ -78,6 +82,9 @@ notif_json="${notif_json//##STATUS##/${VESSELS[$1:status]}}"
 notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]}}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
+
+# make the JSON object into a single line:
+notif_json="$(jq -c . <<< "$notif_json")"
 
 # Now send the Discord notification:
 #shellcheck disable=SC2086

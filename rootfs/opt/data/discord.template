@@ -99,7 +99,7 @@
           "name": "Heading",
           "value": "##HEADING## deg",
           "inline": false
-        },
+        }
       ],
       "timestamp": "##TIMESTAMP## ",
       "thumbnail": {
@@ -108,8 +108,8 @@
       "footer": {
         "text": "VesselAlert by kx1t"
       },
-      "url": "https://www.vesselalert.com",
-      "image":{"url":"attachment://##SCREENSHOTFILE##"}
+      "url": "https://www.vesselalert.com"
+      , "image":{"url":"attachment://##SCREENSHOTFILE##"}
     }
   ]
 }
