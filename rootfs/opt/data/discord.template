@@ -1,122 +1,123 @@
 {
-  "username": "##USER##",
-  "avatar_url": "##AVATAR##",
-  "tts": false,
-  "components": [
-    {
-      "type": 1,
-      "components": [
+    "username": "##USER##",
+    "avatar_url": "##AVATAR##",
+    "tts": false,
+    "components": [
         {
-          "style": 5,
-          "label": "ShipSpotting photo gallery",
-          "url": "##STNMAP##",
-          "disabled": ##STNMAPDISABLED##,
-          "type": 2
+            "type": 1,
+            "components": [
+                {
+                    "style": 5,
+                    "label": "ShipSpotting photo gallery",
+                    "url": "##STNMAP##",
+                    "disabled": ##STNMAPDISABLED##,
+                    "type": 2
+                },
+                {
+                    "style": 5,
+                    "label": "ShipXplorer",
+                    "url": "https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##",
+                    "disabled": false,
+                    "type": 2
+                },
+                {
+                    "style": 5,
+                    "label": "MarineTraffic",
+                    "url": "https://www.marinetraffic.com/en/ais/details/ships/##MMSI##",
+                    "disabled": false,
+                    "type": 2
+                },
+                {
+                    "style": 5,
+                    "label": "VesselFinder",
+                    "url": "https://www.vesselfinder.com/vessels/details/##MMSI##",
+                    "disabled": false,
+                    "type": 2
+                },
+                {
+                    "style": 5,
+                    "label": "ShipSpotting photo gallery",
+                    "url": "https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##",
+                    "disabled": false,
+                    "type": 2
+                }
+            ]
         }
+    ],
+    "embeds": [
         {
-          "style": 5,
-          "label": "ShipXplorer",
-          "url": "https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##",
-          "disabled": false,
-          "type": 2
-        },
-        {
-          "style": 5,
-          "label": "MarineTraffic",
-          "url": "https://www.marinetraffic.com/en/ais/details/ships/##MMSI##",
-          "disabled": false,
-          "type": 2
-        },
-        {
-          "style": 5,
-          "label": "VesselFinder",
-          "url": "https://www.vesselfinder.com/vessels/details/##MMSI##",
-          "disabled": false,
-          "type": 2
-        },
-        {
-          "style": 5,
-          "label": "ShipSpotting photo gallery",
-          "url": "https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##",
-          "disabled": false,
-          "type": 2
+            "tts": false,
+            "type": "rich",
+            "title": "VesselAlert",
+            "description": "Vessel ##VESSELNAME## - MMSI ##MMSI",
+            "color": "16711680",
+            "fields": [
+                {
+                    "name": "Vessel Name",
+                    "value": "##VESSELNAME## ",
+                    "inline": true
+                },
+                {
+                    "name": "MMSI",
+                    "value": "##MMSI## ",
+                    "inline": true
+                },
+                {
+                    "name": "Callsign",
+                    "value": "##CALLSIGN## ",
+                    "inline": true
+                },
+                {
+                    "name": "Type",
+                    "value": "##TYPE## ",
+                    "inline": true
+                },
+                {
+                    "name": "Destination",
+                    "value": "##DESTINATION## ",
+                    "inline": false
+                },
+                {
+                    "name": "Flag",
+                    "value": "##FLAG## ",
+                    "inline": true
+                },
+                {
+                    "name": "Msgs rcvd",
+                    "value": "##COUNT## ",
+                    "inline": true
+                },
+                {
+                    "name": "RSSI",
+                    "value": "##SIGNAL## dBFS",
+                    "inline": true
+                },
+                {
+                    "name": "Status",
+                    "value": "##STATUS## ",
+                    "inline": false
+                },
+                {
+                    "name": "Speed",
+                    "value": "##SPEED## kt",
+                    "inline": true
+                },
+                {
+                    "name": "Heading",
+                    "value": "##HEADING## deg",
+                    "inline": false
+                }
+            ],
+            "timestamp": "##TIMESTAMP## ",
+            "thumbnail":
+            {
+                "url": "https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=##MMSI##"
+            },
+            "footer":
+            {
+                "text": "VesselAlert by kx1t"
+            },
+            "url": "https://www.vesselalert.com"
+            , "image":{"url":"attachment://##SCREENSHOTFILE##"}
+            }]
         }
-      ]
-    }
-  ],
-  "embeds": [
-    {
-      "tts": false,
-      "type": "rich",
-      "title": "VesselAlert",
-      "description": "Vessel ##VESSELNAME## - MMSI ##MMSI",
-      "color": "16711680",
-      "fields": [
-        {
-          "name": "Vessel Name",
-          "value": "##VESSELNAME## ",
-          "inline": true
-        },
-        {
-          "name": "MMSI",
-          "value": "##MMSI## ",
-          "inline": true
-        },
-        {
-          "name": "Callsign",
-          "value": "##CALLSIGN## ",
-          "inline": true
-        },
-        {
-          "name": "Type",
-          "value": "##TYPE## ",
-          "inline": true
-        },
-        {
-          "name": "Destination",
-          "value": "##DESTINATION## ",
-          "inline": false
-        },
-        {
-          "name": "Flag",
-          "value": "##FLAG## ",
-          "inline": true
-        },
-        {
-          "name": "Msgs rcvd",
-          "value": "##COUNT## ",
-          "inline": true
-        },
-        {
-          "name": "RSSI",
-          "value": "##SIGNAL## dBFS",
-          "inline": true
-        },
-        {
-          "name": "Status",
-          "value": "##STATUS## ",
-          "inline": false
-        },
-        {
-          "name": "Speed",
-          "value": "##SPEED## kt",
-          "inline": true
-        },
-        {
-          "name": "Heading",
-          "value": "##HEADING## deg",
-          "inline": false
-        }
-      ],
-      "timestamp": "##TIMESTAMP## ",
-      "thumbnail": {
-        "url": "https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=##MMSI##"
-      },
-      "footer": {
-        "text": "VesselAlert by kx1t"
-      },
-      "url": "https://www.vesselalert.com"
-      , "image":{"url":"attachment://##SCREENSHOTFILE##"}
-    }
-  ]
-}

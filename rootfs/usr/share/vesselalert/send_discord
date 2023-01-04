@@ -57,7 +57,7 @@ readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 [[ -n "${VESSELS[${vessel}:shipname]}" ]] && VESSELS[${vessel}:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:shipname]}")"
 [[ -n "${VESSELS[${vessel}:destination]}" ]] && VESSELS[${vessel}:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$vessel:destination]}")"
 
-
+set -x
 # load the notification JSON from the template:
 notif_json="$(</data/discord.template)"
 
@@ -103,7 +103,7 @@ echo "$notif_json" > /data/notif.json
 
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
-
+set +x
 # Now send the Discord notification:
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
