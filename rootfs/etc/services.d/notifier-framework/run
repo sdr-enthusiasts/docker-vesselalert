@@ -108,7 +108,7 @@ do
         if [[ -n "${VESSELS[${vessel}:last_signal]}" ]] \
         && (( ${VESSELS[${vessel}:last_signal]} > 600 ))
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
             notify_timing="false"
         fi
 
