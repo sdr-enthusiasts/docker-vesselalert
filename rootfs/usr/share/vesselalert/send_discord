@@ -54,8 +54,8 @@ fi
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 
 # First do some clean up
-[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
-[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
+[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
 
 [[ -n "$DEBUG" ]] && set -x
 # load the notification JSON from the template:
@@ -90,14 +90,14 @@ fi
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 [[ -n "${DISCORD_AVATAR_URL}" ]] && notif_json="${notif_json//##AVATAR##/${DISCORD_AVATAR_URL}}" || notif_json="${notif_json//\"avatar_url\": \"##AVATAR##\",/}"
 notif_json="${notif_json//##MMSI##/$1}"
-notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]}}"
+notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]//_/ }}"
 notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
-type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"; type="${type#*#}"; notif_json="${notif_json//##TYPE##/${type}}"
-notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]}}"
+type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"; notif_json="${notif_json//##TYPE##/${type//#/}}"
+notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
 flag="${COUNTRY[${VESSELS[$1:country]}]}"; notif_json="${notif_json//##FLAG##/${flag}}"
 notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 printf -v signal -- "%.1f" "${VESSELS[$1:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
-status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";notif_json="${notif_json//##STATUS##/${status}}"
+status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}"; status="${status//_/ }";notif_json="${notif_json//##STATUS##/${status}}"
 notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
