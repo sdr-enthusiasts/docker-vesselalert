@@ -119,6 +119,11 @@
                 "text": "VesselAlert by kx1t"
             },
             "url": "https://www.vesselalert.com"
-            , "image":{"url":"attachment://##SCREENSHOTFILE##"}
+            ##SCRSHT--
+            ,
+            "image":
+            {
+                "url":"attachment://##SCREENSHOTFILE##"
+            }--SCRSHT##
             }]
         }

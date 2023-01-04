@@ -57,7 +57,7 @@ readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 [[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
 [[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
 
-set -x
+[[ -n "$DEBUG" ]] && set -x
 # load the notification JSON from the template:
 notif_json="$(</data/discord.template)"
 
@@ -66,10 +66,12 @@ if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
 then
     SCREENSHOTCURL="-F file1=@${IMAGECACHE}/screenshots/$1.jpg"
     notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
+    notif_json="${notif_json//##SCRSHT--/}"
+    notif_json="${notif_json//--SCRSHT##/}"
     echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
 else
     SCREENSHOTCURL=""
-    notif_json="${notif_json//, \"image\":{\"url\":\"attachment:\/\/##SCREENSHOTFILE##\"}/}"
+    notif_json="${notif_json//##SCRSHT--*---SCRSHT##/}"
     echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
 fi
 
@@ -79,6 +81,8 @@ fi
 if [[ -n "${NOTIFICATION_MAPURL}" ]]
 then
     notif_json="${notif_json//##STNMAP##/${NOTIFICATION_MAPURL}}"
+    notif_json="${notif_json//##SM--/}"
+    notif_json="${notif_json//--SM##/}"
 else
     notif_json="${notif_json//##SM--*--SM##/}"
 fi
