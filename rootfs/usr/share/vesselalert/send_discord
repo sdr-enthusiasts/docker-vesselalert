@@ -118,6 +118,7 @@ notif_json="$(jq -c . <<< "${notif_json}")"
 for url in "${webhooks[@]}"
 do
 #    set -x
+    url="${url//$'\n\/}"    # remove any stray newlines from the URL
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
 #    set +x
     # check if there was an error
