@@ -1,0 +1,97 @@
+#!/usr/bin/with-contenv bash
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+# This script sends a Mastodon notification (toot)
+
+# redirect stderr to stdout so it's picked up in the docker logs
+exec 2>&1
+# all errors will show a line number and the command used to produce the error
+SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
+trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+
+APPNAME="$(hostname)/send-discord"
+
+renice -n 10 -p $$ >/dev/null 2>&1
+
+NL="$'\n'"
+[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
+IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
+
+source "$VESSELDBFILE"
+
+if [[ -z "$1" ]]
+then
+    echo "$0 - send a Discord notification for a specific MMSI"
+    echo "Usage: $0 mmsi"
+    exit 1
+fi
+
+if [[ -z "${DISCORD_WEBHOOKS}" ]]
+then
+    echo "[$(date)][$APPNAME] Error: DISCORD_WEBHOOKS not defined. Cannot send a Mastodon notification"
+    exit 1
+fi
+
+readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
+
+# load the notification JSON from the template:
+notif_json="$(</data/discord.template)"
+
+# If a screenshot exists, then make sure we'll include it:
+if [[ -f "$${IMAGECACHE}/screenshots/$1.jpg" ]]
+then
+    SCREENSHOTCURL="-F \"file1=@${IMAGECACHE}/screenshots/$1.jpg\""
+    notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
+else
+    SCREENSHOTCURL=""
+fi
+
+# Now replace a bunch of parameters in the template:
+notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
+notif_json="${notif_json//##MMSI##/$1}"
+notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]}}"
+notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
+notif_json="${notif_json//##TYPE##/${VESSELS[$1:shiptype]}}"
+notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]}}"
+flag="${COUNTRY[${VESSELS[$1:flag]}]}"; notif_json="${notif_json//##FLAG##/$flag}"
+notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
+printf -v signal -- "%.1f" "${VESSELS[${vessel}:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
+notif_json="${notif_json//##STATUS##/${VESSELS[$1:status]}}"
+notif_json="${notif_json//##SPEED##/${VESSELS[$1:speed]}}"
+notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]}}"
+timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
+
+# Now send the Discord notification:
+#shellcheck disable=SC2086
+
+for url in "${webhooks[@]}"
+do
+    response="$(curl -sSL ${SCREENSHOTCURL}  -F "payload_json=${notif_json}" ${url})"
+    # check if there was an error
+    result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
+    if [[ "${result}" != "null" ]]
+    then
+        echo -n "[$(date)][$APPNAME] Discord post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result}. "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n "\#NEW "
+        #shellcheck disable=SC2154
+        [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
+        [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
+        echo ""
+    else
+        echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
+    fi
+done

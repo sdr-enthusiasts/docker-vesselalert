@@ -107,7 +107,7 @@ do
         then
             spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
 	    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
-            VESSELS[${vessel}:mast:last]="$(( $(date +%s) + adjust ))"
+            VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
         fi
     done
 
@@ -115,7 +115,7 @@ do
         && [[ ! -f /data/container_has_run_before ]]
     then
         touch /data/container_has_run_before
-        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and MASTODON_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:mast:last]}"
+        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and MASTODON_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
     fi
 
     # Write back to file

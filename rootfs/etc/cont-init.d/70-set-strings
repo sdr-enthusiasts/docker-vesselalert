@@ -22,9 +22,6 @@ echo "[$(date)][$APPNAME] Loading Vessel and Status Descriptions"
 
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 
-# Put country databases in place but don't overwrite any existing ones as they may have been changed by the user
-cp -n /opt/data/* /data >/dev/null 2>&1
-
 touch ${VESSELDBFILE}
 # First read the existing entries in from file
 if (( $(wc -l < "$VESSELDBFILE") > 0 ))
@@ -416,6 +413,26 @@ fi
 ! declare -p VESSELS >/dev/null 2>&1 && declare -A VESSELS || true
 ! declare -p KEY_INDEX >/dev/null 2>&1 && declare -a KEY_INDEX || true
 ! declare -p VESSEL_INDEX >/dev/null 2>&1 && declare -a VESSEL_INDEX || true
+
+# One-time conversion to new variables naming convention:
+for vessel in "${VESSELS[@]}"
+do
+    if [[ "${VESSELS[${vessel}:mast:lat]+abc}" ]]
+    then
+        VESSELS[${vessel}:notification:lat]="${VESSELS[${vessel}:mast:lat]}"
+        unset "VESSELS[${vessel}:mast:lat]"
+    fi
+    if [[ "${VESSELS[${vessel}:mast:lon]+abc}" ]]
+    then
+        VESSELS[${vessel}:notification:lon]="${VESSELS[${vessel}:mast:lon]}"
+        unset "VESSELS[${vessel}:mast:lon]"
+    fi
+    if [[ "${VESSELS[${vessel}:mast:last]+abc}" ]]
+    then
+        VESSELS[${vessel}:notification:last]="${VESSELS[${vessel}:mast:last]}"
+        unset "VESSELS[${vessel}:mast:last]"
+    fi
+done
 
 # write back to file
 source "/usr/share/vesselalert/save_databases"

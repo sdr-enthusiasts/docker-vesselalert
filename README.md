@@ -52,7 +52,7 @@ There are a series of available environment variables:
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
-| `MASTODON_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
+| `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
 | `MASTODON_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `MASTODON_MAPURL` | If set to a URL, a link `$MASTODON_MAPURL/mmsi=$mmsi` will be added to the toot. If the value doesn't start with "http", `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
 | `SCREENSHOT_URL` | If set to the URL of a screenshot container, the notifier will attempt to get a screenshot to add to the notification. See below for explanation on how to configure | empty | no |
