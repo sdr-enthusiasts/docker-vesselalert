@@ -105,7 +105,6 @@ echo "$notif_json" > /data/notif.json
 notif_json="$(jq -c . <<< "${notif_json}")"
 # final safety - make sure that any double quotes are escaped:
 notif_json="${notif_json//\"/\\\"}"
-set +x
 # Now send the Discord notification:
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
@@ -126,3 +125,4 @@ do
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
     fi
 done
+set +x
