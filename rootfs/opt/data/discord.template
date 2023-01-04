@@ -49,7 +49,7 @@
             "tts": false,
             "type": "rich",
             "title": "VesselAlert",
-            "description": "Vessel ##VESSELNAME## - MMSI ##MMSI",
+            "description": "Vessel ##VESSELNAME## - MMSI ##MMSI##",
             "color": "16711680",
             "fields": [
                 {
@@ -108,7 +108,7 @@
                     "inline": false
                 }
             ],
-            "timestamp": "##TIMESTAMP## ",
+            "timestamp": "##TIMESTAMP##",
             "thumbnail":
             {
                 "url": "https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=##MMSI##"

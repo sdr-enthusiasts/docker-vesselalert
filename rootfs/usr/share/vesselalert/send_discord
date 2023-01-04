@@ -64,7 +64,7 @@ notif_json="$(</data/discord.template)"
 # If a screenshot exists, then make sure we'll include it:
 if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
 then
-    SCREENSHOTCURL="-F \"file1=@${IMAGECACHE}/screenshots/$1.jpg\""
+    SCREENSHOTCURL="-F file1=@${IMAGECACHE}/screenshots/$1.jpg"
     notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
     echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
 else
@@ -108,8 +108,8 @@ set +x
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
 do
-    echo "[$(date)][$APPNAME] Curl command: curl -sSL ${SCREENSHOTCURL} -F \"payload_json=${notif_json}\" ${url}"
-    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
+    echo "[$(date)][$APPNAME] Curl command: curl -sSL ${SCREENSHOTCURL} -F \'payload_json=${notif_json}\' ${url}"
+    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=\'${notif_json}\'" ${url})"
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
