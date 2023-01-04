@@ -209,11 +209,6 @@ do
 
             # ---------------------------------------------------------------------------------------------
 
-            # Update the Assoc Array with the latest values:
-            # update mast_status values:
-            VESSELS[${vessel}:notification:lat]="${VESSELS[${vessel}:lat]}"
-            VESSELS[${vessel}:notification:lon]="${VESSELS[${vessel}:lon]}"
-            VESSELS[${vessel}:notification:last]="$(date +%s)"
 
             [[ -n "$DEBUG" ]] && echo "updated VESSELS[$mmsi]"
             # Increment notification count
@@ -230,13 +225,7 @@ do
 
     [[ -n "$DEBUG" ]] && echo "Notification count: ${notification_count}"
 
-    # Write arrays back to the file if it was changed:
-    if (( notification_count > 0 ))
-    then
-        # Write back to file
-        source /usr/share/vesselalert/save_databases
-        notification_count=0
-    fi
+    notification_count=0
 
     # Remove file block:
     rm -f "$VESSELDBLOCK"

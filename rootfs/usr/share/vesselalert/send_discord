@@ -79,9 +79,8 @@ fi
 if [[ -n "${NOTIFICATION_MAPURL}" ]]
 then
     notif_json="${notif_json//##STNMAP##/${NOTIFICATION_MAPURL}}"
-    notif_json="${notif_json//##STNMAPDISABLED##/false}"
 else
-    notif_json="${notif_json//##STNMAPDISABLED##/true}"
+    notif_json="${notif_json//##SM--*--SM##/}"
 fi
 # Now replace a bunch of parameters in the template:
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
@@ -121,7 +120,7 @@ do
         [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
         [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
         echo ""
-        
+
         # Update the Assoc Array with the latest values:
         VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
         VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"

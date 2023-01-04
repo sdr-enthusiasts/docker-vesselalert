@@ -6,13 +6,14 @@
         {
             "type": 1,
             "components": [
-                {
+          ##SM--{
                     "style": 5,
-                    "label": "ShipSpotting photo gallery",
+                    "label": "Station Map",
                     "url": "##STNMAP##",
-                    "disabled": ##STNMAPDISABLED##,
+                    "disabled": false,
                     "type": 2
-                },
+                },--SM##
+
                 {
                     "style": 5,
                     "label": "ShipXplorer",
