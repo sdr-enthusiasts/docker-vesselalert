@@ -154,16 +154,21 @@ do
         then
             notify_count="false"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"
+        elif [[ -z "${VESSELS[${vessel}:shipname]}" ]] && (( ${VESSELS[${vessel}:count]} < 25 ))
+        then
+            notify_count="false"
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"          
         else
             notify_count="true"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
-
         fi
+
 
         # Notification logic here for clarity:
         unset notify_now
-        [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
-        [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
+        extra_args=""
+        [[ "$notify_timing" == "true" ]] && notify_now="true" && extra_args+="timing "  # notify when timing is right or when the timing is undefined
+        [[ "$notify_distance" == "true" ]] && notify_now="true"  && extra_args+="distance " # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
         [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
 
@@ -204,8 +209,8 @@ do
 
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
-            [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}"
-            [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}"
+            [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args}
+            [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args}
 
             # ---------------------------------------------------------------------------------------------
 

@@ -39,6 +39,9 @@ else
     echo "[$(date)][$APPNAME] Attempting Discord notification for $1 (${VESSELS[$1:shipname]})"
 fi
 
+[[ "$2 $3 $4 $5 $6" =~ .*distance.* ]] && notify_distance="true"
+[[ "$2 $3 $4 $5 $6" =~ .*timing.* ]] && notify_timing="true"
+
 if [[ -z "${DISCORD_WEBHOOKS}" ]]
 then
     echo "[$(date)][$APPNAME] Error: DISCORD_WEBHOOKS not defined. Cannot send a Discord notification"
