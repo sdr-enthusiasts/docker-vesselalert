@@ -1,0 +1,39 @@
+#!/bin/bash
+if [[ -z "$1" ]]
+then
+	echo "Usage: $0 mmsi"
+	exit 1
+fi
+
+
+
+VESSELDBFILE="/opt/ais/data/vessel.db"
+
+if [[ -f  $VESSELDBLOCK ]]
+then
+    echo "$VESSELDBFILE is blocked. Waiting for unblock..."
+    while [[ -f  $VESSELDBLOCK ]]
+    do
+        sleep 0.683
+    done
+    echo "$VESSELDBFILE is now unblocked. Continuing..."
+fi
+    # Now lock the process for myself:
+    touch "$VESSELDBLOCK"
+
+source $VESSELDBFILE
+set -x
+for key in "${KEY_INDEX[@]}"
+do
+	unset VESSELS[$1:$key]
+done
+set +x
+{
+    declare -p KEY_INDEX
+    declare -p VESSEL_INDEX
+    declare -p VESSELS
+    declare -p SHIPTYPE
+    declare -p SHIPSTATUS
+    declare -p COUNTRY ;} > "$VESSELDBFILE"
+
+rm -f "$VESSELDBLOCK"
