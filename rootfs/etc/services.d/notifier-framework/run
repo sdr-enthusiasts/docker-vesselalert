@@ -157,7 +157,7 @@ do
         elif [[ -z "${VESSELS[${vessel}:shipname]}" ]] && (( ${VESSELS[${vessel}:count]} < 25 ))
         then
             notify_count="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"          
+            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"
         else
             notify_count="true"
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
@@ -209,7 +209,9 @@ do
 
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
+            # shellcheck disable=SC2086  # we want globbing of $extra_args here
             [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args}
+            # shellcheck disable=SC2086  # we want globbing of $extra_args here
             [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args}
 
             # ---------------------------------------------------------------------------------------------

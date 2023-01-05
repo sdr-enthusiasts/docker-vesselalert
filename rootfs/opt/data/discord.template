@@ -50,7 +50,7 @@
             "tts": false,
             "type": "rich",
             "title": "VesselAlert",
-            "description": "Vessel ##VESSELNAME## - MMSI ##MMSI##",
+            "description": "##DESCRIPTION## ",
             "color": "16711680",
             "fields": [
                 {

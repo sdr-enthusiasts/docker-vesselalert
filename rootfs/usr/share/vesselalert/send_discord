@@ -91,47 +91,76 @@ else
 fi
 # Now replace a bunch of parameters in the template:
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
+
+{   description=""
+    [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
+    description+="Vessel ${VESSELS[$1:shipname]//_/ } "
+    [[ "${notify_distance}" == "true" ]] && description+="is on the move " || description+="seen "
+    [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && description+="again"
+    notif_json="${notif_json//##DESCRIPTION##/${description}}"
+}
+
 [[ -n "${DISCORD_AVATAR_URL}" ]] && notif_json="${notif_json//##AVATAR##/${DISCORD_AVATAR_URL}}" || notif_json="${notif_json//\"avatar_url\": \"##AVATAR##\",/}"
+
 notif_json="${notif_json//##MMSI##/$1}"
+
 notif_json="${notif_json//##VESSELNAME##/${VESSELS[$1:shipname]//_/ }}"
+
 notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
-type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"; notif_json="${notif_json//##TYPE##/${type//#/}}"
+
+{   type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
+    notif_json="${notif_json//##TYPE##/${type//#/}}"
+}
 notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
-flag="${COUNTRY[${VESSELS[$1:country]}]}"; notif_json="${notif_json//##FLAG##/${flag}}"
+
+{   flag="${COUNTRY[${VESSELS[$1:country]}]}"
+    notif_json="${notif_json//##FLAG##/${flag}}"
+}
+
 notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
-printf -v signal -- "%.1f" "${VESSELS[$1:level]}"; notif_json="${notif_json//##SIGNAL##/${signal}}"
-status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";
+
+{   printf -v signal -- "%.1f" "${VESSELS[$1:level]}"
+    notif_json="${notif_json//##SIGNAL##/${signal}}"
+}
+
+{   status="${SHIPSTATUS[${VESSELS[$1:status]}]}"
+    status="${status#*#}";
     status="${status//_/ }";
     [[ -z "${VESSELS[$1:notification:last]}" ]] && status+=" #New"
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && status+=" #SeenBefore"
     [[ "${notify_distance}" == "true" ]] && status+=" #OnTheMove"
     notif_json="${notif_json//##STATUS##/${status}}"
-if [[ "${notify_distance}" == "true" ]]
-then
-    printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]}" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]} ${VESSELS[$1:lon]}")"
-else
-    printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]}"
-fi
-[[ -z "${VESSELS[$1:speed]}" ]] && speed=""
+}
 
-notif_json="${notif_json//##SPEED##/${speed}}"
+{   if [[ "${notify_distance}" == "true" ]]
+    then
+        printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]}" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}")"
+    else
+        printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]}"
+    fi
+    [[ -z "${VESSELS[$1:speed]}" ]] && speed=""
+    notif_json="${notif_json//##SPEED##/${speed}}"
+}
+
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
-timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
 
+{   timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"
+    notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
+}
+
+# replace " " by "--" to appease Discord's weird restriction on empty and almost empty strings
 notif_json="${notif_json//\" \"/\"--\"}"
 
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
-# final safety - make sure that any double quotes are escaped:
-#notif_json="${notif_json//\"/\\\"}"
+
 # Now send the Discord notification:
 #shellcheck disable=SC2086
 for url in "${webhooks[@]}"
 do
-#    set -x
     url="${url//$'\n'/}"    # remove any stray newlines from the URL
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url} 2>&1)"
-#    set +x
+
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
@@ -140,15 +169,9 @@ do
         [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
         [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
-        [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"
+        [[ "${notify_distance}" == "true" ]] && echo -n " #ONTHEMOVE"
         echo ""
 
-        # Update the Assoc Array with the latest values:
-        VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
-        VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
-        VESSELS[$1:notification:last]="$(date +%s)"
-
-        source /usr/share/vesselalert/save_databases
     else
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
         {
@@ -162,6 +185,16 @@ do
             done
             echo "---------------------------------------------------------------"
         } >> /data/discord.error.log
+        notification_error="true"
     fi
 done
-set +x
+
+if [[ "$notification_error" != "true" ]]
+then
+    # Update the Assoc Array with the latest values:
+    VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
+    VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
+    VESSELS[$1:notification:last]="$(date +%s)"
+
+    source /usr/share/vesselalert/save_databases
+fi
