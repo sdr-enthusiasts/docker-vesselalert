@@ -55,7 +55,7 @@
             "fields": [
                 {
                     "name": "Vessel Name",
-                    "value": "##VESSELNAME##",
+                    "value": "##VESSELNAME## ",
                     "inline": true
                 },
                 {
@@ -65,17 +65,17 @@
                 },
                 {
                     "name": "Callsign",
-                    "value": "##CALLSIGN##",
+                    "value": "##CALLSIGN## ",
                     "inline": true
                 },
                 {
                     "name": "Type",
-                    "value": "##TYPE##",
+                    "value": "##TYPE## ",
                     "inline": true
                 },
                 {
                     "name": "Destination",
-                    "value": "##DESTINATION##",
+                    "value": "##DESTINATION## ",
                     "inline": false
                 },
                 {
@@ -95,17 +95,17 @@
                 },
                 {
                     "name": "Status",
-                    "value": "##STATUS##",
+                    "value": "##STATUS## ",
                     "inline": false
                 },
                 {
                     "name": "Speed",
-                    "value": "##SPEED##",
+                    "value": "##SPEED## ",
                     "inline": true
                 },
                 {
                     "name": "Heading",
-                    "value": "##HEADING##",
+                    "value": "##HEADING## ",
                     "inline": false
                 }
             ],

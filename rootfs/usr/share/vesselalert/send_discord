@@ -105,10 +105,12 @@ status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";
     notif_json="${notif_json//##STATUS##/${status}}"
 if [[ "${notify_distance}" == "true" ]]
 then
-    speed="${VESSELS[$1:speed]} kts - moved $(printf -- "%.1f" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]} ${VESSELS[$1:lon]}")") nm since last notification"
+    printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]}" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]} ${VESSELS[$1:lon]}")"
 else
-    speed="${VESSELS[$1:speed]} kts"
+    printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]}"
 fi
+[[ -z "${VESSELS[$1:speed]}" ]] && speed=""
+
 notif_json="${notif_json//##SPEED##/${speed}}"
 [[ "${VESSELS[$1:heading]}" != "null" ]] && notif_json="${notif_json//##HEADING##/${VESSELS[$1:heading]} deg}" || notif_json="${notif_json//##HEADING##/--}"
 timestamp="$(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%Y-%m-%dT%H:%M:%S%z")"; notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
@@ -124,14 +126,14 @@ notif_json="$(jq -c . <<< "${notif_json}")"
 for url in "${webhooks[@]}"
 do
 #    set -x
-    url="${url//$'\n'\/}"    # remove any stray newlines from the URL
+    url="${url//$'\n'/}"    # remove any stray newlines from the URL
     response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url} 2>&1)"
 #    set +x
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
     then
-        echo -n "[$(date)][$APPNAME] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result}. "
+        echo -n "[$(date)][$APPNAME] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result//$'\n'/}."
         [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
         [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
