@@ -125,7 +125,7 @@ for url in "${webhooks[@]}"
 do
 #    set -x
     url="${url//$'\n'\/}"    # remove any stray newlines from the URL
-    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url})"
+    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url} 2>&1)"
 #    set +x
     # check if there was an error
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
@@ -146,6 +146,17 @@ do
         source /usr/share/vesselalert/save_databases
     else
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
+        {
+            echo "Discord posting error at $(date) for $1 (${VESSELS[$1:shipname]})"
+            echo "SCREENSHOTCURL=${SCREENSHOTCURL}"
+            echo "URL=${url}"
+            echo "notif_json=${notif_json}"
+            for i in "${KEY_INDEX[@]}"
+            do
+                echo "VESSELS[$1:$i]=\"${VESSELS[$1:$i]}\""
+            done
+            echo "---------------------------------------------------------------"
+        } >> /data/discord.error.log
     fi
 done
 set +x
