@@ -178,7 +178,7 @@ do
         then
             # we need to notify
             extra_args=""
-            [[ "$notify_timing" == "true" ]] && extra_args+="timing=$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) "  # notify when timing is right or when the timing is undefined
+            [[ "$notify_timing" == "true" ]] && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && extra_args+="timing=$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) "  # notify when timing is right or when the timing is undefined
             [[ "$notify_distance" == "true" ]] && extra_args+="distance=$(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}")" # notify when the distance traveled is far enough
 
             # Get a vessel image:
