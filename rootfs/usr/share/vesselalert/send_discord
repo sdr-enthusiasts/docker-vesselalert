@@ -106,7 +106,7 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 
 {   description=""
     [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
-    [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 } "
+    [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 "
     [[ -n "${notify_distance}" ]] && description+="is on the move " || description+="is seen "
     [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && description+="again "
     description+="at $(date +"%R %Z")"
