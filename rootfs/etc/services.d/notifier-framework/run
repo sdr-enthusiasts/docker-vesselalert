@@ -3,8 +3,8 @@
 #shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091
 
 
-# Mastodon-Notifier
-# Send notification to Mastodon
+# Notifier Framework
+# Determine if a notification needs to be sent
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
