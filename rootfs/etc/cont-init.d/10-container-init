@@ -4,4 +4,5 @@
 echo "Starting VesselAlert version $(cat /.CONTAINER_VERSION)"
 
 # Put databases in place but don't overwrite any existing ones as they may have been changed by the user
+mkdir -p /data/imagecache/screenshots/
 cp -u --backup=numbered /opt/data/* /data >/dev/null 2>&1
