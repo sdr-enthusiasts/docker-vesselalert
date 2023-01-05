@@ -166,9 +166,8 @@ do
 
         # Notification logic here for clarity:
         unset notify_now
-        extra_args=""
-        [[ "$notify_timing" == "true" ]] && notify_now="true" && extra_args+="timing "  # notify when timing is right or when the timing is undefined
-        [[ "$notify_distance" == "true" ]] && notify_now="true"  && extra_args+="distance " # notify when the distance traveled is far enough
+        [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
+        [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
         [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
 
@@ -178,6 +177,9 @@ do
         if [[ -n "$notify_now" ]]
         then
             # we need to notify
+            extra_args=""
+            [[ "$notify_timing" == "true" ]] && extra_args+="timing=$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) "  # notify when timing is right or when the timing is undefined
+            [[ "$notify_distance" == "true" ]] && extra_args+="distance=$(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}")" # notify when the distance traveled is far enough
 
             # Get a vessel image:
             image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${VESSELS[${vessel}:mmsi]}"

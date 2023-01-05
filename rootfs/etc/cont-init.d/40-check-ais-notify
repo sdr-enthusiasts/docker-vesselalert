@@ -22,29 +22,12 @@
 APPNAME="$(hostname)/40-check-ais-notify"
 echo "[$(date)][$APPNAME] Started as an s6 init script"
 
-if [[ ! $MASTODON_NOTIFY_EVERY =~ ^[0-9]+$ ]]
-then
-    echo "[$(date)][$APPNAME] FATAL: MASTODON_NOTIFY_EVERY is set to \"$MASTODON_NOTIFY_EVERY\"; expecting a numeric value in seconds."
-    echo "[$(date)][$APPNAME]        Please correct and restart the container. (Note - removal will default this parameter to 86400 (1 day).)"
-    echo "[$(date)][$APPNAME] Container execution is HALTED."
-    sleep infinity
-fi
-
 AIS_URL="${AIS_URL,,}"
 if [[ "${AIS_URL:0:4}" != "http" ]]
 then
     [[ -z "$AIS_URL" ]] && echo -n "WARNING: AIS_URL is empty; " || echo -n "WARNING: AIS_URL is set to \":$AIS_URL\"; "
     echo "expecting a URL starting with \"http://\" or \"https://\"."
     echo "[$(date)][$APPNAME]         Please correct and restart the container."
-    echo "[$(date)][$APPNAME] Container execution is HALTED."
-    sleep infinity
-fi
-
-if  [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]]
-then
-    [[ -z "$MASTODON_ACCESS_TOKEN" ]] && echo -n "FATAL: MASTODON_ACCESS_TOKEN not defined. You must create an application in your Mastodon account"
-    [[ -z "$MASTODON_SERVER" ]] && echo -n "FATAL: MASTODON_SERVER not defined. You must create an application in your Mastodon account"
-    echo "[$(date)][$APPNAME]         See https://github.com/sdr-enthusiasts/docker-vesselalert/README-Mastodon.md"
     echo "[$(date)][$APPNAME] Container execution is HALTED."
     sleep infinity
 fi
