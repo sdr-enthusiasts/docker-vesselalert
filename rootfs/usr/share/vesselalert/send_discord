@@ -106,7 +106,7 @@ status="${SHIPSTATUS[${VESSELS[$1:status]}]}"; status="${status#*#}";
 if [[ "${notify_distance}" == "true" ]]
 then
     speed="${VESSELS[$1:speed]} kts - moved $(printf -- "%.1f" "$(nice -n 20 distance "${VESSELS[$1:notification:lat]}" "${VESSELS[$1:notification:lon]}" "${VESSELS[$1:lat]} ${VESSELS[$1:lon]}")") nm since last notification"
-else 
+else
     speed="${VESSELS[$1:speed]} kts"
 fi
 notif_json="${notif_json//##SPEED##/${speed}}"
