@@ -2,49 +2,6 @@
     "username": "##USER##",
     "avatar_url": "##AVATAR##",
     "tts": false,
-    "components": [
-        {
-            "type": 1,
-            "components": [
-          ##SM--{
-                    "style": 5,
-                    "label": "Station Map",
-                    "url": "##STNMAP##",
-                    "disabled": false,
-                    "type": 2
-                },--SM##
-
-                {
-                    "style": 5,
-                    "label": "ShipXplorer",
-                    "url": "https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##",
-                    "disabled": false,
-                    "type": 2
-                },
-                {
-                    "style": 5,
-                    "label": "MarineTraffic",
-                    "url": "https://www.marinetraffic.com/en/ais/details/ships/##MMSI##",
-                    "disabled": false,
-                    "type": 2
-                },
-                {
-                    "style": 5,
-                    "label": "VesselFinder",
-                    "url": "https://www.vesselfinder.com/vessels/details/##MMSI##",
-                    "disabled": false,
-                    "type": 2
-                },
-                {
-                    "style": 5,
-                    "label": "ShipSpotting photo gallery",
-                    "url": "https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##",
-                    "disabled": false,
-                    "type": 2
-                }
-            ]
-        }
-    ],
     "embeds": [
         {
             "tts": false,
@@ -106,6 +63,16 @@
                 {
                     "name": "Heading",
                     "value": "##HEADING## ",
+                    "inline": false
+                },
+                {
+                    "name": "Station Map",
+                    "value": "##STNMAP## ",
+                    "inline": false
+                },
+                {
+                    "name": "External Links",
+                    "value": "[ShipXplorer](https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##) | [MarineTraffic](https://www.marinetraffic.com/en/ais/details/ships/##MMSI##) | [VesselFinder](https://www.vesselfinder.com/vessels/details/##MMSI##) | [ShipSpotting photo gallery](https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##)",
                     "inline": false
                 }
             ],
