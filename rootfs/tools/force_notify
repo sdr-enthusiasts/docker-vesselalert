@@ -1,0 +1,62 @@
+#!/bin/bash
+#shellcheck shell=bash
+#shellcheck disable=SC1090
+
+# AIS-Collect:
+# read AIS data from a AIS-Catcher web service and
+# create and maintain a database with this data
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+# redirect stderr to stdout so it's picked up in the docker logs
+exec 2>&1
+# all errors will show a line number and the command used to produce the error
+#shellcheck disable=SC2164
+SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
+trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+
+if [[ -z "$1" ]]
+then
+	echo "Usage: $0 mmsi"
+	exit 1
+fi
+
+
+
+VESSELDBFILE="/opt/ais/data/vessel.db"
+CONTAINER="vesselalert"
+
+echo "Pausing ${CONTAINER}"
+docker pause ${CONTAINER}
+
+source "$VESSELDBFILE"
+for key in "${KEY_INDEX[@]}"
+do
+	echo "Removing $1:$key"
+	unset "VESSELS[$1:$key]"
+done
+
+# write back to file
+{
+    declare -p KEY_INDEX
+    declare -p VESSEL_INDEX
+    declare -p VESSELS
+    declare -p SHIPTYPE
+    declare -p SHIPSTATUS
+    declare -p COUNTRY ;} > "$VESSELDBFILE"
+
+echo "resuming ${CONTAINER}"
+docker unpause ${CONTAINER}

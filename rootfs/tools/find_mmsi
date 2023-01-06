@@ -1,4 +1,4 @@
-#!/bin/bash
+\#!/bin/bash
 #shellcheck shell=bash
 #shellcheck disable=SC1090
 
@@ -24,46 +24,6 @@
 # redirect stderr to stdout so it's picked up in the docker logs
 exec 2>&1
 # all errors will show a line number and the command used to produce the error
-#shellcheck disable=SC2164
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
-
-if [[ -z "$1" ]]
-then
-	echo "Usage: $0 mmsi"
-	exit 1
-fi
-
-
-
 VESSELDBFILE="/opt/ais/data/vessel.db"
 
-if [[ -f  $VESSELDBLOCK ]]
-then
-    echo "$VESSELDBFILE is blocked. Waiting for unblock..."
-    while [[ -f  $VESSELDBLOCK ]]
-    do
-        sleep 0.683
-    done
-    echo "$VESSELDBFILE is now unblocked. Continuing..."
-fi
-    # Now lock the process for myself:
-    touch "$VESSELDBLOCK"
-
-source "$VESSELDBFILE"
-for key in "${KEY_INDEX[@]}"
-do
-	echo "Removing $1:$key"
-	unset "VESSELS[$1:$key]"
-done
-
-# write back to file
-{
-    declare -p KEY_INDEX
-    declare -p VESSEL_INDEX
-    declare -p VESSELS
-    declare -p SHIPTYPE
-    declare -p SHIPSTATUS
-    declare -p COUNTRY ;} > "$VESSELDBFILE"
-
-rm -f "$VESSELDBLOCK"
+sed 's/"\s\+/"\n/g' "$VESSELDBFILE" | grep "$1" | sort
