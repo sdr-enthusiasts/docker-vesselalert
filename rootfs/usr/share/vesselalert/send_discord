@@ -186,7 +186,7 @@ do
         [[ -n "${notify_distance}" ]] && echo -n " #ONTHEMOVE"
         echo ""
 
-	if -n [[ "$DISCORD_ERROR_LOG" ]]
+	if [[ -n "$DISCORD_ERROR_LOG" ]]
 	then
         {
             echo "Discord posting SUCCESS at $(date) for $1 (${VESSELS[$1:shipname]})"
@@ -203,7 +203,7 @@ do
 
     else
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
-	if -n [[ "$DISCORD_ERROR_LOG" ]]
+	if [[ -n "$DISCORD_ERROR_LOG" ]]
 	then
         {
             echo "Discord posting ERROR at $(date) for $1 (${VESSELS[$1:shipname]})"
