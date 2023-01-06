@@ -161,8 +161,9 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
     notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
 }
 
-# replace " " by "--" to appease Discord's weird restriction on empty and almost empty strings
+# replace " " and "" by "--" to appease Discord's weird restriction on empty and almost empty strings
 notif_json="${notif_json//\" \"/\"--\"}"
+notif_json="${notif_json//\"\"/\"--\"}"
 
 # make the JSON object into a single line:
 notif_json="$(jq -c . <<< "${notif_json}")"
@@ -185,6 +186,8 @@ do
         [[ -n "${notify_distance}" ]] && echo -n " #ONTHEMOVE"
         echo ""
 
+	if -n [[ "$DISCORD_ERROR_LOG" ]]
+	then
         {
             echo "Discord posting SUCCESS at $(date) for $1 (${VESSELS[$1:shipname]})"
             echo "SCREENSHOTCURL=${SCREENSHOTCURL}"
@@ -196,9 +199,12 @@ do
             done
             echo "---------------------------------------------------------------"
         } >> /data/discord.error.log
+	fi
 
     else
         echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
+	if -n [[ "$DISCORD_ERROR_LOG" ]]
+	then
         {
             echo "Discord posting ERROR at $(date) for $1 (${VESSELS[$1:shipname]})"
             echo "SCREENSHOTCURL=${SCREENSHOTCURL}"
@@ -210,6 +216,7 @@ do
             done
             echo "---------------------------------------------------------------"
         } >> /data/discord.error.log
+	fi
         notification_error="true"
     fi
 done
