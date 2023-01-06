@@ -1,6 +1,6 @@
 #!/bin/bash
 #shellcheck shell=bash
-#shellcheck disable=SC1090
+#shellcheck disable=SC1090,SC2015
 
 # AIS-Collect:
 # read AIS data from a AIS-Catcher web service and
@@ -21,6 +21,10 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
+APPNAME="$(hostname)/$0"
+[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
+[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+
 # redirect stderr to stdout so it's picked up in the docker logs
 exec 2>&1
 # all errors will show a line number and the command used to produce the error
@@ -34,13 +38,14 @@ then
 	exit 1
 fi
 
+[[ -f  $VESSELDBLOCK ]] && echo "[$(date)][$APPNAME] Waiting for vessel.db to become unlocked..."
+while [[ -f  $VESSELDBLOCK ]]
+do
+	sleep "0.$((RANDOM % 100))"
+done
 
-
-VESSELDBFILE="/opt/ais/data/vessel.db"
-CONTAINER="vesselalert"
-
-echo "Pausing ${CONTAINER}"
-docker pause ${CONTAINER}
+# Now lock the process for myself:
+touch "$VESSELDBLOCK"
 
 source "$VESSELDBFILE"
 for key in "${KEY_INDEX[@]}"
@@ -57,6 +62,3 @@ done
     declare -p SHIPTYPE
     declare -p SHIPSTATUS
     declare -p COUNTRY ;} > "$VESSELDBFILE"
-
-echo "resuming ${CONTAINER}"
-docker unpause ${CONTAINER}
