@@ -55,10 +55,10 @@ COPY --from=build /docker-vesselalert/src/distance /usr/share/vesselalert/distan
 # Add Container Version
 RUN set -x && \
 pushd /tmp && \
-    git clone --depth=1 https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
-    cd docker-vesselalert && \
     branch="##BRANCH##" && \
-    [[ ! "${branch:0:1}" == "#" ]] && git checkout "$branch" || true && \
+    [[ "${branch:0:1}" == "#" ]] && branch="main" || true && \
+    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
+    cd docker-vesselalert && \
     echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION && \
 popd && \
 rm -rf /tmp/*
