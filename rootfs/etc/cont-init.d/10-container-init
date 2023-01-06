@@ -11,3 +11,4 @@ then
 	tail -500 /data/discord.error.log > /tmp/discord.error.log
 	mv -f /tmp/discord.error.log /data/discord.error.log
 fi
+rm -f "/run/vesseldb.lock"
