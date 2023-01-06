@@ -62,3 +62,5 @@ done
     declare -p SHIPTYPE
     declare -p SHIPSTATUS
     declare -p COUNTRY ;} > "$VESSELDBFILE"
+
+rm -f "$VESSELDBLOCK"
