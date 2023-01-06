@@ -31,9 +31,10 @@ echo "[$(date)][$APPNAME] Started as an s6 service"
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
-CLEANUP_EVERY=3600			# every 1 hour
+CLEANUP_EVERY=1800			# every 30 minutes
 PHOTOS_RETENTION=10080 		# time in minutes; 10080 = 1 week
 SCREENSHOT_RETENTION=3600	# 1 hour
+LOCKFILE_RETENTION=1800		# 15 minutes
 
 while true
 do
@@ -43,3 +44,5 @@ do
 
 	sleep "${CLEANUP_EVERY}"
 done
+
+find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
