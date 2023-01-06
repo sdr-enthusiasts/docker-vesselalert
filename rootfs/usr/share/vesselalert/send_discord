@@ -182,7 +182,7 @@ do
         echo -n "[$(date)][$APPNAME] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result//$'\n'/}."
         [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
-        [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
+        [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n " #OLD "
         [[ -n "${notify_distance}" ]] && echo -n " #ONTHEMOVE"
         echo ""
 
