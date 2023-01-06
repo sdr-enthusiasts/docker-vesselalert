@@ -43,6 +43,7 @@ MASTODON_ACCESS_TOKEN=vsafdwafewarewdcvdsafwaefaewfdw
 MASTODON=ON
 ```
 Replace by the applicable server name and access token.
+For other parameters, see the included [sample `docker-compose.yml`](docker-compose.yml).
 
 # Summary of License Terms
 Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)

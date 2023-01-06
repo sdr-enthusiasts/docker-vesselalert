@@ -26,7 +26,7 @@ trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when exec
 APPNAME="$(hostname)/send-mastodon"
 
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=public
+[[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=unlisted
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 MASTODON_SERVER="${MASTODON_SERVER,,}"
 [[ -z "${MASTODON_SERVER}" ]] && MASTODON_SERVER="airwaves.social"
