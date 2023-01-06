@@ -51,12 +51,13 @@ fi
     touch "$VESSELDBLOCK"
 
 source "$VESSELDBFILE"
-set -x
 for key in "${KEY_INDEX[@]}"
 do
+	echo "Removing $1:$key"
 	unset "VESSELS[$1:$key]"
 done
-set +x
+
+# write back to file
 {
     declare -p KEY_INDEX
     declare -p VESSEL_INDEX
