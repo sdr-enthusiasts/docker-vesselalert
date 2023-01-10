@@ -134,5 +134,5 @@ then
 
     source /usr/share/vesselalert/save_databases
 else
-    echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: $(jq '.error' <<< "${response}"|xargs)"
+    echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: ${response}"
 fi
