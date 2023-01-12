@@ -163,6 +163,8 @@ do
             [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
         fi
 
+        # Notify only if validated =="1"
+        [[ "${VESSELS[${vessel}:validated]}" == "1" ]] && notify_validated="true" || notify_validated="false"
 
         # Notification logic here for clarity:
         unset notify_now
@@ -170,6 +172,8 @@ do
         [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
         [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
+        [[ "$notify_validated" == "false" ]] && unset notify_now	# overrule notification because validation hasn't been done
+        
 
         [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
         [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
