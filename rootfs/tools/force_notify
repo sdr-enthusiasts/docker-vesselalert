@@ -54,6 +54,12 @@ do
 	unset "VESSELS[$1:$key]"
 done
 
+for key in "${VESSEL_INDEX[@]}"
+do
+	[[ "$key" == "$1" ]] && echo "Removing VESSEL_INDEX[$key]=${VESSEL_INDEX[$key]}" || true
+	unset "VESSEL_INDEX[$key]"
+done
+
 # write back to file
 {
     declare -p KEY_INDEX

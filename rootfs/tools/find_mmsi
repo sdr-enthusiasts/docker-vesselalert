@@ -1,10 +1,9 @@
-\#!/bin/bash
+#!/bin/bash
 #shellcheck shell=bash
-#shellcheck disable=SC1090
+#shellcheck disable=SC2015
 
-# AIS-Collect:
-# read AIS data from a AIS-Catcher web service and
-# create and maintain a database with this data
+# find_mmsi:
+# provide info about an MMSI from VesselAlert db
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -24,6 +23,6 @@
 # redirect stderr to stdout so it's picked up in the docker logs
 exec 2>&1
 # all errors will show a line number and the command used to produce the error
-VESSELDBFILE="/opt/ais/data/vessel.db"
+[[ -n "$VESSELDBFILE" ]] && VESSELDBFILE="/data/vessel.db" || true
 
 sed 's/"\s\+/"\n/g' "$VESSELDBFILE" | grep "$1" | sort

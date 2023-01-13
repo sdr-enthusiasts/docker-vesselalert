@@ -41,8 +41,7 @@ do
 	echo "[$(date)][$APPNAME] Cleanup performed"
 	find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
 	find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+	find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
 
 	sleep "${CLEANUP_EVERY}"
 done
-
-find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
