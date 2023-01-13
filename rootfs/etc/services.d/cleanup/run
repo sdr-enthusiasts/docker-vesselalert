@@ -71,9 +71,9 @@ do
 			done
 			for i in "${!VESSEL_INDEX[@]}"
 			do
-    			if [[ "${VESSEL_INDEX[i]}" == "${mmsi}" ]]
+    			if [[ "${VESSEL_INDEX[$i]}" == "${mmsi}" ]]
 				then
-					unset "VESSEL_INDEX[i]"
+					unset "VESSEL_INDEX[$i]"
 					break
 				fi
 			done
@@ -83,6 +83,7 @@ do
 
 	# write data back to file:
 	source "/usr/share/vesselalert/save_databases"
+	rm -f "$VESSELDBLOCK"
 
 	echo "[$(date)][$APPNAME] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) )"
 	sleep "${CLEANUP_EVERY}"
