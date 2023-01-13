@@ -64,7 +64,7 @@ do
 	do
 		if [[ -z "${VESSELS[${mmsi}:last_updated]}" ]] || (( $(date +%s) - ${VESSELS[${mmsi}:last_updated]} > MMSI_RETENTION ))
 		then
-			echo "${mmsi} "
+			echo -n "${mmsi} "
 			for key in "${KEY_INDEX[@]}"
 			do
 				unset "VESSELS[$mmsi:$key]"
