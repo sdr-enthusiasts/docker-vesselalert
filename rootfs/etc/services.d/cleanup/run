@@ -69,6 +69,14 @@ do
 			do
 				unset "VESSELS[$mmsi:$key]"
 			done
+			for i in "${!VESSEL_INDEX[@]}"
+			do
+    			if [[ "${VESSEL_INDEX[i]}" == "${mmsi}" ]]
+				then
+					unset "VESSEL_INDEX[i]"
+					break
+				fi
+			done
 		fi
 	done
 	echo ""
