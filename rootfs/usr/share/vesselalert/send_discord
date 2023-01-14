@@ -147,9 +147,9 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 
 {   if [[ -n "${notify_distance}" ]] && [[ -n "${VESSELS[$1:speed]}" ]]
     then
-        printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]}" "${notify_distance}"
+        printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
     else
-        printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]}"
+        printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]:-0}"
     fi
     [[ -z "${VESSELS[$1:speed]}" ]] && speed=""
     notif_json="${notif_json//##SPEED##/${speed}}"
