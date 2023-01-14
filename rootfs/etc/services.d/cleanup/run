@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bash
 #shellcheck shell=bash disable=SC1090,SC1091,SC2015
 
-# Cleanupt:
+# Cleanup:
 # clean up old files
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
@@ -49,22 +49,24 @@ do
 		sleep "0.$((RANDOM % 100))"
 	done
 	# Now lock the process for myself:
-    touch "$VESSELDBLOCK"
+	touch "$VESSELDBLOCK"
 
-	echo -n "[$(date)][$APPNAME] Removing obsolete screenshots; " && find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
-	echo -n "images; " && find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
-	echo -n "stuck lock file (if it exists); " && find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
+#	echo -n "[$(date)][$APPNAME] Removing obsolete screenshots; " && find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
+#	echo -n "images; " && find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+#	echo -n "stuck lock file (if it exists); " && find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
 
 	# iterate through the vessels and clean up the old ones:
 
 	# get VESSEL data:
 	source "${VESSELDBFILE}"
-	echo -n "obsolete vessels: "
+#	echo -n "obsolete vessels: "
+        removed=()
 	for mmsi in "${VESSEL_INDEX[@]}"
 	do
 		if [[ -z "${VESSELS[${mmsi}:last_updated]}" ]] || (( $(date +%s) - ${VESSELS[${mmsi}:last_updated]} > MMSI_RETENTION ))
 		then
-			echo -n "${mmsi} "
+#			echo -n "${mmsi} "
+			removed+=(${mmsi})
 			for key in "${KEY_INDEX[@]}"
 			do
 				unset "VESSELS[$mmsi:$key]"
@@ -79,12 +81,13 @@ do
 			done
 		fi
 	done
-	echo ""
+#	echo ""
 
 	# write data back to file:
 	source "/usr/share/vesselalert/save_databases"
 	rm -f "$VESSELDBLOCK"
 
-	echo "[$(date)][$APPNAME] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) )"
+	echo -n "[$(date)][$APPNAME] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
+	(( ${#removed[@]} > 0 )) && echo "Removed vessels ${removed[@]}" || echo ""
 	sleep "${CLEANUP_EVERY}"
 done
