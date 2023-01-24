@@ -74,9 +74,9 @@ do
     #   This array contains information about previous notifications to Mastodon for this MMSI
 
     # If there's a lock file, wait until it's gone\
-    while [[ -f  $VESSELDBLOCK ]]
+    while [[ -f $VESSELDBLOCK ]]
     do
-        sleep 1
+        sleep "0.$((RANDOM % 100))"
     done
 
     # Now lock the process for myself:
@@ -84,6 +84,7 @@ do
 
     # First read the existing entries in from file
     [[ -n "$DEBUG" ]] && echo reading shipdict from file || true
+
     source "$VESSELDBFILE"
 
     # Iterate through the ships:
@@ -173,7 +174,7 @@ do
         [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
         [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
         [[ "$notify_validated" == "false" ]] && unset notify_now	# overrule notification because validation hasn't been done
-        
+
 
         [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
         [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
@@ -242,6 +243,14 @@ do
 
     # Remove file block:
     rm -f "$VESSELDBLOCK"
+
+    # Clean up memory; arrays will be re-read next turn
+    unset KEY_INDEX
+    unset VESSEL_INDEX
+    unset VESSELS
+    unset SHIPTYPE
+    unset SHIPSTATUS
+    unset COUNTRY 
 
     # Sleep a bit
     sleep "$CHECK_INTERVAL"
