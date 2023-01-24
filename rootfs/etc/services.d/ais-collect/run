@@ -122,6 +122,14 @@ do
 
     source "/usr/share/vesselalert/save_databases"
 
+    # Clean up memory; arrays will be re-read next turn
+    unset KEY_INDEX
+    unset VESSEL_INDEX
+    unset VESSELS
+    unset SHIPTYPE
+    unset SHIPSTATUS
+    unset COUNTRY 
+
     rm -f "$VESSELDBLOCK"
 
     sleep $CHECK_INTERVAL
