@@ -54,12 +54,14 @@ mkdir -p "${IMAGECACHE}/screenshots"
 # add some random time to the check interval (0-5 secs)
 CHECK_INTERVAL="$(nice -n 20 bc -l <<<"scale=0; x=$RANDOM % 50; scale=1; $CHECK_INTERVAL + x/10")"
 
+RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
+
 # Wait a cycle -- this gives AIS-Collect the chance to do at least an initial run:
 sleep "$CHECK_INTERVAL"
 
 # ---------------------------------------------------------------------------------------
 
-while true
+for (( loops=0; loops < RUNS_BEFORE_RESTART; loops++ ))
 do
 
     # 3 main arrays:
@@ -256,3 +258,4 @@ do
     sleep "$CHECK_INTERVAL"
 
 done
+echo "[$(date)][$APPNAME] restarting $APPNAME to clean up memory"

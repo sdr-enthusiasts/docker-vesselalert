@@ -45,10 +45,12 @@ declare -a KEY_INDEX
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 
+RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
+
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
-while true
+for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ ))
 do
     # If there's a lock file, wait until it's gone
     while [[ -f  $VESSELDBLOCK ]]
@@ -135,3 +137,4 @@ do
     sleep $CHECK_INTERVAL
 
 done
+echo "[$(date)][$APPNAME] restarting $APPNAME to clean up memory"
