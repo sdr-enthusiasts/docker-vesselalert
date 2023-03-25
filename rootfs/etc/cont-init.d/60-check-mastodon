@@ -24,7 +24,6 @@ echo "[$(date)][$APPNAME] Checking Mastodon server and access token"
 if [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]]
 then
     echo "[$(date)][$APPNAME] Mastodon not configured"
-    exit 0
 else
     MASTODON_SERVER="${MASTODON_SERVER,,}"
     # strip http:// https://
