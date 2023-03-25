@@ -41,7 +41,7 @@ declare -a KEY_INDEX
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
-	[[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=604800    # 1 week before a record gets erased from the database
+[[ -z "${MAX_MSG_AGE}" ]] && MAX_MSG_AGE=604800    # 1 week before a record gets erased from the database
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 
@@ -71,6 +71,17 @@ do
     # Now update it with the ones from the AIS_URL website.
     # Read VESSELS from the AIS_URL:
     ships_json="$(curl --compressed -sSL $AIS_URL)"
+
+    # check if ships_json is empty. If so, continue the loop but don't count against loop counter
+    if [[ -z "$ships_json" ]]
+    then
+        echo "[$(date)][$APPNAME] Warning: $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
+        rm -f "$VESSELDBLOCK"
+        sleep $CHECK_INTERVAL
+        (( loops-- ))
+        continue
+    fi
+
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
