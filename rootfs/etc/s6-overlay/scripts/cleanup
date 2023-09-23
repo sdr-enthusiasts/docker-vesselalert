@@ -1,0 +1,90 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash disable=SC1090,SC1091,SC2015
+
+# Cleanup:
+# clean up old files
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+# redirect stderr to stdout so it's picked up in the docker logs
+exec 2>&1
+# all errors will show a line number and the command used to produce the error
+#shellcheck disable=SC2164
+SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
+trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+
+APPNAME="$(hostname)/cleanup"
+echo "[$(date)][$APPNAME] Starting cleanup run"
+
+renice -n 20 -p $$ >/dev/null 2>/dev/null
+
+CLEANUP_EVERY=1800			# every 30 minutes
+PHOTOS_RETENTION=10080 		# time in minutes; 10080 = 1 week
+SCREENSHOT_RETENTION=3600	# 1 hour
+LOCKFILE_RETENTION=1800		# 15 minutes
+MMSI_RETENTION=1209600		# 2 weeks in seconds
+[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
+[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+
+
+echo "[$(date)][$APPNAME] Starting Cleanup"
+[[ -f  $VESSELDBLOCK ]] && echo "[$(date)][$APPNAME] Waiting for vessel.db to become unlocked..."
+while [[ -f  $VESSELDBLOCK ]]
+do
+	sleep "0.$((RANDOM % 100))"
+done
+# Now lock the process for myself:
+touch "$VESSELDBLOCK"
+
+#	echo -n "[$(date)][$APPNAME] Removing obsolete screenshots; " && find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
+#	echo -n "images; " && find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+#	echo -n "stuck lock file (if it exists); " && find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
+
+# iterate through the vessels and clean up the old ones:
+
+# get VESSEL data:
+source "${VESSELDBFILE}"
+#	echo -n "obsolete vessels: "
+	removed=()
+for mmsi in "${VESSEL_INDEX[@]}"
+do
+	if [[ -z "${VESSELS[${mmsi}:last_updated]}" ]] || (( $(date +%s) - ${VESSELS[${mmsi}:last_updated]} > MMSI_RETENTION ))
+	then
+#			echo -n "${mmsi} "å
+		removed+=(${mmsi})
+		for key in "${KEY_INDEX[@]}"
+		do
+			unset "VESSELS[$mmsi:$key]"
+		done
+		for i in "${!VESSEL_INDEX[@]}"
+		do
+			if [[ "${VESSEL_INDEX[$i]}" == "${mmsi}" ]]
+			then
+				unset "VESSEL_INDEX[$i]"
+				break
+			fi
+		done
+	fi
+done
+#	echo ""
+
+# write data back to file:
+source "/usr/share/vesselalert/save_databases"
+rm -f "$VESSELDBLOCK"
+
+echo -n "[$(date)][$APPNAME] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
+(( ${#removed[@]} > 0 )) && echo "Removed vessels ${removed[@]}" || echo ""
+sleep "${CLEANUP_EVERY}"

@@ -13,7 +13,7 @@ IMAGE1="$BASETARGET1/$(pwd | sed -n 's|.*/docker-\(.*\)|\1|p'):$TAG"
 IMAGE2="$BASETARGET2/$(pwd | sed -n 's|.*/docker-\(.*\)|\1|p'):$TAG"
 
 
-echo "press enter to start building $IMAGE1 and $IMAGE2 from $BRANCH"
+echo "press enter to start building $IMAGE1 from $BRANCH"
 
 #shellcheck disable=SC2162
 read
