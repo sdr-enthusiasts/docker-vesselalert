@@ -25,7 +25,7 @@ Currently, this image should pull and run on the following architectures:
 * `arm64`, `aarch64`: ARMv8 64-bit (RPi 4 64-bit OSes)
 * `amd64`, `x86_64`: X86 64-bit Linux (Linux PC)
 
-Other architectures (Windows, Mac) are not currently supported, but feel free to see if the container builds and runs for these.
+Other architectures (Windows, Mac, armel) are not currently supported, but feel free to see if the container builds and runs for these.
 
 ## Configuring Mastodon: create an application and get an `access token`
 Please follow the instructions [here](README-Mastodon.md).
@@ -83,8 +83,8 @@ There are a series of available environment variables:
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
 
 ## Adding screenshots to your notifications
-VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is  large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, Thu units will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
-The screenshot container had an internal website that is used by VesselAlert to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
+VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, it will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
+The screenshot container accesses the AIS-catcher website to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
 A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
 The screenshot container is Open Source and can be found [here](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
 
@@ -104,7 +104,7 @@ You can change those with a text editor. Lines that start with "#" are ignored, 
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
 - [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
 - [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
-- [@hdziban303](https://github.com/hdziban303) for his help testing the early releases and providing feedback
+- [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
 - [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
 - [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
 - The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
