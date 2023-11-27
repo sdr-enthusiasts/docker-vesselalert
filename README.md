@@ -2,7 +2,6 @@
 
 [![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
 
-
 ## Introduction
 
 Docker container providing social media notification for Vessels that are received with @jvde-github's excellent [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package.
@@ -13,6 +12,7 @@ Currently, posts to [Mastodon](https://airwaves.social) and Discord are supporte
 ## Prerequisites
 
 We expect you to have the following:
+
 * An installed and working version of the [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package with the Web Functionality installed and accessible to this container. This means that you need to be using [v0.42](https://github.com/jvde-github/AIS-catcher/releases/tag/v0.42) or later, and that you must configure the Web Server as per the [documentation](https://github.com/jvde-github/AIS-catcher/blob/main/README.md). We advise to put the Web Server on a fixed and known port number as you will have to configure a link to this for VesselAlert to work. Note -- the version of AIS-Catcher in the official ShipXplorer distribution is too old. You must install a newer version (or switch to the [containerized version](https://github.com/sdr-enthusiasts/docker-shipxplorer), which includes an up-to-date version of AIS-Catcher).
 * Docker must be installed on your system. If you don't know how to do that, please read [here](https://github.com/sdr-enthusiasts/docker-install).
 * Some basic knowledge on how to use Linux and how to configure docker containers with `docker-compose`.
@@ -28,9 +28,11 @@ Currently, this image should pull and run on the following architectures:
 Other architectures (Windows, Mac, armel) are not currently supported, but feel free to see if the container builds and runs for these.
 
 ## Configuring Mastodon: create an application and get an `access token`
+
 Please follow the instructions [here](README-Mastodon.md).
 
 ## Up-and-Running with Docker Compose
+
 An example `docker-compose.yml` can be found [here](docker-compose.yml).
 
 Make sure to map the `/data` directory to a volume, as per the [example file](docker-compose.yml). If you forget to do this, the ships database will be erased upon container recreation, and a new notification will be sent for every ship that is heard after restart. This will probably spam your Mastodon account!
@@ -39,7 +41,7 @@ Make sure to map the `/data` directory to a volume, as per the [example file](do
 
 There are a series of available environment variables:
 
-### General parameters:
+### General parameters
 
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
@@ -49,7 +51,19 @@ There are a series of available environment variables:
 | `NOTIFY_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
 
-### Mastodon notifications related parameters:
+### Tropo Alert parameters
+
+The Tropo Alert feature sends notifications if a distant ship is detected during the `TROPOALERT_INTERVAL` period. This is an indication that there is Tropospheric propagation available that makes long-distance reception possible, such as a temperature inverstion, ducting, or sporadic-E propagation.
+
+For predictions on Tropo conditions for your area, please visit the [DX Info Centre](https://www.dxinfocentre.com/) and select the map of your region.
+
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
+| `TROPOALERT` | If set to `on`/`enabled`/`true`/`1`/`yes`, Tropo Alert notifications will be sent if a long distance vessel is detected | Unset (off) | no |
+| `TROPOALERT_INTERVAL` | Interval in which Tropo Alerts are sent. Value should be compatible with the Linux `sleep`command, for example `600`, `10m`, or `3h` | `10m` | no |
+| `TROPO_MINDIST` | Minimum detected distance (in nm) for a Tropo Alert to be sent. | `100` | no |
+
+### Mastodon notifications related parameters
 
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
@@ -64,7 +78,7 @@ There are a series of available environment variables:
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
 
-## Discord notifications related parameters:
+## Discord notifications related parameters
 
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
@@ -73,6 +87,7 @@ There are a series of available environment variables:
 | `DISCORD_AVATAR_URL` | URL to an avatar used with the notification message | empty | no |
 
 ### Expert Parameters (only change/set if you know what you're doing)
+
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
 | `MIN_MSG_COUNT` * | The minimum number of messages that AIS-Catcher must have received before a vessel can create a notification. This is implemented to ensure that "spurious" vessels that probably have invalid information cause notifications. | `10` | no |
@@ -83,6 +98,7 @@ There are a series of available environment variables:
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
 
 ## Adding screenshots to your notifications
+
 VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, it will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
 The screenshot container accesses the AIS-catcher website to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
 A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
@@ -95,19 +111,24 @@ Please note that you must use the screenshot container's `aiscatcher` tag and br
 * All processes are logged to the container's stdout, and can be viewed with `docker logs [-f] container`.
 
 ## Modifications of Ship Status and Ship Type descriptions
+
 In your `opt/ais/data` directory (if you followed the volume mappings as recommended), there are two files:
-- `shipstatus.db` contains the descriptions of the Ship Status for each status ID number
-- `shiptype.db` contains the descriptions of the Ship Type for each type number
+
+* `shipstatus.db` contains the descriptions of the Ship Status for each status ID number
+* `shiptype.db` contains the descriptions of the Ship Type for each type number
+
 You can change those with a text editor. Lines that start with "#" are ignored, and you can hashtag words in the description.
 
 ## Acknowledgements
+
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
-- [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
-- [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
-- [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
-- [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
-- [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
-- The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
+
+* [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
+* [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
+* [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
+* [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
+* [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
+* The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
 
 ## Getting Help
 
@@ -115,7 +136,36 @@ You can [log an issue](https://github.com/sdr-enthusiasts/docker-vesselalert/iss
 I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The #ais-catcher channel is appropriate for conversations about this package.
 
 ## Summary of License Terms
+
+### VesselAlert
+
 Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+### Tropo Alert Feature
+
+The Tropo Alert feature was based on and inspired by AISTropoAlert version 1.0.0 by Jeffrey Luszcz:
+
+```text
+Copyright 2023 Jeffrey Luszcz AISTropoAlert https://github.com/jeff-luszcz/AISTropoAlert
+SPDX-License-Identifier: Apache License 2.0
+For license terms, see https://github.com/jeff-luszcz/AISTropoAlert/blob/1ed4837b900d7af49645ec10877046e51f82b725/LICENSE
+```
+
+All improvements on AISTropoAlert version 1.0.0 are:
+Copyright (C) 2022-2023, Ramon F. Kolb (kx1t) and licenseable under GPLv3 in accordance with this summary:
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

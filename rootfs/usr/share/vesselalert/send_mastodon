@@ -17,13 +17,8 @@
 #---------------------------------------------------------------------------------------------
 # This script sends a Mastodon notification (toot)
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
-
-APPNAME="$(hostname)/send-mastodon"
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=unlisted
@@ -38,16 +33,22 @@ source "$VESSELDBFILE"
 
 if [[ -z "$1" ]]
 then
-    echo "$0 - send a Mastodon notification for a specific MMSI"
-    echo "Usage: $0 mmsi"
+    "${s6wrap[@]}" echo "[ERROR] $0 - send a Mastodon notification for a specific MMSI"
+    "${s6wrap[@]}" echo "[ERROR] Usage: $0 mmsi"
     exit 1
 else
-    echo "[$(date)][$APPNAME] Attempting Mastodon notification for $1 (${VESSELS[$1:shipname]})"
+    "${s6wrap[@]}" echo "[INFO] Attempting Mastodon notification for $1 (${VESSELS[$1:shipname]})"
 fi
 
+if [[ "${*:2}" =~ .*tropoalert=.* ]]
+then
+    notify_tropo=true
+else
+    unset notify_tropo
+fi
 if [[ -z "${MASTODON_ACCESS_TOKEN}" ]]
 then
-    echo "[$(date)][$APPNAME] Error: MASTODON_ACCESS_TOKEN not defined. Cannot send a Mastodon notification"
+    "${s6wrap[@]}" echo "[ERROR] MASTODON_ACCESS_TOKEN not defined. Cannot send a Mastodon notification"
     exit 1
 fi
 
@@ -62,7 +63,12 @@ links=""
 [[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
 [[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
 
-mast_str="#VesselAlert #Ship #Vessel #AIS"
+unset mast_str
+
+if [[ -n "$notify_tropo" ]]; then
+    mast_str="#TropoAlert - Max Distance = ${VESSELS[$1:distance]} nm\n"
+fi
+mast_str+="#VesselAlert #Ship #Vessel #AIS"
 [[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
 #shellcheck disable=SC2154
 [[ "${notify_distance}" == "true" ]] && mast_str+=" #OnTheMove"
@@ -120,7 +126,7 @@ response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTO
 # check if there was an error
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
-    echo -n "[$(date)][$APPNAME] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
+    "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
     [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n "#NEW "
     #shellcheck disable=SC2154
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
@@ -134,5 +140,5 @@ then
 
     source /usr/share/vesselalert/save_databases
 else
-    echo "[$(date)][$APPNAME] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: ${response}"
+    "${s6wrap[@]}" echo "[ERROR] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: ${response}"
 fi

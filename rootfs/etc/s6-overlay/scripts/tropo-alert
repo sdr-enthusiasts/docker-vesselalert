@@ -1,0 +1,151 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash
+#shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091
+
+# AIS Tropo Alert
+# Based on, and improved upon AISTropoAlert by Jeffrey Luszcz
+# Copyright 2023 Jeffrey Luszcz
+# AISTropoAlert https://github.com/jeff-luszcz/AISTropoAlert
+# SPDX-License-Identifier: Apache License 2.0
+# version 1.0.0
+# For license terms, see https://github.com/jeff-luszcz/AISTropoAlert/blob/1ed4837b900d7af49645ec10877046e51f82b725/LICENSE
+#
+#---------------------------------------------------------------------------------------------
+# The improvements upon AISTropoAlert are:
+# Copyright (C) 2023, Ramon F. Kolb (kx1t). 
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+#!/command/with-contenv bash
+#shellcheck shell=bash disable=SC1091,SC2015
+
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
+
+if ! chk_enabled "$TROPOALERT"; then
+    "${s6wrap[@]}" echo "[INFO] TropoAlert is not enabled; if you want to notify when ships are received at long distance, then start container with TROPOALERT=true"
+    exec sleep infinity & wait $!
+fi
+
+# Slow things down to save cycles:
+renice -n 10 -p $$ >/dev/null 2>&1
+
+# run every 10 minutes or as otherwise defined
+sleep "${TROPOALERT_INTERVAL:10m}" & wait $!
+
+DX_FILE="${DX_FILE:-/data/tropoalert.db}"
+[[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
+[[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
+TROPO_MINDIST="${TROPO_MINDIST:-100}"
+TROPO_RETENTIONTIME="${TROPO_RETENTIONTIME:-3600}" # 1 hours (in seconds)
+
+# read previous distances if available
+touch "$DX_FILE"
+unset dx_array
+declare -A dx_array
+# First read the existing entries in from file
+if (( $(wc -l < "$DX_FILE") > 0 ))
+then
+    chk_enabled "$DEBUG" && "${s6wrap[@]}" echo "[DEBUG] reading DX info from $DX_FILE"
+    source "$DX_FILE"
+fi
+
+# Prune dx_array as needed and figure out current max distance:
+curr_time="$(date +%s)"
+for i in "${!dx_array[@]}"; do
+    if (( i < curr_time - TROPO_RETENTIONTIME )); then
+        unset "${dx_array[i]}";
+    elif (( dx_array[i] > max_dist )); then
+        max_dist="${dx_array[i]}"
+    fi
+done
+
+# Get furthest the ships in the current ships.json
+# The JQ function returns all vessel > $TROPO_MINDIST in the format "mmsi dist last_signal"
+readarray -d ' ' -t furthest_vessel < <(curl -ssL "${AIS_URL}" \
+    | jq -r --arg dist "$TROPO_MINDIST" '.ships[] | select(.distance>=($dist|tonumber)) | "\(.mmsi) \(.distance) \(.last_signal) \(.validated)"' \
+    | awk '( ! ENVIRON["MASTODON_SKIP_FILTER"] || $1 !~ ENVIRON["MASTODON_SKIP_FILTER"] )' \
+    | sort -rn -k2.1 | head -1 | tr -d '\n')
+
+# $furthest_vessel will be empty if no vessel was >= $TROPO_MINDIST. Also needs to have the "validated" flag ($furthest_vessel[3]) for it to be valid
+if [[ -n "${furthest_vessel[0]}" ]] && \
+   (( furthest_vessel[3] == 1 &&  \
+      "${furthest_vessel[1]%%.*}" > max_dist && \
+      furthest_vessel[2] <= TROPO_RETENTIONTIME )) && \
+    { [[ -z "${MASTODON_SKIP_FILTER}" ]] || [[ ! ${furthest_vessel[0]} =~ ${MASTODON_SKIP_FILTER} ]]; }; then
+    # add to dx_array:
+    dx_array[$(( $(date +%s) - furthest_vessel[2] ))]="${furthest_vessel[1]%%.*}"
+    if (( max_dist < ${furthest_vessel[1]%%.*} )); then
+        max_dist="${furthest_vessel[1]%%.*}"
+        new_max_dist="New Max Dist!"
+    fi
+
+    # Get ship info from our database
+    source "${VESSELDBFILE:-/data/vessel.db}"
+    # Notify
+    "${s6wrap[@]}" echo "[INFO] Tropo DX Alert: MMSI=${furthest_vessel[0]} DIST=${new_max_dist:-${furthest_vessel[1]%%.*}} MAXDIST_in_last_TROPO_RETENTIONTIME_secs=$max_dist"
+    "${s6wrap[@]}" echo "[INFO]                 Name=${VESSELS[${furthest_vessel[0]}:shipname]:-unknown}"
+
+    # Get a vessel image:
+    image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${furthest_vessel[0]}"
+
+    # Try to get an image if there isn't already one:
+    if [[ ! -f "$IMAGECACHE/${furthest_vessel[0]}.jpg" ]]
+    then
+        if ! curl -sL -A "Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0" "$image_link" -o  "$IMAGECACHE/${furthest_vessel[0]}.jpg"
+        then
+            rm -f "$IMAGECACHE/${furthest_vessel[0]}.jpg"
+        fi
+    fi
+    # If the file starts with <!DOCTYPE html>, we know it was an error message and we can erase it:
+    if grep '<!DOCTYPE html>' < <(dd bs=1 count=15 if="$IMAGECACHE/${furthest_vessel[0]}" 2>/dev/null) >/dev/null 2>&1
+    then
+        rm -f "$IMAGECACHE/${furthest_vessel[0]}.jpg"
+    fi
+
+    # Try to get a screenshot:
+    rm -f "/${IMAGECACHE}/screenshots/${furthest_vessel[0]}.jpg"
+
+    # get a screenshot
+    if [[ -n "$SCREENSHOT_URL" ]] && curl -sSL "$SCREENSHOT_URL/snap/${furthest_vessel[0]}" -o "${IMAGECACHE}/screenshots/${furthest_vessel[0]}.jpg"
+    then
+        echo "[$(date)][$APPNAME] Got screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
+    else
+        echo "[$(date)][$APPNAME] Failed to get screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
+    fi
+
+    # ---------------------------------------------------------------------------------------------
+    # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
+    # shellcheck disable=SC2086  # we want globbing of $extra_args here
+    [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${furthest_vessel[0]}}" "tropoalert=true"
+    # shellcheck disable=SC2086  # we want globbing of $extra_args here
+    [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${furthest_vessel[0]}" "tropoalert=true"
+    # ---------------------------------------------------------------------------------------------
+
+
+fi
+
+
+
+
+# ships=`curl -s $URL/ships.json  | jq --arg dist "$TROPO_MINDIST" '.ships[] | select(.distance>=($dist|tonumber)) | .distance' | sort -r | head -1 `
+# echo Furthest ship seen was $ships miles away further than $DIST miles away!
+
+# # if we have any resuts, post an alert to Mastodon, otherwise do nothing
+
+# if [ "$ships"  ]
+# then
+# echo TOPO! writing information to Mastodon!
+# now=$(date)
+# curl $MASTODON_URL -H "Authorization: Bearer $MASTODON_TOKEN" -F "status=Possible Tropo Near REPLACEME: AIS reports from $ships miles away seen at $now. Alerts triggered when ships seen over $DIST miles away."
