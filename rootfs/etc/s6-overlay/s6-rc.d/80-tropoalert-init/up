@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /etc/s6-overlay/scripts/70-set-strings
+exec /etc/s6-overlay/scripts/80-tropoalert-init
