@@ -49,6 +49,7 @@ DX_FILE="${DX_FILE:-/data/tropoalert.db}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 TROPO_MINDIST="${TROPO_MINDIST:-100}"
 TROPO_RETENTIONTIME="${TROPO_RETENTIONTIME:-3600}" # 1 hours (in seconds)
+IMAGECACHE="/data/imagecache"
 
 # read previous distances if available
 touch "$DX_FILE"
