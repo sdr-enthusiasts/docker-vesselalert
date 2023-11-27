@@ -42,7 +42,7 @@ fi
 renice -n 10 -p $$ >/dev/null 2>&1
 
 # run every 10 minutes or as otherwise defined
-sleep "${TROPOALERT_INTERVAL:10m}" & wait $!
+sleep "${TROPOALERT_INTERVAL:-10m}" & wait $!
 
 DX_FILE="${DX_FILE:-/data/tropoalert.db}"
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
