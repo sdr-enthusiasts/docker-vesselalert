@@ -120,19 +120,25 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     # get a screenshot
     if [[ -n "$SCREENSHOT_URL" ]] && curl -sSL "$SCREENSHOT_URL/snap/${furthest_vessel[0]}" -o "${IMAGECACHE}/screenshots/${furthest_vessel[0]}.jpg"
     then
-        echo "[$(date)][$APPNAME] Got screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
+        "${s6wrap[@]}" echo "[INFO] Got screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
     else
-        echo "[$(date)][$APPNAME] Failed to get screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
+        "${s6wrap[@]}" echo "[WARNING] Failed to get screenshot for ${furthest_vessel[0]} (${VESSELS[${furthest_vessel[0]}:shipname]:-unknown})"
     fi
 
     # ---------------------------------------------------------------------------------------------
     # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
     # shellcheck disable=SC2086  # we want globbing of $extra_args here
-    [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${furthest_vessel[0]}}" "tropoalert=true"
+    if [[ -n "${MASTODON_ACCESS_TOKEN}" ]]; then
+        nice -n 20 /usr/share/vesselalert/send_mastodon "${furthest_vessel[0]}}" "tropoalert=true"
+    fi
     # shellcheck disable=SC2086  # we want globbing of $extra_args here
-    [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${furthest_vessel[0]}" "tropoalert=true"
+    if [[ -n "${DISCORD_WEBHOOKS}" ]]; then
+        nice -n 20 /usr/share/vesselalert/send_discord "${furthest_vessel[0]}" "tropoalert=true"
+    fi
     # ---------------------------------------------------------------------------------------------
 
+    # Write back dx_array to file:
+    declare -P dx_array > "$DX_FILE" 2>/dev/null
 
 fi
 
