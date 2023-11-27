@@ -6,7 +6,7 @@
         {
             "tts": false,
             "type": "rich",
-            "title": "VesselAlert",
+            "title": "##TITLE##",
             "description": "##DESCRIPTION## ",
             "color": "16711680",
             "fields": [

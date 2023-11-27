@@ -52,10 +52,11 @@ fi
 if [[ "${*:2}" =~ .*tropoalert=.* ]]
 then
     notify_tropo=true
+    notif_json="${notif_json//##TITLE##/TropoAlert}"
 else
     unset notify_tropo
+    notif_json="${notif_json//##TITLE##/VesselAlert}"
 fi
-
 
 if [[ -z "${DISCORD_WEBHOOKS}" ]]
 then
@@ -109,7 +110,7 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 
 {   description=""
     if [[ -n "${notify_tropo}" ]]; then
-        description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm"
+        description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
     else
         [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
         [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 "
