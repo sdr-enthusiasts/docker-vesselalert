@@ -36,6 +36,8 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 if ! chk_enabled "$TROPOALERT"; then
     "${s6wrap[@]}" echo "[INFO] TropoAlert is not enabled; if you want to notify when ships are received at long distance, then start container with TROPOALERT=true"
     exec sleep infinity & wait $!
+else
+    "${s6wrap[@]}" echo "[INFO] TropoAlert is enabled. Checking every ${TROPOALERT_INTERVAL:-10m} for ships further than ${TROPO_MINDIST:-100} nm"
 fi
 
 # Slow things down to save cycles:
