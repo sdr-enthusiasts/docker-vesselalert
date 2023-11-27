@@ -107,9 +107,9 @@ then
     response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg")"
     [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
     [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id} "
-    echo "[$(date)][$APPNAME] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
+    "${s6wrap[@]}" echo "[INFO] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
 else
-    echo "[$(date)][$APPNAME] no image available for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]})"
+    "${s6wrap[@]}" echo "[WARNING] no image available for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]})"
 fi
 
 # If a screenshot exists, then upload it to Mastodon:
@@ -127,7 +127,7 @@ response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTO
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
     "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
-    [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n "#NEW "
+    [[ -z "${VESSELS[$1:notification:last]}" ]] && "${s6wrap[@]}" echo -n "[INFO] #NEW "
     #shellcheck disable=SC2154
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD "
     [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE"

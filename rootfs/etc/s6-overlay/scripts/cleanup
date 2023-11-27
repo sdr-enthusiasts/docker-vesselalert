@@ -35,7 +35,7 @@ MMSI_RETENTION=1209600		# 2 weeks in seconds
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
 
 
-echo "[$(date)][$APPNAME] Starting Cleanup"
+"${s6wrap[@]}" echo "[INFO] Starting Cleanup"
 [[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
 while [[ -f  $VESSELDBLOCK ]]
 do
