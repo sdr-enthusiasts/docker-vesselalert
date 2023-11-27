@@ -129,7 +129,7 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
     # shellcheck disable=SC2086  # we want globbing of $extra_args here
     if [[ -n "${MASTODON_ACCESS_TOKEN}" ]]; then
-        nice -n 20 /usr/share/vesselalert/send_mastodon "${furthest_vessel[0]}}" "tropoalert=true"
+        nice -n 20 /usr/share/vesselalert/send_mastodon "${furthest_vessel[0]}" "tropoalert=true"
     fi
     # shellcheck disable=SC2086  # we want globbing of $extra_args here
     if [[ -n "${DISCORD_WEBHOOKS}" ]]; then
