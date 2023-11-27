@@ -36,8 +36,6 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 if ! chk_enabled "$TROPOALERT"; then
     "${s6wrap[@]}" echo "[INFO] TropoAlert is not enabled; if you want to notify when ships are received at long distance, then start container with TROPOALERT=true"
     exec sleep infinity & wait $!
-else
-    "${s6wrap[@]}" echo "[INFO] TropoAlert is enabled. Checking every ${TROPOALERT_INTERVAL:-10m} for ships further than ${TROPO_MINDIST:-100} nm"
 fi
 
 # Slow things down to save cycles:
@@ -96,7 +94,7 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     # Get ship info from our database
     source "${VESSELDBFILE:-/data/vessel.db}"
     # Notify
-    "${s6wrap[@]}" echo "[INFO] Tropo DX Alert: MMSI=${furthest_vessel[0]} DIST=${new_max_dist:-${furthest_vessel[1]%%.*}} MAXDIST_in_last_TROPO_RETENTIONTIME_secs=$max_dist"
+    "${s6wrap[@]}" echo "[INFO] Tropo DX Alert: MMSI=${furthest_vessel[0]} DIST=${new_max_dist:-${furthest_vessel[1]%%.*} nm} MAXDIST_in_last_${TROPO_RETENTIONTIME}=$max_dist nm"
     "${s6wrap[@]}" echo "[INFO]                 Name=${VESSELS[${furthest_vessel[0]}:shipname]:-unknown}"
 
     # Get a vessel image:
@@ -140,7 +138,7 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     # ---------------------------------------------------------------------------------------------
 
     # Write back dx_array to file:
-    declare -P dx_array > "$DX_FILE" 2>/dev/null
+    declare -p dx_array > "$DX_FILE" 2>/dev/null
 else
     "${s6wrap[@]}" echo "[INFO] No Tropo detected"
 fi
