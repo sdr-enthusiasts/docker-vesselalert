@@ -21,14 +21,10 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-APPNAME="$(hostname)/notifier-framework"
-echo "[$(date)][$APPNAME] Started as an s6 service"
+"${s6wrap[@]}" echo "[INFO] Starting cleanup run"
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
@@ -38,7 +34,7 @@ renice -n 10 -p $$ >/dev/null 2>&1
 
 notification_count=0
 
-# [[ -n "$DEBUG" ]] && MASTODON_POST_VISIBILITY="private"
+# chk_enabled "${DEBUG}" && MASTODON_POST_VISIBILITY="private"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
 if [[ -z "$MASTODON_MIN_DIST" ]] || [[ "$MASTODON_MIN_DIST" == "0" ]]
@@ -85,7 +81,7 @@ do
     touch "$VESSELDBLOCK"
 
     # First read the existing entries in from file
-    [[ -n "$DEBUG" ]] && echo reading shipdict from file || true
+    chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] reading shipdict from file" || true
 
     source "$VESSELDBFILE"
 
@@ -101,17 +97,17 @@ do
         && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
         && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + MASTODON_NOTIFY_EVERY ))
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             notify_timing="false"
         else
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing (or MASTODON_NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $MASTODON_NOTIFY_EVERY secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing (or MASTODON_NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $MASTODON_NOTIFY_EVERY secs )"
             export notify_timing="true"
         fi
         # Never notify if last observation was more than 10 mins ago:
         if [[ -n "${VESSELS[${vessel}:last_signal]}" ]] \
         && (( ${VESSELS[${vessel}:last_signal]} > 600 ))
         then
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
             notify_timing="false"
         fi
 
@@ -124,17 +120,17 @@ do
         && [[ "$(nice -n 20 bc -l <<<"scale=2; $(nice -n 20 distance ${VESSELS[${vessel}:notification:lat]} ${VESSELS[${vessel}:notification:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $MASTODON_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $MASTODON_MIN_DIST )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $MASTODON_MIN_DIST )"
         elif [[ -n "${MASTODON_MIN_DIST}" ]] \
         && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
         && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
         && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]]
         then
             export notify_distance="true"
-            [[ -n "$DEBUG" ]] && [[ -n "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $MASTODON_MIN_DIST )"
+            chk_enabled "${DEBUG}" && [[ -n "${MASTODON_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $MASTODON_MIN_DIST )"
         else
             notify_distance="false"
-            [[ -n "$DEBUG" ]] && [[ -z "${MASTODON_MIN_DIST}" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: MASTODON_MIN_DIST not defined"
+            chk_enabled "${DEBUG}" && [[ -z "${MASTODON_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: MASTODON_MIN_DIST not defined"
         fi
 
         # dont notify if it matches the Skip Filter
@@ -142,28 +138,28 @@ do
         && [[ ${VESSELS[${vessel}:mmsi]} =~ ${MASTODON_SKIP_FILTER} ]]
         then
             notify_filter="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${MASTODON_SKIP_FILTER})"
         elif [[ -n "${MASTODON_SKIP_FILTER}" ]]
         then
             notify_filter="true"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MASTODON_SKIP_FILTER defined but no mmsi skip filter match"
         else
             notify_filter="true"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no MASTODON_SKIP_FILTER defined"
         fi
 
         # check once more the min_msg_count. Too few messages means the screenshot won't be complete and it'd be better to wait
         if [[ ! ${VESSELS[${vessel}:count]}  =~ ^[0-9]+$ ]] || (( ${VESSELS[${vessel}:count]} < MIN_MSG_COUNT ))
         then
             notify_count="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"
         elif [[ -z "${VESSELS[${vessel}:shipname]}" ]] && (( ${VESSELS[${vessel}:count]} < 25 ))
         then
             notify_count="false"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"
         else
             notify_count="true"
-            [[ -n "$DEBUG" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
         fi
 
         # Notify only if validated =="1"
@@ -178,8 +174,8 @@ do
         [[ "$notify_validated" == "false" ]] && unset notify_now	# overrule notification because validation hasn't been done
 
 
-        [[ -n "$DEBUG" ]] && [[ -n "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
-        [[ -n "$DEBUG" ]] && [[ -z "$notify_now" ]] && echo "${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
+        chk_enabled "${DEBUG}" && [[ -n "$notify_now" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
+        chk_enabled "${DEBUG}" && [[ -z "$notify_now" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
 
         if [[ -n "$notify_now" ]]
         then
@@ -211,9 +207,9 @@ do
             # get a screenshot
             if [[ -n "$SCREENSHOT_URL" ]] && curl -sSL "$SCREENSHOT_URL/snap/${VESSELS[${vessel}:mmsi]}" -o "${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg"
             then
-                echo "[$(date)][$APPNAME] Got screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
+                "${s6wrap[@]}" echo "[INFO] Got screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             else
-                echo "[$(date)][$APPNAME] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
+                "${s6wrap[@]}" echo "[INFO] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
 
             # ---------------------------------------------------------------------------------------------
@@ -226,20 +222,20 @@ do
             # ---------------------------------------------------------------------------------------------
 
 
-            [[ -n "$DEBUG" ]] && echo "updated VESSELS[$mmsi]"
+            chk_enabled "${DEBUG}" && echo "updated VESSELS[$mmsi]"
             # Increment notification count
             (( notification_count++ )) || true
 
             if [[ -n "$NOTIFICATION_THROTTLE" ]] && [[ "$(nice -n 20 bc <<< "${notification_count}%10")" == "0" ]]
             then
                 # we need to throttle - let's wait 15 seconds
-                [[ -n "$DEBUG" ]] && echo "Notification Count is ${notification_count}; throttling for 15 seconds"
+                chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] Notification Count is ${notification_count}; throttling for 15 seconds"
                 sleep 15
             fi
         fi
     done
 
-    [[ -n "$DEBUG" ]] && echo "Notification count: ${notification_count}"
+    chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] Notification count: ${notification_count}"
 
     notification_count=0
 
@@ -258,4 +254,4 @@ do
     sleep "$CHECK_INTERVAL"
 
 done
-echo "[$(date)][$APPNAME] restarting $APPNAME to clean up memory"
+"${s6wrap[@]}" echo "[INFO] restarting $APPNAME to clean up memory"

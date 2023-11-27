@@ -21,15 +21,11 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-APPNAME="$(hostname)/ais-collect"
-echo "[$(date)][$APPNAME] Started as an s6 service"
-[[ -n "$DEBUG" ]] && echo "[$(date)][$APPNAME] DEBUG=ON" || echo "[$(date)][$APPNAME] DEBUG=OFF"
+"${s6wrap[@]}" echo "[INFO] Started as an s6 service"
+[[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[INFO] DEBUG=ON" || "${s6wrap[@]}" echo "[INFO] DEBUG=OFF"
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
@@ -64,7 +60,7 @@ do
     # First read the existing entries in from file
     if (( $(wc -l < "$VESSELDBFILE") > 0 ))
     then
-        [[ -n "$DEBUG" ]] && echo reading VESSELS dict from file || true
+        [[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[DEBUG] reading VESSELS dict from file" || true
         source "$VESSELDBFILE"
     fi
 
@@ -75,7 +71,7 @@ do
     # check if ships_json is empty. If so, continue the loop but don't count against loop counter
     if [[ -z "$ships_json" ]]
     then
-        echo "[$(date)][$APPNAME] Warning: $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
+        "${s6wrap[@]}" echo "[WARNING] $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
         rm -f "$VESSELDBLOCK"
         sleep $CHECK_INTERVAL
         (( loops-- ))
@@ -128,7 +124,7 @@ do
         && [[ ! -f /data/container_has_run_before ]]
     then
         touch /data/container_has_run_before
-        [[ -n "$DEBUG" ]] && echo "This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
+        [[ -n "$DEBUG" ]] &&"${s6wrap[@]}" echo "[DEBUG] This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
     fi
 
     # Write back to file
@@ -148,4 +144,4 @@ do
     sleep $CHECK_INTERVAL
 
 done
-echo "[$(date)][$APPNAME] restarting $APPNAME to clean up memory"
+"${s6wrap[@]}" echo "[INFO] restarting $0 to clean up memory"

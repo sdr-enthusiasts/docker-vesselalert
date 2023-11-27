@@ -1,5 +1,5 @@
 #!/command/with-contenv bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
 
 # Check to make sure the correct parameters are defined.
 #---------------------------------------------------------------------------------------------
@@ -18,16 +18,19 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-APPNAME="$(hostname)/40-check-ais-notify"
-echo "[$(date)][$APPNAME] Started as an s6 init script"
+"${s6wrap[@]}" echo "[INFO] Started as an s6 init script"
 
 AIS_URL="${AIS_URL,,}"
 if [[ "${AIS_URL:0:4}" != "http" ]]
 then
-    [[ -z "$AIS_URL" ]] && echo -n "WARNING: AIS_URL is empty; " || echo -n "WARNING: AIS_URL is set to \":$AIS_URL\"; "
-    echo "expecting a URL starting with \"http://\" or \"https://\"."
-    echo "[$(date)][$APPNAME]         Please correct and restart the container."
-    echo "[$(date)][$APPNAME] Container execution is HALTED."
-    sleep infinity
+    if [[ -z "$AIS_URL" ]]; then
+        "${s6wrap[@]}" echo -n "[FATAL] AIS_URL is empty; "
+    else 
+        "${s6wrap[@]}" echo -n "[FATAL]  AIS_URL is set to \":$AIS_URL\"; expecting a URL starting with \"http://\" or \"https://\"."
+    fi
+    "${s6wrap[@]}" echo "[FATAL] Please correct and restart the container. Container execution is HALTED."
+    exec sleep infinity & wait $!
 fi

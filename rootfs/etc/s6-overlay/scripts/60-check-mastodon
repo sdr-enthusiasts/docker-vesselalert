@@ -1,7 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash disable=SC2015,SC1091
 
-APPNAME="$(hostname)/60-check-mastodon"
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -18,12 +17,14 @@ APPNAME="$(hostname)/60-check-mastodon"
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-echo "[$(date)][$APPNAME] Checking Mastodon server and access token"
+"${s6wrap[@]}" echo "[INFO] Checking Mastodon server and access token"
 
 if [[ -z "$MASTODON_ACCESS_TOKEN" ]] || [[ -z "$MASTODON_SERVER" ]]
 then
-    echo "[$(date)][$APPNAME] Mastodon not configured"
+    "${s6wrap[@]}" echo "[INFO] Mastodon not configured"
 else
     MASTODON_SERVER="${MASTODON_SERVER,,}"
     # strip http:// https://
@@ -32,8 +33,8 @@ else
     result="$(curl -sS -H "Authorization: Bearer $MASTODON_ACCESS_TOKEN" "https://${MASTODON_SERVER}/api/v1/apps/verify_credentials")"
     if  grep -vi "The access token is invalid"  <<< "$result" >/dev/null 2>&1
     then
-        echo "[$(date)][$APPNAME] Mastodon configured correctly for application $(jq '.name' <<< "$result") / website $(jq '.website' <<< "$result")"
+        "${s6wrap[@]}" echo "[INFO] Mastodon configured correctly for application $(jq '.name' <<< "$result") / website $(jq '.website' <<< "$result")"
     else
-        echo "[$(date)][$APPNAME] Mastodon configured incorrectly. Check your setup"
+        "${s6wrap[@]}" echo "[ERROR] Mastodon configured incorrectly. Check your setup"
     fi
 fi
