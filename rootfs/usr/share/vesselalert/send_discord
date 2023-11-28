@@ -25,6 +25,11 @@ IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
+[[d -n "$DEBUG" ]] && set -x
+# load the notification JSON from the template:
+notif_json="$(</data/discord.template)"
+
+
 if [[ -z "$1" ]]
 then
     "${s6wrap[@]}" echo "[INFO] $0 - send a Discord notification for a specific MMSI"
@@ -75,10 +80,6 @@ readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 # First do some clean up
 [[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
 [[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
-
-[[ -n "$DEBUG" ]] && set -x
-# load the notification JSON from the template:
-notif_json="$(</data/discord.template)"
 
 # If a screenshot exists, then make sure we'll include it:
 if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
