@@ -59,9 +59,9 @@ For predictions on Tropo conditions for your area, please visit the [DX Info Cen
 
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
-| `TROPOALERT` | If set to `on`/`enabled`/`true`/`1`/`yes`, Tropo Alert notifications will be sent if a long distance vessel is detected | Unset (off) | no |
+| `TROPOALERT` | If set to `on`/`enabled`/`true`/`1`/`yes`, Tropo Alert notifications will be sent if a long distance vessel is detected | `enabled` | no |
 | `TROPOALERT_INTERVAL` | Interval in which Tropo Alerts are sent. Value should be compatible with the Linux `sleep`command, for example `600`, `10m`, or `3h` | `10m` | no |
-| `TROPO_MINDIST` | Minimum detected distance (in nm) for a Tropo Alert to be sent. | `100` | no |
+| `TROPO_MINDIST` | Minimum detected distance (in nm) for a Tropo Alert to be sent. | `75` | no |
 
 ### Mastodon notifications related parameters
 
