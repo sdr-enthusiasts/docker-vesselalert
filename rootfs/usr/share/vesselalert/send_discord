@@ -25,7 +25,7 @@ IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
-[[d -n "$DEBUG" ]] && set -x
+[[ -n "$DEBUG" ]] && set -x
 # load the notification JSON from the template:
 notif_json="$(</data/discord.template)"
 
