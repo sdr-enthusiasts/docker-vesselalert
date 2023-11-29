@@ -117,6 +117,8 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     then
         rm -f "$IMAGECACHE/${furthest_vessel[0]}.jpg"
     fi
+    # If getting a photo was successful (or one already existed), let's `touch` it so the retention period is reset:
+    touch -c "$IMAGECACHE/${furthest_vessel[0]}.jpg"
 
     # Try to get a screenshot:
     rm -f "/${IMAGECACHE}/screenshots/${furthest_vessel[0]}.jpg"

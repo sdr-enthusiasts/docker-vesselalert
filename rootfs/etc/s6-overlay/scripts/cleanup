@@ -27,13 +27,12 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
 CLEANUP_EVERY=1800			# every 30 minutes
-PHOTOS_RETENTION=10080 		# time in minutes; 10080 = 1 week
-SCREENSHOT_RETENTION=3600	# 1 hour
-LOCKFILE_RETENTION=1800		# 15 minutes
+PHOTOS_RETENTION=20160 		# 2 weeks in minutes
+SCREENSHOT_RETENTION=60		# 1 hour
+#LOCKFILE_RETENTION=15		# 15 minutes
 MMSI_RETENTION=1209600		# 2 weeks in seconds
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
-
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 "${s6wrap[@]}" echo "[INFO] Starting Cleanup"
 [[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
@@ -41,12 +40,15 @@ while [[ -f  $VESSELDBLOCK ]]
 do
 	sleep "0.$((RANDOM % 100))"
 done
+
 # Now lock the process for myself:
 touch "$VESSELDBLOCK"
 
-#	echo -n "[$(date)][$APPNAME] Removing obsolete screenshots; " && find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
-#	echo -n "images; " && find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
-#	echo -n "stuck lock file (if it exists); " && find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
+"${s6wrap[@]}" echo -n "[INFO] Removing obsolete screenshots... "
+find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
+echo -n "images... "
+find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+echo "done."
 
 # iterate through the vessels and clean up the old ones:
 

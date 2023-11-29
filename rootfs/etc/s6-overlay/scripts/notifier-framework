@@ -167,10 +167,10 @@ do
 
         # Notification logic here for clarity:
         unset notify_now
-        [[ "$notify_timing" == "true" ]] && notify_now="true"   # notify when timing is right or when the timing is undefined
-        [[ "$notify_distance" == "true" ]] && notify_now="true" # notify when the distance traveled is far enough
-        [[ "$notify_filter" == "false" ]] && unset notify_now   # stop and overrule notification if the MMSI filter has a match
-        [[ "$notify_count" == "false" ]] && unset notify_now	# overrule notification because there are too few messages
+        [[ "$notify_timing" == "true" ]] && notify_now="true"       # notify when timing is right or when the timing is undefined
+        [[ "$notify_distance" == "true" ]] && notify_now="true"     # notify when the distance traveled is far enough
+        [[ "$notify_filter" == "false" ]] && unset notify_now       # stop and overrule notification if the MMSI filter has a match
+        [[ "$notify_count" == "false" ]] && unset notify_now	    # overrule notification because there are too few messages
         [[ "$notify_validated" == "false" ]] && unset notify_now	# overrule notification because validation hasn't been done
 
 
@@ -201,6 +201,9 @@ do
                 rm -f "$IMAGECACHE/${VESSELS[${vessel}:mmsi]}.jpg"
             fi
 
+            # If getting a photo was successful (or one already existed), let's `touch` it so the retention period is reset:
+            touch -c "$IMAGECACHE/${VESSELS[${vessel}:mmsi]}.jpg"
+
             # Try to get a screenshot:
             rm -f "/${IMAGECACHE}/screenshots/${VESSELS[${vessel}:mmsi]}.jpg"
 
@@ -218,7 +221,6 @@ do
             [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args}
             # shellcheck disable=SC2086  # we want globbing of $extra_args here
             [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args}
-
             # ---------------------------------------------------------------------------------------------
 
 
