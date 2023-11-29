@@ -33,6 +33,9 @@
 source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
+# TropoAlert is default enabled:
+TROPOALERT="${TROPOALERT:-enabled}"
+
 if ! chk_enabled "$TROPOALERT"; then
     "${s6wrap[@]}" echo "[INFO] TropoAlert is not enabled; if you want to notify when ships are received at long distance, then start container with TROPOALERT=true"
     exec sleep infinity & wait $!
@@ -47,7 +50,7 @@ sleep "${TROPOALERT_INTERVAL:-10m}" & wait $!
 DX_FILE="${DX_FILE:-/data/tropoalert.db}"
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
-TROPO_MINDIST="${TROPO_MINDIST:-100}"
+TROPO_MINDIST="${TROPO_MINDIST:-75}"
 TROPO_RETENTIONTIME="${TROPO_RETENTIONTIME:-3600}" # 1 hours (in seconds)
 IMAGECACHE="/data/imagecache"
 
