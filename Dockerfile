@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim AS build
+FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS build
 
 RUN set -x && \
     apt-get update -y && \

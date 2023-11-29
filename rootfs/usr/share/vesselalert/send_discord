@@ -17,52 +17,61 @@
 #---------------------------------------------------------------------------------------------
 # This script sends a Discord notification
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-APPNAME="$(hostname)/send-discord"
-
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
+[[ -n "$DEBUG" ]] && set -x
+# load the notification JSON from the template:
+notif_json="$(</data/discord.template)"
+
+
 if [[ -z "$1" ]]
 then
-    echo "$0 - send a Discord notification for a specific MMSI"
-    echo "Usage: $0 mmsi"
+    "${s6wrap[@]}" echo "[INFO] $0 - send a Discord notification for a specific MMSI"
+    "${s6wrap[@]}" echo "[INFO] Usage: $0 mmsi"
     exit 1
 else
-    echo "[$(date)][$APPNAME] Attempting Discord notification for $1 (${VESSELS[$1:shipname]})"
+    "${s6wrap[@]}" echo "[INFO] Attempting Discord notification for $1 (${VESSELS[$1:shipname]})"
 fi
 
 #shellcheck disable=SC2001
-if [[ "$2 $3 $4 $5 $6" =~ .*distance=.* ]]
+if [[ "${*:2}" =~ .*distance=.* ]]
 then
-    notify_distance="$(sed 's|^.*distance=\([0-9.]*\).*$|\1|g' <<< "$2 $3 $4 $5 $6")"
+    notify_distance="$(sed 's|^.*distance=\([0-9.]*\).*$|\1|g' <<< "${*:2}")"
 else
-    notify_distance=""
+    unset notify_distance
 fi
 #shellcheck disable=SC2001
-if [[ "$2 $3 $4 $5 $6" =~ .*timing=.* ]]
+if [[ "${*:2}" =~ .*timing=.* ]]
 then
-    notify_timing="$(sed 's|^.*timing=\([0-9.]*\).*$|\1|g' <<< "$2 $3 $4 $5 $6")"
+    notify_timing="$(sed 's|^.*timing=\([0-9.]*\).*$|\1|g' <<< "${*:2}")"
 else
-    notify_timing=""
+    unset notify_timing
+fi
+#shellcheck disable=SC2001
+if [[ "${*:2}" =~ .*tropoalert=.* ]]
+then
+    notify_tropo=true
+    notif_json="${notif_json//##TITLE##/TropoAlert}"
+else
+    unset notify_tropo
+    notif_json="${notif_json//##TITLE##/VesselAlert}"
 fi
 
 if [[ -z "${DISCORD_WEBHOOKS}" ]]
 then
-    echo "[$(date)][$APPNAME] Error: DISCORD_WEBHOOKS not defined. Cannot send a Discord notification"
+    "${s6wrap[@]}" echo "[ERROR] DISCORD_WEBHOOKS not defined. Cannot send a Discord notification"
     exit 1
 fi
 
 if [[ -z "${DISCORD_NAME}" ]]
 then
-    echo "[$(date)][$APPNAME] Error: DISCORD_NAME not defined. Cannot send a Discord notification"
+    "${s6wrap[@]}" echo "[ERROR] DISCORD_NAME not defined. Cannot send a Discord notification"
     exit 1
 fi
 
@@ -72,10 +81,6 @@ readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 [[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
 [[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
 
-[[ -n "$DEBUG" ]] && set -x
-# load the notification JSON from the template:
-notif_json="$(</data/discord.template)"
-
 # If a screenshot exists, then make sure we'll include it:
 if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
 then
@@ -83,11 +88,11 @@ then
     notif_json="${notif_json//##SCREENSHOTFILE##/$1.jpg}"
     notif_json="${notif_json//##SCRSHT--/}"
     notif_json="${notif_json//--SCRSHT##/}"
-    echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
+    "${s6wrap[@]}" echo "[INFO] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
 else
     SCREENSHOTCURL=""
     notif_json="${notif_json//##SCRSHT--*---SCRSHT##/}"
-    echo "[$(date)][$APPNAME] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
+    "${s6wrap[@]}" echo "[INFO] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
 fi
 
 # Add a Map URL if configured:
@@ -105,10 +110,14 @@ fi
 notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
 
 {   description=""
-    [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
-    [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 "
-    [[ -n "${notify_distance}" ]] && description+="is on the move " || description+="is seen "
-    [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && description+="again "
+    if [[ -n "${notify_tropo}" ]]; then
+        description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
+    else
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
+        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 "
+        [[ -n "${notify_distance}" ]] && description+="is on the move " || description+="is seen "
+        [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && description+="again "
+    fi
     description+="at $(date +"%R %Z")"
     notif_json="${notif_json//##DESCRIPTION##/${description}}"
 }
@@ -179,44 +188,15 @@ do
     result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
     if [[ "${result}" != "null" ]]
     then
-        echo -n "[$(date)][$APPNAME] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result//$'\n'/}."
+        "${s6wrap[@]}" echo "[INFO] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result//$'\n'/}."
         [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
         [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n " #OLD "
         [[ -n "${notify_distance}" ]] && echo -n " #ONTHEMOVE"
         echo ""
 
-        # if [[ -n "$DISCORD_ERROR_LOG" ]]
-        # then
-        #     {
-        #         echo "Discord posting SUCCESS at $(date) for $1 (${VESSELS[$1:shipname]})"
-        #         echo "SCREENSHOTCURL=${SCREENSHOTCURL}"
-        #         echo "URL=${url}"
-        #         echo "notif_json=${notif_json}"
-        #         for i in "${KEY_INDEX[@]}"
-        #         do
-        #             echo "VESSELS[$1:$i]=\"${VESSELS[$1:$i]}\""
-        #         done
-        #         echo "---------------------------------------------------------------"
-        #     } >> /data/discord.error.log
-        # fi
-
     else
-        echo "[$(date)][$APPNAME] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
-        # if [[ -n "$DISCORD_ERROR_LOG" ]]
-        # then
-        #     {
-        #         echo "Discord posting ERROR at $(date) for $1 (${VESSELS[$1:shipname]})"
-        #         echo "SCREENSHOTCURL=${SCREENSHOTCURL}"
-        #         echo "URL=${url}"
-        #         echo "notif_json=${notif_json}"
-        #         for i in "${KEY_INDEX[@]}"
-        #         do
-        #             echo "VESSELS[$1:$i]=\"${VESSELS[$1:$i]}\""
-        #         done
-        #         echo "---------------------------------------------------------------"
-        #     } >> /data/discord.error.log
-        # fi
+        "${s6wrap[@]}" echo "[ERROR] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
         notification_error="true"
     fi
 done

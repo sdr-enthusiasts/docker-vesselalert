@@ -1,7 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash disable=SC2015,SC1091,SC1090,SC2034
 
-APPNAME="$(hostname)/70-set-strings"
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -18,15 +17,18 @@ APPNAME="$(hostname)/70-set-strings"
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-echo "[$(date)][$APPNAME] Loading Vessel and Status Descriptions"
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
+
+"${s6wrap[@]}" echo "[INFO] Loading Vessel and Status Descriptions"
 
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 
-touch ${VESSELDBFILE}
+touch "${VESSELDBFILE}"
 # First read the existing entries in from file
 if (( $(wc -l < "$VESSELDBFILE") > 0 ))
 then
-    [[ -n "$DEBUG" ]] && echo reading databases from file || true
+    [[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[INFO] reading databases from file" || true
     source "$VESSELDBFILE"
 fi
 
@@ -37,7 +39,7 @@ declare -A SHIPTYPE
 if [[ -f /data/shiptype.db ]]
 then
     source "/data/shiptype.db"
-    echo "[$(date)][$APPNAME] SHIPTYPE database loaded from file"
+    "${s6wrap[@]}" echo "[INFO] SHIPTYPE database loaded from file"
 else
     #SHIPTYPE[0]="Not Available"
     #SHIPTYPE[1]="Reserved for future use"
@@ -140,14 +142,14 @@ else
     #SHIPTYPE[98]="#Other Reserved"
     SHIPTYPE[99]="#Other"
 
-    echo "[$(date)][$APPNAME] SHIPTYPE database loaded from internal list as shiptype.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] SHIPTYPE database loaded from internal list as shiptype.db file was not found"
 fi
 unset SHIPSTATUS
 declare -A SHIPSTATUS
 if [[ -f /data/shipstatus.db ]]
 then
     source "/data/shipstatus.db"
-    echo "[$(date)][$APPNAME] SHIPSTATUS database loaded from file"
+    "${s6wrap[@]}" echo "[INFO] SHIPSTATUS database loaded from file"
 else
     SHIPSTATUS[0]="#under_way_using_engine"
     SHIPSTATUS[1]="#anchored"
@@ -166,7 +168,7 @@ else
     SHIPSTATUS[14]="#AIS-SART #MOB-AIS #EPIRB-AIS"
     #SHIPSTATUS[15]="undefined = default (also used by AIS-SART, MOB-AIS and EPIRB-AIS under test)"
 
-    echo "[$(date)][$APPNAME] SHIPSTATUS database loaded from internal list as shipstatus.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] SHIPSTATUS database loaded from internal list as shipstatus.db file was not found"
 fi
 
 unset COUNTRY
@@ -174,7 +176,7 @@ declare -A COUNTRY
 if [[ -f /data/country.db ]]
 then
     source "/data/country.db"
-    echo "[$(date)][$APPNAME] COUNTRY names database loaded from file"
+    "${s6wrap[@]}" echo "[INFO] COUNTRY names database loaded from file"
 else
     COUNTRY[AD]="Andorra"
     COUNTRY[AE]="UAE"
@@ -406,7 +408,7 @@ else
     COUNTRY[ZM]="Zambia"
     COUNTRY[ZW]="Zimbabwe"
 
-    echo "[$(date)][$APPNAME] COUNTRY names database loaded from internal list as country.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] COUNTRY names database loaded from internal list as country.db file was not found"
 fi
 
 # Make sure the other arrays have been declared if they don't already exist:

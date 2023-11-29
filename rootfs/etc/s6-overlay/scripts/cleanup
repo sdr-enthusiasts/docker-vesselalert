@@ -19,42 +19,58 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-#shellcheck disable=SC2164
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-APPNAME="$(hostname)/cleanup"
-echo "[$(date)][$APPNAME] Starting cleanup run"
+"${s6wrap[@]}" echo "[INFO] Starting cleanup run"
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
-CLEANUP_EVERY=1800			# every 30 minutes
-PHOTOS_RETENTION=10080 		# time in minutes; 10080 = 1 week
-SCREENSHOT_RETENTION=3600	# 1 hour
-LOCKFILE_RETENTION=1800		# 15 minutes
-MMSI_RETENTION=1209600		# 2 weeks in seconds
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+CLEANUP_EVERY=1800				# every 30 minutes
+PHOTOS_RETENTION=20160 			# 2 weeks in minutes
+SCREENSHOT_RETENTION=60			# 1 hour
+#LOCKFILE_RETENTION=15			# 15 minutes
+MMSI_RETENTION=1209600			# 2 weeks in seconds
+COUNTRY_BKUP_RETENTION=20160	# 2 weeks in minutes
+DISCTMPL_BKUP_RETENTION=20160	# 2 weeks in minutes
+SHIPSTATUS_BKUP_RETENTION=20160	# 2 weeks in minutes
+SHIPTYPE_BKUP_RETENTION=20160	# 2 weeks in minutes
+VESSELDB_BKUP_RETENTION=20160	# 2 weeks in minutes
 
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
-echo "[$(date)][$APPNAME] Starting Cleanup"
-[[ -f  $VESSELDBLOCK ]] && echo "[$(date)][$APPNAME] Waiting for vessel.db to become unlocked..."
+DBLOCK_MAXWAIT=600				# don't wait more than 600 secs for the dblock to be removed
+
+"${s6wrap[@]}" echo "[INFO] Starting Cleanup"
+[[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
+
+lockstarttime="$(date +%s)"
 while [[ -f  $VESSELDBLOCK ]]
 do
 	sleep "0.$((RANDOM % 100))"
+	if (( $(date +%s) > lockstarttime + DBLOCK_MAXWAIT )); then
+		"${s6wrap[@]}" echo "[WARNING] vessel.db has been locked for more than $DBLOCK_MAXWAIT secs. Force-unlocking stale lock process!"
+		break
+	fi
 done
+
 # Now lock the process for myself:
 touch "$VESSELDBLOCK"
 
-#	echo -n "[$(date)][$APPNAME] Removing obsolete screenshots; " && find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
-#	echo -n "images; " && find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
-#	echo -n "stuck lock file (if it exists); " && find /run  -maxdepth 1 -mmin +${LOCKFILE_RETENTION}     -type f -iname "vesseldb.lock" -delete >/dev/null 2>&1
+"${s6wrap[@]}" echo -n "[INFO] Removing obsolete screenshots... "
+find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+echo -n "images... "
+find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}          -type f -iname "*.jpg" -delete >/dev/null 2>&1
+echo -n "old backups... "
+find /data                        -maxdepth 1 -mmin +${COUNTRY_BKUP_RETENTION}    -type f -iname "country.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${DISCTMPL_BKUP_RETENTION}   -type f -iname "discord.template.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${SHIPSTATUS_BKUP_RETENTION} -type f -iname "shipstatus.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${SHIPTYPE_BKUP_RETENTION}   -type f -iname "shiptype.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${VESSELDB_BKUP_RETENTION}   -type f -iname "vessel.db.*" -delete >/dev/null 2>&1
 
 # iterate through the vessels and clean up the old ones:
-
+echo -n "vessels... "
 # get VESSEL data:
 source "${VESSELDBFILE}"
 #	echo -n "obsolete vessels: "
@@ -63,8 +79,7 @@ for mmsi in "${VESSEL_INDEX[@]}"
 do
 	if [[ -z "${VESSELS[${mmsi}:last_updated]}" ]] || (( $(date +%s) - ${VESSELS[${mmsi}:last_updated]} > MMSI_RETENTION ))
 	then
-#			echo -n "${mmsi} "å
-		removed+=(${mmsi})
+		removed+=("${mmsi}")
 		for key in "${KEY_INDEX[@]}"
 		do
 			unset "VESSELS[$mmsi:$key]"
@@ -79,12 +94,19 @@ do
 		done
 	fi
 done
-#	echo ""
+
+if (( ${#removed[@]} > 0 )); then
+	echo "removed ${removed[*]}"
+else
+	echo ""
+fi
 
 # write data back to file:
 source "/usr/share/vesselalert/save_databases"
+
+
 rm -f "$VESSELDBLOCK"
 
-echo -n "[$(date)][$APPNAME] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
-(( ${#removed[@]} > 0 )) && echo "Removed vessels ${removed[@]}" || echo ""
+"${s6wrap[@]}" echo "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
+
 sleep "${CLEANUP_EVERY}"
