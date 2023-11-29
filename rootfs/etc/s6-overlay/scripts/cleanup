@@ -40,11 +40,19 @@ VESSELDB_BKUP_RETENTION=20160	# 2 weeks in minutes
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
+DBLOCK_MAXWAIT=600				# don't wait more than 600 secs for the dblock to be removed
+
 "${s6wrap[@]}" echo "[INFO] Starting Cleanup"
 [[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
+
+lockstarttime="$(date +%s)"
 while [[ -f  $VESSELDBLOCK ]]
 do
 	sleep "0.$((RANDOM % 100))"
+	if (( $(date +%s) > lockstarttime + DBLOCK_MAXWAIT )); then
+		"${s6wrap[@]}" echo "[WARNING] vessel.db has been locked for more than $DBLOCK_MAXWAIT secs. Force-unlocking stale lock process!"
+		break
+	fi
 done
 
 # Now lock the process for myself:
@@ -60,8 +68,6 @@ find /data                        -maxdepth 1 -mmin +${DISCTMPL_BKUP_RETENTION} 
 find /data                        -maxdepth 1 -mmin +${SHIPSTATUS_BKUP_RETENTION} -type f -iname "shipstatus.db.*" -delete >/dev/null 2>&1
 find /data                        -maxdepth 1 -mmin +${SHIPTYPE_BKUP_RETENTION}   -type f -iname "shiptype.db.*" -delete >/dev/null 2>&1
 find /data                        -maxdepth 1 -mmin +${VESSELDB_BKUP_RETENTION}   -type f -iname "vessel.db.*" -delete >/dev/null 2>&1
-
-
 
 # iterate through the vessels and clean up the old ones:
 echo -n "vessels... "
