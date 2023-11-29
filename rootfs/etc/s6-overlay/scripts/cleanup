@@ -26,11 +26,17 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
-CLEANUP_EVERY=1800			# every 30 minutes
-PHOTOS_RETENTION=20160 		# 2 weeks in minutes
-SCREENSHOT_RETENTION=60		# 1 hour
-#LOCKFILE_RETENTION=15		# 15 minutes
-MMSI_RETENTION=1209600		# 2 weeks in seconds
+CLEANUP_EVERY=1800				# every 30 minutes
+PHOTOS_RETENTION=20160 			# 2 weeks in minutes
+SCREENSHOT_RETENTION=60			# 1 hour
+#LOCKFILE_RETENTION=15			# 15 minutes
+MMSI_RETENTION=1209600			# 2 weeks in seconds
+COUNTRY_BKUP_RETENTION=20160	# 2 weeks in minutes
+DISCTMPL_BKUP_RETENTION=20160	# 2 weeks in minutes
+SHIPSTATUS_BKUP_RETENTION=20160	# 2 weeks in minutes
+SHIPTYPE_BKUP_RETENTION=20160	# 2 weeks in minutes
+VESSELDB_BKUP_RETENTION=20160	# 2 weeks in minutes
+
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
@@ -45,9 +51,16 @@ done
 touch "$VESSELDBLOCK"
 
 "${s6wrap[@]}" echo -n "[INFO] Removing obsolete screenshots... "
-find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
+find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
 echo -n "images... "
-find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}          -type f -iname "*.jpg" -delete >/dev/null 2>&1
+echo -n "old backups... "
+find /data                        -maxdepth 1 -mmin +${COUNTRY_BKUP_RETENTION}    -type f -iname "country.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${DISCTMPL_BKUP_RETENTION}   -type f -iname "discord.template.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${SHIPSTATUS_BKUP_RETENTION} -type f -iname "shipstatus.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${SHIPTYPE_BKUP_RETENTION}   -type f -iname "shiptype.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +${VESSELDB_BKUP_RETENTION}   -type f -iname "vessel.db.*" -delete >/dev/null 2>&1
+
 
 
 # iterate through the vessels and clean up the old ones:
@@ -84,6 +97,8 @@ fi
 
 # write data back to file:
 source "/usr/share/vesselalert/save_databases"
+
+
 rm -f "$VESSELDBLOCK"
 
 "${s6wrap[@]}" echo "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
