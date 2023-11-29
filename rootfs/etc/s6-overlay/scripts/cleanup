@@ -48,10 +48,10 @@ touch "$VESSELDBLOCK"
 find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION} -type f -iname "*.jpg" -delete >/dev/null 2>&1
 echo -n "images... "
 find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
-echo "done."
+
 
 # iterate through the vessels and clean up the old ones:
-
+echo -n "vessels... "
 # get VESSEL data:
 source "${VESSELDBFILE}"
 #	echo -n "obsolete vessels: "
@@ -75,12 +75,17 @@ do
 		done
 	fi
 done
-#	echo ""
+
+if (( ${#removed[@]} > 0 )); then
+	echo "removed ${removed[*]}"
+else
+	echo ""
+fi
 
 # write data back to file:
 source "/usr/share/vesselalert/save_databases"
 rm -f "$VESSELDBLOCK"
 
 "${s6wrap[@]}" echo "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
-(( ${#removed[@]} > 0 )) && "${s6wrap[@]}" echo "[INFO] Removed vessels ${removed[*]}" || true
+
 sleep "${CLEANUP_EVERY}"
