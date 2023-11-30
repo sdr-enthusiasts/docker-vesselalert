@@ -66,7 +66,7 @@ links=""
 unset mast_str
 
 if [[ -n "$notify_tropo" ]]; then
-    mast_str="#TropoAlert - Max Distance = ${VESSELS[$1:distance]} nm\n"
+    mast_str="#TropoAlert - Max Distance = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
 fi
 mast_str+="#VesselAlert #Ship #Vessel #AIS"
 [[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
