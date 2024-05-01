@@ -106,7 +106,11 @@ source "/usr/share/vesselalert/save_databases"
 rm -f "$VESSELDBLOCK"
 
 # clean up Mastodon toots:
-/usr/share/vesselalert/masto_expire
+
+if [[ -n "$MASTODON_ACCESS_TOKEN" ]]; then 
+	/usr/share/vesselalert/masto_expire delete || true
+fi
+
 
 "${s6wrap[@]}" echo "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
 

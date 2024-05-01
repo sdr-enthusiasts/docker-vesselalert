@@ -64,4 +64,4 @@ jobs:
       build_baseimage_url: base/base-test-pr
     secrets:
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      # dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
