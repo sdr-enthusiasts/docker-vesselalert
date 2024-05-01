@@ -22,8 +22,6 @@
 source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-"${s6wrap[@]}" echo "[INFO] Starting cleanup run"
-
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
 CLEANUP_EVERY=1800				# every 30 minutes
