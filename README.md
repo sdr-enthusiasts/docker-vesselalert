@@ -77,6 +77,9 @@ For predictions on Tropo conditions for your area, please visit the [DX Info Cen
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
+| `MASTODON_RETENTION_TIME` | Time (in days) that any Toots to Mastodon will be retained. *) Default if omitted is `7` days. Set to `off` to disable | `7`(days) | no |
+
+*) If you are currently sending notifications to Mastodon, the system will automatically delete any Toots you made to your Mastodon account that are older than 7 days, or whatever value you have set this parameter to. If you don't want this to happen, you MUST set MASTODON_RETENTION_TIME=off in your planefence.config file. Note that ALL posts to your Mastodon account are affected by this, and not just the posts made by VesselAlert. The reasoning behind this parameter: many Mastodon servers are owned and operated by individuals, and the disk storage costs, which can be substantial due to the number of images we are attaching, are often borne out of their own pockets. This is VesselAlert being social and cost-conscious, and we really appreciate your cooperation!
 
 ## Discord notifications related parameters
 
