@@ -107,7 +107,7 @@ rm -f "$VESSELDBLOCK"
 
 # clean up Mastodon toots:
 
-if [[ -n "$MASTODON_ACCESS_TOKEN" ]] && ! chk_disabled "$MASTODON_EXPIRE"; then 
+if [[ -n "$MASTODON_ACCESS_TOKEN" ]]; then 
 	/usr/share/vesselalert/masto_expire delete || true
 fi
 
