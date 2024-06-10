@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   vesselalert:
-    image: ghcr.io/sdr-enthusiasts/vesselalert
+    image: ghcr.io/sdr-enthusiasts/docker-vesselalert
     container_name: vesselalert
     hostname: vesselalert
     restart: always
