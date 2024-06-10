@@ -11,7 +11,8 @@ services:
       - MASTODON_SERVER=airwaves.social
       - MASTODON_ACCESS_TOKEN=my_mastodon_token
       # optional parameters that you may want to set:
-      - MASTODON_SKIP_FILTER=
+        # This MASTODON_SKIP_FILTER ensures no notifications are sent for AtoN beacons:
+      - MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$|^[0-9]{7}$
       - MASTODON_MIN_DIST=
       - MASTODON_NOTIFY_EVERY=86400
       - MASTODON_CUSTOM_FIELD=
