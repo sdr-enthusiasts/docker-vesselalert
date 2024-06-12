@@ -1,5 +1,5 @@
 #!/command/with-contenv bash
-#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC1091
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC1091,SC2154
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
 #
@@ -18,13 +18,23 @@
 # This script sends a Mastodon notification (toot)
 
 source /scripts/common
-s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "$MASTODON_POST_VISIBILITY" ]] && MASTODON_POST_VISIBILITY=unlisted
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+
+declare -A MASTO_TERM
+LANGUAGE="${LANGUAGE:-enus}"
+LANGUAGE="${LANGUAGE,,}"
+if [[ -f "/data/mast-l10n-$LANGUAGE" ]]; then
+    source "/data/mast-l10n-$LANGUAGE"
+else
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
+    source "/data/mast-l10n-enus"
+fi
+
+MASTODON_POST_VISIBILITY="${MASTODON_POST_VISIBILITY:-unlisted}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 MASTODON_SERVER="${MASTODON_SERVER,,}"
-[[ -z "${MASTODON_SERVER}" ]] && MASTODON_SERVER="airwaves.social"
+MASTODON_SERVER="${MASTODON_SERVER:-airwaves.social}"
 [[ "${MASTODON_SERVER:0:7}" == "http://" ]] && MASTODON_SERVER="${MASTODON_SERVER:7}" || true
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
@@ -67,33 +77,34 @@ chk_enabled "$MASTODON_LINK_VESSELFINDER" && links+="https://www.vesselfinder.co
 unset mast_str
 
 if [[ -n "$notify_tropo" ]]; then
-    mast_str="#TropoAlert - Max Distance = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
+    mast_str="#${MASTO_TERM[TROPOMAXDIST]} = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
 fi
 mast_str+="#VesselAlert #Ship #Vessel #AIS"
-[[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" #NEW #FIRST Observation"
+if [[ "${MASTO_TERM[SHIP]}" != "Ship" ]]; then mast_str+=" #${MASTO_TERM[SHIP]}"; fi
+[[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" ${MASTO_TERM[NEW]}"
 #shellcheck disable=SC2154
-[[ "${notify_distance}" == "true" ]] && mast_str+=" #OnTheMove"
+[[ "${notify_distance}" == "true" ]] && mast_str+=" #${MASTO_TERM[ONTHEMOVE]}"
 mast_str+="\n"
-[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="Name: #${VESSELS[$1:shipname]} "
+[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]} "
 [[ -n "${VESSELS[$1:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"
-[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="Callsign: #${VESSELS[$1:callsign]} "
-[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="Type: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
+[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]} "
+[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
 mast_str+="\n"
 
-[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#Flag: #${COUNTRY[${VESSELS[$1:country]}]} "
-mast_str+="Msgs recvd: ${VESSELS[$1:count]}\n"
-mast_str+="Seen on: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
+[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]} "
+mast_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
+mast_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
-[[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && mast_str+="Status: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"
-[[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="Speed: $(printf "%.1f" "${VESSELS[$1:speed]}") kts "
-[[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]&& mast_str+="Heading: ${VESSELS[$1:heading]} deg "
-[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="Destination: ${VESSELS[$1:destination]}\n"
+[[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && mast_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"
+[[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts "
+[[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]&& mast_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg "
+[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"
 mast_str+="\n"
 
-mast_str+="Signal #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
+mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 [[ -n "${links}" ]] && mast_str+="${links}\n"
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && mast_str+="\nVessel location: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && mast_str+="\nVessel location: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && mast_str+="\n${MASTO_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}"
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}"
 
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
 
