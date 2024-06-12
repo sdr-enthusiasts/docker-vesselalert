@@ -22,7 +22,6 @@
 #---------------------------------------------------------------------------------------------
 
 source /scripts/common
-s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 "${s6wrap[@]}" echo "[INFO] Started as an s6 service"
 [[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[INFO] DEBUG=ON" || "${s6wrap[@]}" echo "[INFO] DEBUG=OFF"
