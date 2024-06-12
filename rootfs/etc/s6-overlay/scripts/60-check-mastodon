@@ -18,7 +18,6 @@
 #---------------------------------------------------------------------------------------------
 
 source /scripts/common
-s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 "${s6wrap[@]}" echo "[INFO] Checking Mastodon server and access token"
 
