@@ -2,6 +2,30 @@
 
 [![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
 
+## Table of Contents
+
+- [sdr-enthusiasts/docker-vesselalert](#sdr-enthusiastsdocker-vesselalert)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Prerequisites](#prerequisites)
+  - [Multi Architecture Support](#multi-architecture-support)
+  - [Configuring Mastodon: create an application and get an `access token`](#configuring-mastodon-create-an-application-and-get-an-access-token)
+  - [Up-and-Running with Docker Compose](#up-and-running-with-docker-compose)
+  - [Runtime Environment Variables](#runtime-environment-variables)
+    - [General parameters](#general-parameters)
+    - [Tropo Alert parameters](#tropo-alert-parameters)
+    - [Mastodon notifications related parameters](#mastodon-notifications-related-parameters)
+  - [Discord notifications related parameters](#discord-notifications-related-parameters)
+    - [Expert Parameters (only change/set if you know what you're doing)](#expert-parameters-only-changeset-if-you-know-what-youre-doing)
+  - [Adding screenshots to your notifications](#adding-screenshots-to-your-notifications)
+  - [Logging](#logging)
+  - [Modifications of Ship Status and Ship Type descriptions](#modifications-of-ship-status-and-ship-type-descriptions)
+  - [Acknowledgements](#acknowledgements)
+  - [Getting Help](#getting-help)
+  - [Summary of License Terms](#summary-of-license-terms)
+    - [VesselAlert](#vesselalert)
+    - [Tropo Alert Feature](#tropo-alert-feature)
+
 ## Introduction
 
 Docker container providing social media notification for Vessels that are received with @jvde-github's excellent [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package.
@@ -13,17 +37,17 @@ Currently, posts to [Mastodon](https://airwaves.social) and Discord are supporte
 
 We expect you to have the following:
 
-* An installed and working version of the [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package with the Web Functionality installed and accessible to this container. This means that you need to be using [v0.42](https://github.com/jvde-github/AIS-catcher/releases/tag/v0.42) or later, and that you must configure the Web Server as per the [documentation](https://github.com/jvde-github/AIS-catcher/blob/main/README.md). We advise to put the Web Server on a fixed and known port number as you will have to configure a link to this for VesselAlert to work. Note -- the version of AIS-Catcher in the official ShipXplorer distribution is too old. You must install a newer version (or switch to the [containerized version](https://github.com/sdr-enthusiasts/docker-shipxplorer), which includes an up-to-date version of AIS-Catcher).
-* Docker must be installed on your system. If you don't know how to do that, please read [here](https://github.com/sdr-enthusiasts/docker-install).
-* Some basic knowledge on how to use Linux and how to configure docker containers with `docker-compose`.
+- An installed and working version of the [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package with the Web Functionality installed and accessible to this container. This means that you need to be using [v0.42](https://github.com/jvde-github/AIS-catcher/releases/tag/v0.42) or later, and that you must configure the Web Server as per the [documentation](https://github.com/jvde-github/AIS-catcher/blob/main/README.md). We advise to put the Web Server on a fixed and known port number as you will have to configure a link to this for VesselAlert to work. Note -- the version of AIS-Catcher in the official ShipXplorer distribution is too old. You must install a newer version (or switch to the [containerized version](https://github.com/sdr-enthusiasts/docker-shipxplorer), which includes an up-to-date version of AIS-Catcher).
+- Docker must be installed on your system. If you don't know how to do that, please read [here](https://github.com/sdr-enthusiasts/docker-install).
+- Some basic knowledge on how to use Linux and how to configure docker containers with `docker-compose`.
 
 ## Multi Architecture Support
 
 Currently, this image should pull and run on the following architectures:
 
-* `arm32v7`, `armv7l`, `armhf`: ARMv7 32-bit (Odroid HC1/HC2/XU4, RPi 2/3/4 32-bit)
-* `arm64`, `aarch64`: ARMv8 64-bit (RPi 4 64-bit OSes)
-* `amd64`, `x86_64`: X86 64-bit Linux (Linux PC)
+- `arm32v7`, `armv7l`, `armhf`: ARMv7 32-bit (Odroid HC1/HC2/XU4, RPi 2/3/4 32-bit)
+- `arm64`, `aarch64`: ARMv8 64-bit (RPi 4 64-bit OSes)
+- `amd64`, `x86_64`: X86 64-bit Linux (Linux PC)
 
 Other architectures (Windows, Mac, armel) are not currently supported, but feel free to see if the container builds and runs for these.
 
@@ -74,6 +98,7 @@ For predictions on Tropo conditions for your area, please visit the [DX Info Cen
 | `MASTODON_NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
 | `MASTODON_POST_VISIBILITY` | `visibility` setting for the Mastodon notification. Valid values are `public`, `unlisted`, and `private`. | `unlisted` | no |
 | `MASTODON_CUSTOM_FIELD` | Custom field attached to the end of the Mastodon notification. Please keep it short and clear-text only. | empty | no |
+| `MASTODON_LINK_AISCATCHER` | If set to `on`, the Mastodon notification will include a link to the vessel on aiscatcher.org. (Set to `off`/`false`/`no`/`0` to disable) | on | no |
 | `MASTODON_LINK_SHIPXPLORER` | If set to `on`, the Mastodon notification will include a link to the vessel on ShipXplorer | empty | no |
 | `MASTODON_LINK_MARINETRAFFIC` | If set to `on`, the Mastodon notification will include a link to the vessel on MarineTraffic | empty | no |
 | `MASTODON_LINK_VESSELFINDER` | If set to `on`, the Mastodon notification will include a link to the vessel on VesselFinder | empty | no |
@@ -111,14 +136,14 @@ Please note that you must use the screenshot container's `aiscatcher` tag and br
 
 ## Logging
 
-* All processes are logged to the container's stdout, and can be viewed with `docker logs [-f] container`.
+- All processes are logged to the container's stdout, and can be viewed with `docker logs [-f] container`.
 
 ## Modifications of Ship Status and Ship Type descriptions
 
 In your `opt/ais/data` directory (if you followed the volume mappings as recommended), there are two files:
 
-* `shipstatus.db` contains the descriptions of the Ship Status for each status ID number
-* `shiptype.db` contains the descriptions of the Ship Type for each type number
+- `shipstatus.db` contains the descriptions of the Ship Status for each status ID number
+- `shiptype.db` contains the descriptions of the Ship Type for each type number
 
 You can change those with a text editor. Lines that start with "#" are ignored, and you can hashtag words in the description.
 
@@ -126,12 +151,12 @@ You can change those with a text editor. Lines that start with "#" are ignored, 
 
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
 
-* [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
-* [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
-* [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
-* [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
-* [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
-* The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
+- [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
+- [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
+- [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
+- [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
+- [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
+- The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
 
 ## Getting Help
 
