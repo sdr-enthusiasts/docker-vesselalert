@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/command/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC1090,SC2015
+#shellcheck disable=SC1090,SC2015,SC1091
 
 # AIS-Collect:
 # read AIS data from a AIS-Catcher web service and
@@ -21,16 +21,9 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-APPNAME="$(hostname)/$0"
+source /scripts/common
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
-
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-#shellcheck disable=SC2164
-SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd)/$(basename "$0")"
-trap 'echo -e "[$(date)][$APPNAME][ERROR] $SCRIPT_PATH in line $LINENO when executing: $BASH_COMMAND returned ${?}"' ERR
 
 if [[ -z "$1" ]]
 then
@@ -61,12 +54,7 @@ do
 done
 
 # write back to file
-{
-    declare -p KEY_INDEX
-    declare -p VESSEL_INDEX
-    declare -p VESSELS
-    declare -p SHIPTYPE
-    declare -p SHIPSTATUS
-    declare -p COUNTRY ;} > "$VESSELDBFILE"
+# shellcheck disable=SC1091
+source "/usr/share/vesselalert/save_databases"
 
 rm -f "$VESSELDBLOCK"
