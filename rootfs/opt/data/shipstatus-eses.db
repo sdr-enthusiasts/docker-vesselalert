@@ -16,7 +16,7 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-SHIPSTATUS[0]="#en_marcha_usand_ motor"
+SHIPSTATUS[0]="#en_marcha_usando_motor"
 SHIPSTATUS[1]="#anclado"
 SHIPSTATUS[2]="#sin_mando "
 SHIPSTATUS[3]="#maniobrabilidad_restringida"
