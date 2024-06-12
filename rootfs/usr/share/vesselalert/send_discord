@@ -130,7 +130,7 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
     if [[ -n "${notify_tropo}" ]]; then
         description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
     else
-        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${MASTO_TERM[NEW2]}: " || description+="${MASTO_TERM[AGAIN]}: "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${MASTO_TERM[NEW2]} " || description+="${MASTO_TERM[AGAIN]} "
         [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${MASTO_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${MASTO_TERM[SHIP]} $1 "
         [[ -n "${notify_distance}" ]] && description+="${MASTO_TERM[ISMOVING]} " || description+="${MASTO_TERM[ISSEENON]} "
     fi
