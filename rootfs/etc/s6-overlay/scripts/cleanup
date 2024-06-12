@@ -24,9 +24,9 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
-CLEANUP_EVERY=1800				# every 30 minutes
+CLEANUP_EVERY=1800				# 30 minutes in seconds
 PHOTOS_RETENTION=20160 			# 2 weeks in minutes
-SCREENSHOT_RETENTION=60			# 1 hour
+SCREENSHOT_RETENTION=60			# 1 hour in minutes
 #LOCKFILE_RETENTION=15			# 15 minutes
 MMSI_RETENTION=1209600			# 2 weeks in seconds
 COUNTRY_BKUP_RETENTION=20160	# 2 weeks in minutes
@@ -34,11 +34,14 @@ DISCTMPL_BKUP_RETENTION=20160	# 2 weeks in minutes
 SHIPSTATUS_BKUP_RETENTION=20160	# 2 weeks in minutes
 SHIPTYPE_BKUP_RETENTION=20160	# 2 weeks in minutes
 VESSELDB_BKUP_RETENTION=20160	# 2 weeks in minutes
+MASTODON_CLEANUP_EVERY=43200	# 12 hours in seconds
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 DBLOCK_MAXWAIT=600				# don't wait more than 600 secs for the dblock to be removed
+
+[[ ! -f /run/.last_mastodon_cleanup ]] && date +%s > /run/.last_mastodon_cleanup || true
 
 "${s6wrap[@]}" echo "[INFO] Starting Cleanup"
 [[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
@@ -107,11 +110,11 @@ rm -f "$VESSELDBLOCK"
 
 # clean up Mastodon toots:
 
-if [[ -n "$MASTODON_ACCESS_TOKEN" ]]; then 
+if [[ -n "$MASTODON_ACCESS_TOKEN" ]] && (( $(date +%s) -  $(</run/.last_mastodon_cleanup) > MASTODON_CLEANUP_EVERY )); then 
 	/usr/share/vesselalert/masto_expire delete || true
 fi
 
-
-"${s6wrap[@]}" echo "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
+"${s6wrap[@]}" echo -n "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
+[[ -n "$MASTODON_ACCESS_TOKEN" ]] && echo "Next Mastodon cleanup run at $(( $(</run/.last_mastodon_cleanup) > MASTODON_CLEANUP_EVERY ))" || echo ""
 
 sleep "${CLEANUP_EVERY}"
