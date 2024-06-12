@@ -24,8 +24,8 @@ VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 declare -A MASTO_TERM
 LANGUAGE="${LANGUAGE:-enus}"
 LANGUAGE="${LANGUAGE,,}"
-if [[ -f "/data/mast-l10n-$LANGUAGE" ]]; then
-    source "/data/mast-l10n-$LANGUAGE"
+if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
+    source "/data/masto-l10n-$LANGUAGE.db"
 else
     "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
     source "/data/mast-l10n-enus"
