@@ -44,6 +44,7 @@ RUN \
         "${TEMP_PACKAGES[@]}" \
         && \
     # add files from the build container:
+    mkdir -p /usr/share/vesselalert && \
     cp -f /build/src/distance /usr/share/vesselalert/distance && \
     cp -f /build/.CONTAINER_VERSION /.CONTAINER_VERSION && \
     # Do some other stuff
