@@ -115,6 +115,6 @@ if [[ -n "$MASTODON_ACCESS_TOKEN" ]] && (( $(date +%s) -  $(</run/.last_mastodon
 fi
 
 "${s6wrap[@]}" echo -n "[INFO] Cleanup finished. Next cleanup run at $(date -d @$(( $(date +%s) + CLEANUP_EVERY )) ). "
-[[ -n "$MASTODON_ACCESS_TOKEN" ]] && echo "Next Mastodon cleanup run at $(date -d "$(( $(</run/.last_mastodon_cleanup) + MASTODON_CLEANUP_EVERY ))")" || echo ""
+[[ -n "$MASTODON_ACCESS_TOKEN" ]] && echo "Next Mastodon cleanup run at $(date -d @"$(( $(</run/.last_mastodon_cleanup) + MASTODON_CLEANUP_EVERY ))")" || echo ""
 
 sleep "${CLEANUP_EVERY}"
