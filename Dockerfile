@@ -16,7 +16,7 @@ RUN \
     [[ "${branch:0:1}" == "#" ]] && branch="main" || true && \
     git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
     cd docker-vesselalert && \
-    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION && \
+    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 
