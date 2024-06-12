@@ -28,7 +28,7 @@ if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
     source "/data/masto-l10n-$LANGUAGE.db"
 else
     "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
-    source "/data/mast-l10n-enus"
+    source "/data/mast-l10n-enus.db"
 fi
 
 MASTODON_POST_VISIBILITY="${MASTODON_POST_VISIBILITY:-unlisted}"
