@@ -11,7 +11,7 @@
             "color": "16711680",
             "fields": [
                 {
-                    "name": "Vessel Name",
+                    "name": "Nombre del barco",
                     "value": "##VESSELNAME## ",
                     "inline": true
                 },
@@ -21,27 +21,27 @@
                     "inline": true
                 },
                 {
-                    "name": "Callsign",
+                    "name": "Indicativo",
                     "value": "##CALLSIGN## ",
                     "inline": true
                 },
                 {
-                    "name": "Type",
+                    "name": "Tipo",
                     "value": "##TYPE## ",
                     "inline": true
                 },
                 {
-                    "name": "Destination",
+                    "name": "Destino",
                     "value": "##DESTINATION## ",
                     "inline": false
                 },
                 {
-                    "name": "Flag",
+                    "name": "Bandera",
                     "value": "##FLAG##",
                     "inline": true
                 },
                 {
-                    "name": "Msgs rcvd",
+                    "name": "Mensajes recibido",
                     "value": "##COUNT##",
                     "inline": true
                 },
@@ -51,22 +51,22 @@
                     "inline": true
                 },
                 {
-                    "name": "Status",
+                    "name": "Estado",
                     "value": "##STATUS## ",
                     "inline": false
                 },
                 {
-                    "name": "Speed",
+                    "name": "Velocidad",
                     "value": "##SPEED## ",
                     "inline": true
                 },
                 {
-                    "name": "Heading",
+                    "name": "Rumbo",
                     "value": "##HEADING## ",
                     "inline": false
                 },
                 {
-                    "name": "External Links",
+                    "name": "Enlaces Externos",
                     "value": "##SM--[Station Map](##STNMAP##) | --SM##[AIS-Catcher](https://aiscatcher.org/ship/details/##MMSI##) | [ShipXplorer](https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##) | [MarineTraffic](https://www.marinetraffic.com/en/ais/details/ships/##MMSI##) | [VesselFinder](https://www.vesselfinder.com/vessels/details/##MMSI##) | [ShipSpotting photo gallery](https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##)",
                     "inline": false
                 }
