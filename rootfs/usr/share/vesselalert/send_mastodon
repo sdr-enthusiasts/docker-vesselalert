@@ -59,9 +59,10 @@ fi
 # Build the message - create notification string
 
 links=""
-[[ -n "$MASTODON_LINK_SHIPXPLORER" ]] && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
-[[ -n "$MASTODON_LINK_MARINETRAFFIC" ]] && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
-[[ -n "$MASTODON_LINK_VESSELFINDER" ]] && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
+chk_enabled "$MASTODON_LINK_SHIPXPLORER" && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
+chk_enabled "$MASTODON_LINK_MARINETRAFFIC" && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
+chk_enabled "$MASTODON_LINK_VESSELFINDER" && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
+chk_enabled "${MASTODON_LINK_AISCATCHER:-on}" && links+="https://aiscatcher.org/?mmsi=${VESSELS[$1:mmsi]}\n" || true
 
 unset mast_str
 
