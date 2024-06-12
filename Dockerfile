@@ -1,12 +1,14 @@
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS build
 
-RUN set -x && \
+SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
+RUN \
+    --mount=type=bind,source=./,target=/ghrepo/  \
     apt-get update -y && \
     apt-get install -q -o Dpkg::Options::="--force-confnew" -y \
         git gcc && \
-    cd / && \
-    git clone --depth=1 --single-branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
-    cd /docker-vesselalert/src && \
+    mkdir -p /src && \
+    cd /src && \
+    cp -f /ghrepo/src/distance.c . && \
     gcc -static distance.c -o distance -lm -Ofast && \
     # Add Container Version:
     cd / && \
@@ -24,7 +26,6 @@ ENV PATH="$PATH:/usr/share/vesselalert:/tools"
 LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/docker-vesselalert"
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
-
 # hadolint ignore=DL3008,SC2086,SC2039,SC2068
 RUN \
     --mount=type=bind,from=build,source=/,target=/build \
@@ -43,7 +44,7 @@ RUN \
         "${TEMP_PACKAGES[@]}" \
         && \
     # add files from the build container:
-    cp -f /build/docker-vesselalert/src/distance /usr/share/vesselalert/distance && \
+    cp -f /build/src/distance /usr/share/vesselalert/distance && \
     cp -f /build/.CONTAINER_VERSION /.CONTAINER_VERSION && \
     # Do some other stuff
     echo "alias dir=\"ls -alsv\"" >> /root/.bashrc && \
