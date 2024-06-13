@@ -133,7 +133,8 @@ fi
 
 # Now send the toot:
 #shellcheck disable=SC2086
-response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST ${media_id} -F "status=${mast_str}" -F "language=eng" -F "visibility=${MASTODON_POST_VISIBILITY}")"
+
+response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST ${media_id} -F "status=${mast_str}" -F "language=${LANGUAGE:0:2}" -F "visibility=${MASTODON_POST_VISIBILITY}")"
 # check if there was an error
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
