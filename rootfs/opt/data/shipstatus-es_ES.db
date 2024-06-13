@@ -1,0 +1,34 @@
+# Format: [#]SHIPSTATUS[number]="Description with #hashtags"
+# If the line starts with "#", it means that there's no description in the notification for this SHIPSTATUS
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+SHIPSTATUS[0]="#en_marcha_usando_motor"
+SHIPSTATUS[1]="#anclado"
+SHIPSTATUS[2]="#sin_mando "
+SHIPSTATUS[3]="#maniobrabilidad_restringida"
+SHIPSTATUS[4]="#calado_constringido"
+SHIPSTATUS[5]="#amarrado"
+SHIPSTATUS[6]="#en_tierra "
+SHIPSTATUS[7]="#pescando"
+SHIPSTATUS[8]="#en_marcha_con_vela #velando"
+# SHIPSTATUS[9]="reserved for future amendment of navigational status for ships carrying DG, HS, or MP, or IMO hazard or pollutant category C, high-speed craft (HSC)"
+# SHIPSTATUS[10]="reserved for future amendment of navigational status for ships carrying dangerous goods (DG), harmful substances (HS) or marine pollutants (MP), or IMO hazard or pollutant category A, wing in ground (WIG)"
+SHIPSTATUS[11]="#remolcador_tirando"
+SHIPSTATUS[12]="#remolcador_empujando"
+# SHIPSTATUS[13]="reserved for future use"
+SHIPSTATUS[14]="#AIS-SART #MOB-AIS #EPIRB-AIS"
+# SHIPSTATUS[15]="undefined = default (also used by AIS-SART, MOB-AIS and EPIRB-AIS under test)"

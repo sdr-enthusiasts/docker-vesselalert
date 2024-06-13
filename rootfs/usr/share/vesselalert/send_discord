@@ -18,7 +18,6 @@
 # This script sends a Discord notification
 
 source /scripts/common
-s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
@@ -27,7 +26,22 @@ source "$VESSELDBFILE"
 
 [[ -n "$DEBUG" ]] && set -x
 # load the notification JSON from the template:
-notif_json="$(</data/discord.template)"
+
+
+LANGUAGE="${LANGUAGE:-en_US}"
+if [[ -f "/data/discord.template-$LANGUAGE" ]]; then
+    notif_json="$(<"/data/discord.template-$LANGUAGE")"
+else
+    notif_json="$(</data/discord.template)"
+fi
+
+declare -A MASTO_TERM
+if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
+    source "/data/masto-l10n-$LANGUAGE.db"
+else
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
+    source "/data/mast-l10n-enus.db"
+fi
 
 
 if [[ -z "$1" ]]
@@ -113,12 +127,11 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
     if [[ -n "${notify_tropo}" ]]; then
         description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
     else
-        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="NEW: "
-        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="Vessel ${VESSELS[$1:shipname]//_/ } " || description+="Vessel $1 "
-        [[ -n "${notify_distance}" ]] && description+="is on the move " || description+="is seen "
-        [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && description+="again "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${MASTO_TERM[NEW2]} " || description+="${MASTO_TERM[AGAIN]} "
+        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${MASTO_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${MASTO_TERM[SHIP]} $1 "
+        [[ -n "${notify_distance}" ]] && description+="${MASTO_TERM[ISMOVING]} " || description+="${MASTO_TERM[ISSEENON]} "
     fi
-    description+="at $(date +"%R %Z")"
+    description+="$(date +"%R %Z")"
     notif_json="${notif_json//##DESCRIPTION##/${description}}"
 }
 
@@ -156,7 +169,7 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 
 {   if [[ -n "${notify_distance}" ]] && [[ -n "${VESSELS[$1:speed]}" ]]
     then
-        printf -v speed -- "%.1f kts -  moved %.1f nm since last notification" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
+        printf -v speed -- "%.1f kts -  ${MASTO_TERM[DIST_SINCE_LAST]}" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
     else
         printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]:-0}"
     fi

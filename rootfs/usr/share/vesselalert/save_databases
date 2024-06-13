@@ -18,6 +18,8 @@
 
 # This script is sourced from several services to make sure that all of the persistent arrays are stored
 
+source /scripts/common
+
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 
 {

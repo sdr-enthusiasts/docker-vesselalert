@@ -20,7 +20,6 @@
 #---------------------------------------------------------------------------------------------
 
 source /scripts/common
-s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 

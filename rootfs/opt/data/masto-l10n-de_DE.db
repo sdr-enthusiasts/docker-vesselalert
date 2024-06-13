@@ -1,0 +1,39 @@
+# Format: [#]MASTO_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this MASTO_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2024, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+MASTO_TERM[TROPOMAXDIST]="TropoAlert - Maximale Distanz"
+MASTO_TERM[SHIP]="Schiffe"
+MASTO_TERM[NEW]="#NEU #ERSTE_ERSTE BEOBACHTUNG"
+MASTO_TERM[ONTHEMOVE]="#Unterwegs"
+MASTO_TERM[MOVING]="unterwegs"
+MASTO_TERM[SHIPNAME]="Schiffsname"
+MASTO_TERM[CALLSIGN]="Rufzeichen"
+MASTO_TERM[SHIPTYPE]="Typ"
+MASTO_TERM[FLAG]="Flagge"
+MASTO_TERM[MSGS_RECVD]="Berichte entvangen"
+MASTO_TERM[SEEN_ON]="Gesehn um"
+MASTO_TERM[STATUS]="Status"
+MASTO_TERM[SPEED]="Geschwindigkeit"
+MASTO_TERM[HEADING]="Richtung"
+MASTO_TERM[DESTINATION]="Reiseziel"
+MASTO_TERM[SIGNAL]="Signal"
+MASTO_TERM[LOCATION]="Schiffsstandort"
+MASTO_TERM[ISMOVING]="is unterwegs"
+MASTO_TERM[ISSEENON]="beobachtet um"
+MASTO_TERM[AGAIN]="Wiederholung:"
+MASTO_TERM[NEW2]="Neu:"
+MASTO_TERM[DIST_SINCE_LAST]="hat sich seit der letzten Meldung um %.1f sm bewegt"
