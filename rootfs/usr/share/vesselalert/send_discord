@@ -28,9 +28,7 @@ source "$VESSELDBFILE"
 # load the notification JSON from the template:
 
 
-LANGUAGE="${LANGUAGE:-enus}"
-LANGUAGE="${LANGUAGE,,}"
-
+LANGUAGE="${LANGUAGE:-en_US}"
 if [[ -f "/data/discord.template-$LANGUAGE" ]]; then
     notif_json="$(<"/data/discord.template-$LANGUAGE")"
 else
