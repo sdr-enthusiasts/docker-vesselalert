@@ -26,7 +26,7 @@ LANGUAGE="${LANGUAGE:-en_US}"
 if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
     source "/data/masto-l10n-$LANGUAGE.db"
 else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
     source "/data/mast-l10n-enus.db"
 fi
 
