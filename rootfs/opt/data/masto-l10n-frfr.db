@@ -17,7 +17,7 @@
 #---------------------------------------------------------------------------------------------
 MASTO_TERM[TROPOMAXDIST]="TropoAlerte - Distance Max"
 MASTO_TERM[SHIP]="Navire"
-MASTO_TERM[NEW]="#NEW #Première observation"
+MASTO_TERM[NEW]="#NOUVEAU #Première_observation"
 MASTO_TERM[ONTHEMOVE]="#En_mouvement"
 MASTO_TERM[SHIPNAME]="Nom"
 MASTO_TERM[CALLSIGN]="Indicatif"
