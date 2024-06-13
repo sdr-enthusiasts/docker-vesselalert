@@ -22,8 +22,7 @@ source /scripts/common
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 
 declare -A MASTO_TERM
-LANGUAGE="${LANGUAGE:-enus}"
-LANGUAGE="${LANGUAGE,,}"
+LANGUAGE="${LANGUAGE:-en_US}"
 if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
     source "/data/masto-l10n-$LANGUAGE.db"
 else
