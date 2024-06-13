@@ -143,7 +143,7 @@ else
     #SHIPTYPE[98]="#Other Reserved"
     SHIPTYPE[99]="#Other"
 
-    "${s6wrap[@]}" echo "[INFO] SHIPTYPE database loaded from internal list as shiptype.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] SHIPTYPE database loaded from internal list as shiptype-$LANGUAGE.db file was not found"
 fi
 unset SHIPSTATUS
 declare -A SHIPSTATUS
@@ -169,7 +169,7 @@ else
     SHIPSTATUS[14]="#AIS-SART #MOB-AIS #EPIRB-AIS"
     #SHIPSTATUS[15]="undefined = default (also used by AIS-SART, MOB-AIS and EPIRB-AIS under test)"
 
-    "${s6wrap[@]}" echo "[INFO] SHIPSTATUS database loaded from internal list as shipstatus.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] SHIPSTATUS database loaded from internal list as shipstatus-$LANGUAGE.db file was not found"
 fi
 
 unset COUNTRY
@@ -409,7 +409,7 @@ else
     COUNTRY[ZM]="Zambia"
     COUNTRY[ZW]="Zimbabwe"
 
-    "${s6wrap[@]}" echo "[INFO] COUNTRY names database loaded from internal list as country.db file was not found"
+    "${s6wrap[@]}" echo "[INFO] COUNTRY names database loaded from internal list as country-$LANGUAGE.db file was not found"
 fi
 
 # Make sure the other arrays have been declared if they don't already exist:
