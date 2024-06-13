@@ -11,7 +11,7 @@
             "color": "16711680",
             "fields": [
                 {
-                    "name": "Vessel Name",
+                    "name": "Schiffsname",
                     "value": "##VESSELNAME## ",
                     "inline": true
                 },
@@ -21,27 +21,27 @@
                     "inline": true
                 },
                 {
-                    "name": "Callsign",
+                    "name": "Rufzeichen",
                     "value": "##CALLSIGN## ",
                     "inline": true
                 },
                 {
-                    "name": "Type",
+                    "name": "Typ",
                     "value": "##TYPE## ",
                     "inline": true
                 },
                 {
-                    "name": "Destination",
+                    "name": "Reiseziel",
                     "value": "##DESTINATION## ",
                     "inline": false
                 },
                 {
-                    "name": "Flag",
+                    "name": "Flagge",
                     "value": "##FLAG##",
                     "inline": true
                 },
                 {
-                    "name": "Msgs rcvd",
+                    "name": "Berichte entv.",
                     "value": "##COUNT##",
                     "inline": true
                 },
@@ -56,17 +56,17 @@
                     "inline": false
                 },
                 {
-                    "name": "Speed",
+                    "name": "Geschwindigkeit",
                     "value": "##SPEED## ",
                     "inline": true
                 },
                 {
-                    "name": "Heading",
+                    "name": "Kompassrichtung",
                     "value": "##HEADING## ",
                     "inline": false
                 },
                 {
-                    "name": "External Links",
+                    "name": "Externe Links",
                     "value": "##SM--[Station Map](##STNMAP##) | --SM##[AIS-Catcher](https://aiscatcher.org/ship/details/##MMSI##) | [ShipXplorer](https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##) | [MarineTraffic](https://www.marinetraffic.com/en/ais/details/ships/##MMSI##) | [VesselFinder](https://www.vesselfinder.com/vessels/details/##MMSI##) | [ShipSpotting photo gallery](https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##)",
                     "inline": false
                 }
@@ -78,7 +78,7 @@
             },
             "footer":
             {
-                "text": "VesselAlert by kx1t"
+                "text": "VesselAlert von kx1t"
             },
             "url": "https://www.vesselalert.com"
             ##SCRSHT--
