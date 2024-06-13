@@ -74,7 +74,7 @@ There are a series of available environment variables:
 | `NOTIFICATION_MAPURL` | If set to a URL, a link `$NOTIFICATION_MAPURL/mmsi=$mmsi` will be added to the notification. If the value is non-empty but doesn't start with "http" (e.g., if it's set to `on`, `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
 | `NOTIFY_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
-| `LANGUAGE` | Set to make notifications in one of these supported languages: `enus` (US English); ~~`eses` (Spanish)~~; `nlnl` (Dutch); ~~`frfr` (French)~~; ~~`dede` (German)~~. (~~Strike-through~~ means that these languages will be available soon.) If omitted, it will default to `enus` | `enus` | no |
+| `LANGUAGE` | Set to make notifications in one of these supported languages: `en_US` (US English); `es_ES` (Spanish); `nl_NL` (Dutch); `fr_FR` (French); `de_DE` (German). If omitted, it will default to `en_US` | `en_US` | no |
 
 ### Tropo Alert parameters
 
