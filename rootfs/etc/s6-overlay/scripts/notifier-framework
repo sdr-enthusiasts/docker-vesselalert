@@ -22,7 +22,7 @@
 
 source /scripts/common
 
-"${s6wrap[@]}" echo "[INFO] Starting cleanup run"
+"${s6wrap[@]}" echo "[INFO] Notification Framework run"
 
 renice -n 10 -p $$ >/dev/null 2>&1
 

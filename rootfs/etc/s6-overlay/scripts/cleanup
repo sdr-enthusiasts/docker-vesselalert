@@ -43,7 +43,12 @@ DBLOCK_MAXWAIT=600				# don't wait more than 600 secs for the dblock to be remov
 [[ ! -f /run/.last_mastodon_cleanup ]] && date +%s > /run/.last_mastodon_cleanup || true
 
 "${s6wrap[@]}" echo "[INFO] Starting Cleanup"
-[[ -f  $VESSELDBLOCK ]] && "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
+if [[ -f  $VESSELDBLOCK ]]; then
+	"${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
+	is_locked=true
+else
+	is_locked=false
+fi
 
 lockstarttime="$(date +%s)"
 while [[ -f  $VESSELDBLOCK ]]
@@ -54,6 +59,10 @@ do
 		break
 	fi
 done
+
+if [[ "$is_locked" == true ]]; then
+	"${s6wrap[@]}" echo "[INFO] Vessel.db is now unlocked - continuing cleanup"
+fi
 
 # Now lock the process for myself:
 touch "$VESSELDBLOCK"
