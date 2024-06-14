@@ -78,7 +78,7 @@ unset mast_str
 if [[ -n "$notify_tropo" ]]; then
     mast_str="#${MASTO_TERM[TROPOMAXDIST]} = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
 fi
-mast_str+="#VesselAlert #Ship #Vessel #AIS"
+mast_str+="#VesselAlert"
 if [[ "${MASTO_TERM[SHIP]}" != "Ship" ]]; then mast_str+=" #${MASTO_TERM[SHIP]}"; fi
 [[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" ${MASTO_TERM[NEW]}"
 #shellcheck disable=SC2154
@@ -106,6 +106,9 @@ mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level
 [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && mast_str+="\n${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}"
 
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD"
+
+mast_str+="\n#Ship #Vessel #AIS"
+mast_str+="\n#VesselAlert © 2023, 2024 kx1t"
 
 #shellcheck disable=SC2001
 mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
