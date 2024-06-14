@@ -75,6 +75,8 @@ There are a series of available environment variables:
 | `NOTIFY_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
 | `LANGUAGE` | Set to make notifications in one of these supported languages: `en_US` (US English); `es_ES` (Spanish); `nl_NL` (Dutch); `fr_FR` (French); `de_DE` (German). If omitted, it will default to `en_US` | `en_US` | no |
+| `LAT` | Latitude of receiver station. If Lat/Lon are included, the notification will contain a "Distance to Receiver" field | empty | no |
+| `LON` | Longitude of receiver station. If Lat/Lon are included, the notification will contain a "Distance to Receiver" field | empty | no |
 
 ### Tropo Alert parameters
 
