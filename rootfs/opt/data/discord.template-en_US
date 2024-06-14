@@ -65,6 +65,11 @@
                     "value": "##HEADING## ",
                     "inline": false
                 },
+                ##HASDIST--{
+                    "name": "Distance from receiver",
+                    "value": "##DISTANCE## nm",
+                    "inline": false
+                },--HASDIST##
                 {
                     "name": "External Links",
                     "value": "##SM--[Station Map](##STNMAP##) | --SM##[AIS-Catcher](https://aiscatcher.org/ship/details/##MMSI##) | [ShipXplorer](https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##) | [MarineTraffic](https://www.marinetraffic.com/en/ais/details/ships/##MMSI##) | [VesselFinder](https://www.vesselfinder.com/vessels/details/##MMSI##) | [ShipSpotting photo gallery](https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##)",

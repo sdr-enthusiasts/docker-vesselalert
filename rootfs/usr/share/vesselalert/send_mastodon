@@ -78,6 +78,7 @@ unset mast_str
 if [[ -n "$notify_tropo" ]]; then
     mast_str="#${MASTO_TERM[TROPOMAXDIST]} = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
 fi
+
 mast_str+="#VesselAlert"
 [[ "${MASTO_TERM[SHIP]}" != "Ship" ]] && mast_str+=" #${MASTO_TERM[SHIP]}" || true
 [[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" ${MASTO_TERM[NEW]}" || true
