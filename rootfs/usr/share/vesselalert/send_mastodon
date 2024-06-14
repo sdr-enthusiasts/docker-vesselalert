@@ -98,6 +98,12 @@ mast_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:las
 [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts "
 [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]&& mast_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg "
 [[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"
+
+if [[ -n "${VESSELS[$1:lat]}" ]] && [[ -n "${VESSELS[$1:lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
+    distance="$(bc -l <<< "scale=1; $(distance "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}" "$LAT" "$LON") / 1")"
+    mast_str+="${MASTO_TERM[DISTANCE]}: $distance nm\n"
+fi
+
 mast_str+="\n"
 
 mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
