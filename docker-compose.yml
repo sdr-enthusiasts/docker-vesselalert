@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   vesselalert:
     image: ghcr.io/sdr-enthusiasts/docker-vesselalert
@@ -31,6 +30,7 @@ services:
       - MIN_MSG_COUNT=10
       - MAX_MSG_AGE=86400
       - DEBUG=
+      - LANGUAGE=en_US
     tmpfs:
       - /tmp
     volumes:
