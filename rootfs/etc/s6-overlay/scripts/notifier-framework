@@ -1,6 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091
+#shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091,SC2154
 
 # Notifier Framework
 # Determine if a notification needs to be sent
@@ -22,7 +22,7 @@
 
 source /scripts/common
 
-"${s6wrap[@]}" echo "[INFO] Starting cleanup run"
+"${s6wrap[@]}" echo "[INFO] Notification Framework run"
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
