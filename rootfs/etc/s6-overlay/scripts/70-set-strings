@@ -21,7 +21,7 @@ source /scripts/common
 
 "${s6wrap[@]}" echo "[INFO] Loading Vessel and Status Descriptions"
 
-LANGUAGE="${LANGUAGE:-en_us}"
+LANGUAGE="${LANGUAGE:-en_US}"
 
 [[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
 
