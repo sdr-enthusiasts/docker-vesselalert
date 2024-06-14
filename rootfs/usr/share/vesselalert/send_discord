@@ -183,6 +183,16 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
     notif_json="${notif_json//##TIMESTAMP##/${timestamp}}"
 }
 
+if [[ -n "${VESSELS[$1:lat]}" ]] && [[ -n "${VESSELS[$1:lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
+    distance="$(bc -l <<< "scale=1; $(distance "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}" "$LAT" "$LON") / 1")"
+    notif_json="${notif_json//##DISTANCE##/${distance}}"
+    notif_json="${notif_json//##HASDIST--/}"
+    notif_json="${notif_json//--HASDIST##/}"
+else
+    notif_json="${notif_json//##HASDIST--*--HASDIST##/}"
+fi
+
+
 # replace " " and "" by "--" to appease Discord's weird restriction on empty and almost empty strings
 notif_json="${notif_json//\" \"/\"--\"}"
 notif_json="${notif_json//\"\"/\"--\"}"
