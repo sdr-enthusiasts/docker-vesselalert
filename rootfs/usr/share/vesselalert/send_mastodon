@@ -90,7 +90,7 @@ mast_str+="\n"
 [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n" || true
 mast_str+="\n"
 
-[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]} " || true
+[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n" || true
 mast_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
 mast_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
