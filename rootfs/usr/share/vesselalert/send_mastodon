@@ -84,10 +84,10 @@ mast_str+="#VesselAlert"
 [[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" ${MASTO_TERM[NEW]}" || true
 [[ "${notify_distance}" == "true" ]] && mast_str+=" #${MASTO_TERM[ONTHEMOVE]}" || true
 mast_str+="\n"
-[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]} " || true
+[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n" || true
 [[ -n "${VESSELS[$1:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]} " || true
-[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}" || true
+[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n" || true
+[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n" || true
 mast_str+="\n"
 
 [[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]} " || true
