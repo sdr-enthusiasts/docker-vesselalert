@@ -1,6 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC1090,SC2015,SC1091
+#shellcheck disable=SC1090,SC2015,SC1091,SC2302,SC2303
 
 # AIS-Collect:
 # read AIS data from a AIS-Catcher web service and
