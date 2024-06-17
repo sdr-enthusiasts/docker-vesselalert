@@ -111,7 +111,7 @@ mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="\n$MASTODON_CUSTOM_FIELD" || true
 
 mast_str+="\n#Ship #Vessel #AIS"
-mast_str+="\n#VesselAlert © 2023-2024 kx1t
+mast_str+="\n#VesselAlert © 2023-2024 kx1t"
 
 #shellcheck disable=SC2001
 mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
