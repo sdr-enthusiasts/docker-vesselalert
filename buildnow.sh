@@ -10,7 +10,7 @@ BASETARGET1=ghcr.io/sdr-enthusiasts
 BASETARGET2=kx1t
 
 IMAGE1="$BASETARGET1/$(pwd | sed -n 's|.*/docker-\(.*\)|\1|p'):$TAG"
-IMAGE2="$BASETARGET2/$(pwd | sed -n 's|.*/docker-\(.*\)|\1|p'):$TAG"
+#IMAGE2="$BASETARGET2/$(pwd | sed -n 's|.*/docker-\(.*\)|\1|p'):$TAG"
 
 
 echo "press enter to start building $IMAGE1 from $BRANCH"
