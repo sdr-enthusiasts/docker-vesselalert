@@ -22,6 +22,9 @@ services:
       - NOTIFICATION_MAPURL=yes
       - NOTIFICATION_THROTTLE=on
       - NOTIFY_ONLY_NEW_ON_STARTUP=on
+      # latitude and longitude of the receiver can be specified, will display the distance from in the toot
+      - LAT=xx.xxxxx
+      - LON=xx.xxxxx
       - SCREENSHOT_URL=http://ais-screenshot:5042
       # optional parameters that you probably don't want to touch unless you really know what you are doing:
       - CHECK_INTERVAL=30
