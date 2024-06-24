@@ -1,0 +1,96 @@
+{
+    "username": "##USER##",
+    "avatar_url": "##AVATAR##",
+    "tts": false,
+    "embeds": [
+        {
+            "tts": false,
+            "type": "rich",
+            "title": "##TITLE##",
+            "description": "##DESCRIPTION## ",
+            "color": "16711680",
+            "fields": [
+                {
+                    "name": "Nom del vaixell",
+                    "value": "##VESSELNAME## ",
+                    "inline": true
+                },
+                {
+                    "name": "MMSI",
+                    "value": "##MMSI##",
+                    "inline": true
+                },
+                {
+                    "name": "Indicatiu",
+                    "value": "##CALLSIGN## ",
+                    "inline": true
+                },
+                {
+                    "name": "Tipus",
+                    "value": "##TYPE## ",
+                    "inline": true
+                },
+                {
+                    "name": "Destinació",
+                    "value": "##DESTINATION## ",
+                    "inline": false
+                },
+                {
+                    "name": "Bandera",
+                    "value": "##FLAG##",
+                    "inline": true
+                },
+                {
+                    "name": "Missatges Rebuts",
+                    "value": "##COUNT##",
+                    "inline": true
+                },
+                {
+                    "name": "RSSI",
+                    "value": "##SIGNAL## dBFS",
+                    "inline": true
+                },
+                {
+                    "name": "Estat",
+                    "value": "##STATUS## ",
+                    "inline": false
+                },
+                {
+                    "name": "Velocitat",
+                    "value": "##SPEED## ",
+                    "inline": true
+                },
+                {
+                    "name": "Direcció",
+                    "value": "##HEADING## ",
+                    "inline": false
+                },
+                ##HASDIST--{
+                    "name": "Distància del receptor",
+                    "value": "##DISTANCE## nm",
+                    "inline": false
+                },--HASDIST##
+                {
+                    "name": "Enllaços externs",
+                    "value": "##SM--[Mapa de l'Estació](##STNMAP##) | --SM##[AIS-Catcher](https://aiscatcher.org/ship/details/##MMSI##) | [ShipXplorer](https://www.shipxplorer.com/data/vessels/IMO-MMSI-##MMSI##) | [MarineTraffic](https://www.marinetraffic.com/en/ais/details/ships/##MMSI##) | [VesselFinder](https://www.vesselfinder.com/vessels/details/##MMSI##) | [ShipSpotting photo gallery](https://www.shipspotting.com/photos/gallery?mmsi=##MMSI##)",
+                    "inline": false
+                }
+            ],
+            "timestamp": "##TIMESTAMP##",
+            "thumbnail":
+            {
+                "url": "https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=##MMSI##"
+            },
+            "footer":
+            {
+                "text": "VesselAlert © 2023, 2024 kx1t"
+            },
+            "url": "https://www.vesselalert.com"
+            ##SCRSHT--
+            ,
+            "image":
+            {
+                "url":"attachment://##SCREENSHOTFILE##"
+            }--SCRSHT##
+            }]
+        }
