@@ -113,7 +113,7 @@ mast_str+="\n"
 
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="$MASTODON_CUSTOM_FIELD\n" || true
 
-mast_str+="${MASTO_TERM[SHIP]} #AIS\n"
+mast_str+="#${MASTO_TERM[SHIP]} #AIS\n"
 mast_str+="#VesselAlert © 2022-2024 #kx1t"
 
 #shellcheck disable=SC2001
