@@ -1,7 +1,7 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC1091,SC2154,SC2001
 #---------------------------------------------------------------------------------------------
-# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+# Copyright (C) 2022-2024, Ramon F. Kolb (kx1t)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -114,7 +114,7 @@ mast_str+="\n"
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="$MASTODON_CUSTOM_FIELD\n" || true
 
 mast_str+="${MASTO_TERM[SHIP]} #AIS\n"
-mast_str+="#VesselAlert © 2023-2024 #kx1t"
+mast_str+="#VesselAlert © 2022-2024 #kx1t"
 
 #shellcheck disable=SC2001
 mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
