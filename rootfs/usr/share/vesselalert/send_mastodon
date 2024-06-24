@@ -113,8 +113,8 @@ mast_str+="\n"
 
 [[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="$MASTODON_CUSTOM_FIELD\n" || true
 
-mast_str+="#Ship #Vessel #AIS\n"
-mast_str+="#VesselAlert © 2023-2024 kx1t"
+mast_str+="${MASTO_TERM[SHIP]} #AIS\n"
+mast_str+="#VesselAlert © 2023-2024 #kx1t"
 
 #shellcheck disable=SC2001
 mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"
