@@ -41,7 +41,7 @@
                     "inline": true
                 },
                 {
-                    "name": "Mensajes recibido",
+                    "name": "Mensajes recibidos",
                     "value": "##COUNT##",
                     "inline": true
                 },
