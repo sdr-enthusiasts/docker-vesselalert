@@ -1,0 +1,34 @@
+# Format: [#]SHIPSTATUS[number]="Description with #hashtags"
+# If the line starts with "#", it means that there's no description in the notification for this SHIPSTATUS
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+SHIPSTATUS[0]="#en_marcha_usando_motor"
+SHIPSTATUS[1]="#ancorado"
+SHIPSTATUS[2]="#non_baixo_mando"
+SHIPSTATUS[3]="#manobrabilidade_restrinxida"
+SHIPSTATUS[4]="#profundidade_restrinxida"
+SHIPSTATUS[5]="#amarrado"
+SHIPSTATUS[6]="#acallado"
+SHIPSTATUS[7]="#pesca"
+SHIPSTATUS[8]="#en_marcha_usando_vela "
+# SHIPSTATUS[9]="reservado para futuras modificacións do estado de navegación dos buques que levan DG, HS ou MP, ou da OMI categoría C de perigo ou contaminante, embarcacións de alta velocidade (HSC)"
+# SHIPSTATUS[10]="reservado para futuras modificacións do estado de navegación dos buques que transportan mercadorías perigosas (DG), substancias nocivas (HS) ou contaminantes mariños (MP), ou perigo da OMI ou categoría de contaminantes A, ala no chan (WIG)"
+SHIPSTATUS[11]="#remolque_tirando"
+SHIPSTATUS[12]="#remolque_empurrando"
+# SHIPSTATUS[13]="reservado para uso futuro"
+SHIPSTATUS[14]="#AIS-SART #MOB-AIS #EPIRB-AIS"
+# SHIPSTATUS[15]="undefined = default (tamén usado por AIS-SART, MOB-AIS e EPIRB-AIS en proba)"
