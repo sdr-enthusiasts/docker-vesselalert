@@ -1,0 +1,40 @@
+# Format: [#]MASTO_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this MASTO_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2024, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+MASTO_TERM[TROPOMAXDIST]="TropoAlert - Distancia Máxima"
+MASTO_TERM[SHIP]="Embarcación"
+MASTO_TERM[NEW]="#NOVO #PREIMERA Observación"
+MASTO_TERM[ONTHEMOVE]="#EnMovemento"
+MASTO_TERM[MOVING]="en movemento"
+MASTO_TERM[SHIPNAME]="Nome"
+MASTO_TERM[CALLSIGN]="Indicativo"
+MASTO_TERM[SHIPTYPE]="Tipo"
+MASTO_TERM[FLAG]="Bandeira"
+MASTO_TERM[MSGS_RECVD]="Mensaxes recibidas"
+MASTO_TERM[SEEN_ON]="Visto últ."
+MASTO_TERM[STATUS]="Estado"
+MASTO_TERM[SPEED]="Velocidade"
+MASTO_TERM[HEADING]="Curso"
+MASTO_TERM[DESTINATION]="Destino"
+MASTO_TERM[SIGNAL]="Sinal"
+MASTO_TERM[LOCATION]="Detalles"
+MASTO_TERM[ISMOVING]="está en movemento"
+MASTO_TERM[ISSEENON]="foi visto en"
+MASTO_TERM[AGAIN]="De Novo:"
+MASTO_TERM[NEW2]="Novo:"
+MASTO_TERM[DIST_SINCE_LAST]="moveuse %.1f nm desde a última notificación"
+MASTO_TERM[DISTANCE]="Distancia"
