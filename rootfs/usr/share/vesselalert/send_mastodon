@@ -154,7 +154,7 @@ response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTO
 # check if there was an error
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
-    "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs). "
+    "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs)"
     [[ -z "${VESSELS[$1:notification:last]}" ]] && "${s6wrap[@]}" echo -n "[INFO] #NEW " || true
     #shellcheck disable=SC2154
     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD " || true
