@@ -23,22 +23,20 @@ source /scripts/common
 
 renice -n 20 -p $$ >/dev/null 2>/dev/null
 
-CLEANUP_EVERY=1800				# 30 minutes in seconds
-PHOTOS_RETENTION=20160 			# 2 weeks in minutes
-SCREENSHOT_RETENTION=60			# 1 hour in minutes
-#LOCKFILE_RETENTION=15			# 15 minutes
-MMSI_RETENTION=1209600			# 2 weeks in seconds
-COUNTRY_BKUP_RETENTION=20160	# 2 weeks in minutes
-DISCTMPL_BKUP_RETENTION=20160	# 2 weeks in minutes
-SHIPSTATUS_BKUP_RETENTION=20160	# 2 weeks in minutes
-SHIPTYPE_BKUP_RETENTION=20160	# 2 weeks in minutes
-VESSELDB_BKUP_RETENTION=20160	# 2 weeks in minutes
-MASTODON_CLEANUP_EVERY=43200	# 12 hours in seconds
+CLEANUP_EVERY="${CLEANUP_EVER:-1800}"			# 30 minutes in seconds
+PHOTOS_RETENTION="${PHOTOS_RETENTION:-20160}"		# 2 weeks in minutes
+SCREENSHOT_RETENTION="${SCREENSHOT_RETENTION:-60}"	# 1 hour in minutes
+MMSI_RETENTION="${MMSI_RETENTION:-1209600}"			# 2 weeks in seconds
+COUNTRY_BKUP_RETENTION="${VESSELDB_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
+DISCTMPL_BKUP_RETENTION="${DISCTMPL_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
+SHIPSTATUS_BKUP_RETENTION="${SHIPSTATUS_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
+SHIPTYPE_BKUP_RETENTION="${SHIPTYPE_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
+VESSELDB_BKUP_RETENTION="${VESSELDB_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
+MASTODON_CLEANUP_EVERY="${MASTODON_CLEANUP_EVERY:-43200}"	# 12 hours in seconds
+DBLOCK_MAXWAIT="${DBLOCK_MAXWAIT:-600}"				# don't wait more than 600 secs for the dblock to be removed
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
-
-DBLOCK_MAXWAIT=600				# don't wait more than 600 secs for the dblock to be removed
 
 [[ ! -f /run/.last_mastodon_cleanup ]] && date +%s > /run/.last_mastodon_cleanup || true
 
