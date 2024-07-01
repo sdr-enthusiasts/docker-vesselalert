@@ -6,7 +6,7 @@
 # read AIS data from a AIS-Catcher web service and
 # create and maintain a database with this data
 #---------------------------------------------------------------------------------------------
-# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+# Copyright (C) 2022-2024, Ramon F. Kolb (kx1t)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -28,9 +28,9 @@ source /scripts/common
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
-declare -A VESSELS
-declare -a VESSEL_INDEX
-declare -a KEY_INDEX
+! declare -p VESSELS >/dev/null 2>&1 && declare -A VESSELS || true
+! declare -p KEY_INDEX >/dev/null 2>&1 && declare -a KEY_INDEX || true
+! declare -p VESSEL_INDEX >/dev/null 2>&1 && declare -a VESSEL_INDEX || true
 
 CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
