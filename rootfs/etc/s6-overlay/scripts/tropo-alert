@@ -73,7 +73,7 @@ done
 
 # Get furthest the ships in the current ships.json
 # The JQ function returns all vessel > $TROPO_MINDIST in the format "mmsi dist last_signal"
-readarray -d ' ' -t furthest_vessel < <(curl -ssL "${AIS_URL}" \
+readarray -d ' ' -t furthest_vessel < <(curl -sSL "${AIS_URL}" \
     | jq -r --arg dist "$TROPO_MINDIST" '.ships[] | select(.distance>=($dist|tonumber)) | "\(.mmsi) \(.distance) \(.last_signal) \(.validated)"' \
     | awk '( ! ENVIRON["MASTODON_SKIP_FILTER"] || $1 !~ ENVIRON["MASTODON_SKIP_FILTER"] )' \
     | sort -rn -k2.1 | head -1 | tr -d '\n')
