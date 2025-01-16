@@ -49,8 +49,8 @@ then
 else
     unset notify_tropo
 fi
-if [[ -z "${BLUESKY_API_PASSWORD}" ]] || [[ -z "$BLUESKY_HANDLE" ]]; then
-    "${s6wrap[@]}" echo "[ERROR] BLUESKY_API_PASSWORDor BLUESKY_HANDLE not defined. Cannot send a BlueSky notification"
+if [[ -z "${BLUESKY_APP_PASSWORD}" ]] || [[ -z "$BLUESKY_HANDLE" ]]; then
+    "${s6wrap[@]}" echo "[ERROR] BLUESKY_APP_PASSWORD or BLUESKY_HANDLE not defined. Cannot send a BlueSky notification"
     exit 1
 fi
 
