@@ -134,11 +134,13 @@ for image in "${IMAGES[@]}"; do
 
     if (( imgsize_org < 10000 )); then
         "${s6wrap[@]}" echo "Image size for $image is less than 10 KB ($imgsize_org). Is it really an image? Skipping..."
+        rm -f "$image"
         continue
     fi
     # shellcheck disable=SC2076
     if [[ ! " jpeg jpg gif png " =~ " ${mimetype_local##*/} " ]]; then
         "${s6wrap[@]}" echo "Omitting image $image as it is not jpg, gif, or png. (Reported mimetype is ${mimetype_local##*/})"
+        rm -f "$image"
         continue
     fi
     if (( imgsize_org >= 950000 )); then
