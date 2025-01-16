@@ -83,7 +83,7 @@ bsky_str+="\n"
 [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && bsky_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n" || true
 
 [[ -n "${VESSELS[$1:country]}" ]] && bsky_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n" || true
-bsky_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
+# bsky_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
 bsky_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
 [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && bsky_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n" || true
