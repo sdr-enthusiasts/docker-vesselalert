@@ -36,6 +36,9 @@ RUN \
     KEPT_PACKAGES+=(jq) && \
     KEPT_PACKAGES+=(nano) && \
     KEPT_PACKAGES+=(curl) && \
+    KEPT_PACKAGES+=(file) && \
+    KEPT_PACKAGES+=(jpegoptim) && \
+    KEPT_PACKAGES+=(pngquant) && \
     #
     # install packages
     apt-get update && \
