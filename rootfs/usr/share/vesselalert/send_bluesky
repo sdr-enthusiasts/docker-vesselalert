@@ -106,7 +106,7 @@ bsky_str+="\n"
 
 [[ -n "$BLUESKY_CUSTOM_FIELD" ]] && bsky_str+="$BLUESKY_CUSTOM_FIELD\n" || true
 
-bsky_str+="#${MASTO_TERM[SHIP]} #AIS © #kx1t https://sdr-enthusiasts.com/docker-vesselalert"
+bsky_str+="#${MASTO_TERM[SHIP]} #AIS © #kx1t https://sdr-e.com/docker-vesselalert"
 
 #shellcheck disable=SC2001
 bsky_str="$(sed -e 's|\\n|\n|g' <<< "$bsky_str")"
