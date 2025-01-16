@@ -5,7 +5,7 @@
 # Notifier Framework
 # Determine if a notification needs to be sent
 #---------------------------------------------------------------------------------------------
-# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -219,6 +219,8 @@ do
             [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args}
             # shellcheck disable=SC2086  # we want globbing of $extra_args here
             [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args}
+                        # shellcheck disable=SC2086  # we want globbing of $extra_args here
+            [[ -n "${BLUESKY_APP_PASSWORD}" ]] && [[ -n "$BLUESKY_HANDLE" ]] && nice -n 20 /usr/share/vesselalert/send_bluesky "${VESSELS[${vessel}:mmsi]}" ${extra_args}
             # ---------------------------------------------------------------------------------------------
 
 
