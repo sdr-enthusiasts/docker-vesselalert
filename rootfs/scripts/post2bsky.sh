@@ -92,7 +92,7 @@ BLUESKY_MAXLENGTH="${BLUESKY_MAXLENGTH:-300}"
 
 mapurls=("${BLUESKY_MAPURLS[@]}")
 if [[ -z "${mapurls[*]}" ]]; then
-    mapurls=(adsbexchange flightradar24 planefinder opensky flightaware fr24 radarbox airnav airplanes.live adsb.lol adsb.fi wiki planefence)
+    mapurls=(adsbexchange flightradar24 planefinder opensky flightaware fr24 radarbox airnav airplanes.live adsb.lol adsb.fi wiki planefence sdr-e)
 fi
 
 # Check if the required variables are set
