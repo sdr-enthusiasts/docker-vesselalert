@@ -17,7 +17,7 @@
     - [Mastodon and other notifications related parameters](#mastodon-and-other-notifications-related-parameters)
   - [Discord notifications related parameters](#discord-notifications-related-parameters)
   - [BlueSky notifications related parameters](#bluesky-notifications-related-parameters)
-    - [Expert Parameters (only change/set if you know what you're doing)](#expert-parameters-only-changeset-if-you-know-what-youre-doing)
+  - [Expert Parameters (only change/set if you know what you're doing)](#expert-parameters-only-changeset-if-you-know-what-youre-doing)
   - [Adding screenshots to your notifications](#adding-screenshots-to-your-notifications)
   - [Logging](#logging)
   - [Modifications of Ship Status and Ship Type descriptions](#modifications-of-ship-status-and-ship-type-descriptions)
@@ -138,7 +138,7 @@ If you want to stop sending notifications to BlueSky, simply remove either the `
 | `BLUESKY_HANDLE` | BlueSky handle (incl. PDS, for example `abcd.bsky.social`.) | (empty) | Yes |
 | `BLUESKY_API` | Alternative API for users who use their own PDS. (Do not set this parameter unless you know what you are doing!) | `https://bsky.social/xrpc` | No |
 
-### Expert Parameters (only change/set if you know what you're doing)
+## Expert Parameters (only change/set if you know what you're doing)
 
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
