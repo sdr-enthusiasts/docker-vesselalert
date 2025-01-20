@@ -175,9 +175,10 @@ You can change those with a text editor. Lines that start with "#" are ignored, 
 
 ## Acknowledgements
 
-Without the help, advice, testing, and kicking the tires of these people, things wouldn't have happened:
+Without the help, advice, testing, and kicking the tires of these people, things wouldn't have been possible. In random order:
 
 - [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
+- [@wiedehopf](https://github.com/wiedehopf) for his continous help, advice, and expertise
 - [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
 - [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
 - [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
