@@ -132,6 +132,8 @@ If you want to post to another federated BlueSky server, you can update `BLUESKY
 
 If you want to stop sending notifications to BlueSky, simply remove either the `BLUESKY_APP_PASSWORD` or the `BLUESKY_HANDLE` parameter.
 
+Please note that the length of the text in BlueSky notifications is limited to 300 characters. This may cause some notifications to be truncated.
+
 | Environment Variable | Purpose                         | Default | Mandatory? |
 | -------------------- | ------------------------------- | ------- | ---------- |
 | `BLUESKY_APP_PASSWORD` | BlueSky App Password as described above | (empty) | Yes |
