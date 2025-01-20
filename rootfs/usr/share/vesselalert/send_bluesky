@@ -98,10 +98,10 @@ fi
 
 bsky_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && bsky_str+="${MASTO_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && bsky_str+="${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && bsky_str+="${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
+[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && bsky_str+="${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
 [[ -n "${links}" ]] && bsky_str+="${links}\n" || true
-
+LLP
 bsky_str+="\n"
 
 [[ -n "$BLUESKY_CUSTOM_FIELD" ]] && bsky_str+="$BLUESKY_CUSTOM_FIELD\n" || true
