@@ -54,7 +54,7 @@ else
 fi
 
 # do some clean up
-[[ -n "${mqtt_array[shipname]}" ]] && mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[shipname]}")" || true
+[[ -n "${mqtt_array[shipname]}" ]] && mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")" || true
 [[ -n "${mqtt_array[destination]}" ]] && mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")" || true
 
 # Add links
