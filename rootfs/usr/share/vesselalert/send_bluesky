@@ -125,5 +125,11 @@ if "${s6wrap[@]}" /scripts/post2bsky.sh "$bsky_str" "${img_str[@]}"; then
     VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
     VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
     VESSELS[$1:notification:last]="$(date +%s)"
+    if [[ -f /tmp/bsky-notif.txt ]]; then
+        VESSELS[$1:notification:bluesky]="$(</tmp/bsky-notif.txt)"
+        rm -f /tmp/bsky-notif.txt
+    else
+        VESSELS[$1:notification:bluesky]="true"
+    fi
     source /usr/share/vesselalert/save_databases
 fi

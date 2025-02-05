@@ -165,6 +165,7 @@ then
     VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
     VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
     VESSELS[$1:notification:last]="$(date +%s)"
+    VESSELS[$1:notification:mastodon]="true"
 
     source /usr/share/vesselalert/save_databases
 else
