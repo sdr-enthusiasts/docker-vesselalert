@@ -70,17 +70,18 @@ if [[ -n "${mqtt_array[lat]}" ]] && [[ -n "${mqtt_array[lon]}" ]] && [[ -n "$LAT
 fi
 
 # Add image URL if available
-if [[ -f "$IMAGECACHE/$mmsi.jpg" ]]; then mqtt_array[imagelink]="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=$mmsi"; fi
+if [[ -f "$IMAGECACHE/$mmsi.jpg" ]]; then mqtt_array[image_link]="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=$mmsi"; fi
 
 # If needed, convert the dates into the desired format
 if [[ -n "$MQTT_DATETIME_FORMAT" ]]; then
-    mqtt_array[notification:last]="$(date -d "@${mqtt_array[notification:last]}" +"$MQTT_DATETIME_FORMAT")"
+    mqtt_array[notification:last]="$(date -d "@${mqtt_array[notification:last]}" "+$MQTT_DATETIME_FORMAT")"
     mqtt_array[last_updated]="$(date -d "@${mqtt_array[last_updated]}" +"$MQTT_DATETIME_FORMAT")"
 fi
 
 # Now send the MQTT Notification:
 # convert $msg_array[@] into a JSON object:
-MQTT_JSON="$(for i in "${!mqtt_array[@]}"; do printf '{"%s":"%s"}\n' "$i" "${mqtt_array[$i]}"; done | jq -sc add)"
+MQTT_JSON="$(for i in "${!mqtt_array[@]}"; do if [[ -n "$i" ]]; then printf '{"%s":"%s"}\n' "$i" "${mqtt_array[$i]}"; fi; done)"
+MQTT_JSON="$(jq -sc add <<< "$MQTT_JSON")"
 
 # prep the MQTT host, port, etc
 unset MQTT_TOPIC MQTT_PORT MQTT_USERNAME MQTT_PASSWORD MQTT_HOST
@@ -129,9 +130,6 @@ if [[ "${outputmsg:0:6}" == "Failed" ]] || [[ "${outputmsg:0:5}" == "usage" ]]; 
 else
     "${s6wrap[@]}" echo "MQTT Delivery successful!"
     if chk_enabled "$MQTT_DEBUG"; then "${s6wrap[@]}" echo "Results string: ${outputmsg//$'\n'/ }"; fi
-fi
-
-if "${s6wrap[@]}" /scripts/post2bsky.sh "$bsky_str" "${img_str[@]}"; then
     # Update the Assoc Array with the latest values:
     VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
     VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
