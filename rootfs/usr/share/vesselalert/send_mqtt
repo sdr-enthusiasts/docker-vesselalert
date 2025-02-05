@@ -44,7 +44,7 @@ declare -A mqtt_array
 
 while read -r param; do 
     if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi
-done <<< "$(printf "%s\n" "${!VESSELS[@]}" | grep "$mmsi" | awk -F: '{print$2}')"
+done <<< "$(printf "%s\n" "${!VESSELS[@]}" | grep "$mmsi" | cut -d: -f2-)"
 
 if [[ "${*:2}" =~ .*tropoalert=.* ]]
 then
