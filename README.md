@@ -17,6 +17,7 @@
     - [Mastodon and other notifications related parameters](#mastodon-and-other-notifications-related-parameters)
   - [Discord notifications related parameters](#discord-notifications-related-parameters)
   - [BlueSky notifications related parameters](#bluesky-notifications-related-parameters)
+  - [MQTT notifications related parameters](#mqtt-notifications-related-parameters)
   - [Expert Parameters (only change/set if you know what you're doing)](#expert-parameters-only-changeset-if-you-know-what-youre-doing)
   - [Adding screenshots to your notifications](#adding-screenshots-to-your-notifications)
   - [Logging](#logging)
@@ -139,6 +140,22 @@ Please note that the length of the text in BlueSky notifications is limited to 3
 | `BLUESKY_APP_PASSWORD` | BlueSky App Password as described above | (empty) | Yes |
 | `BLUESKY_HANDLE` | BlueSky handle (incl. PDS, for example `abcd.bsky.social`.) | (empty) | Yes |
 | `BLUESKY_API` | Alternative API for users who use their own PDS. (Do not set this parameter unless you know what you are doing!) | `https://bsky.social/xrpc` | No |
+
+## MQTT notifications related parameters
+
+If you want to send notifications to an MQTT broker, please use the following parameters.
+Note - at this time, only MQTT deliveries via the mqtt protocol are supported. This means specifically that SSL deliveries (mqtts) or WebSocket deliveries (ws:// or wss://) are not supported.
+
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
+| `MQTT_URL` | MQTT broker target URL. Format: `[mqtt://][user:pass]@host[:port][/group/topic]`. If left empty, sending MQTT notifications is disabled. You can also pass in the `user`, `pass`, `port`, and `group/topic` as separate parameters, see below. Note - parameters passed in this `MQTT_URL` parameter will overrule any values defined in the parameters below. Examples:<br/>`mqtt://admin:password@192.168.0.1:1883/bostonharbor/vesselalert`, `my.mqttbroker.com:1883`, `192.168.0.1` | Empty | Yes (to enable MQTT notifications) |
+| `MQTT_PORT` | TCP port of the MQTT server | 1883 | No |
+| `MQTT_CLIENT_ID` | MQTT Client ID string (no whitespace please) | `$container_name` | No |
+| `MQTT_TOPIC` | MQTT Topic passed to the MQTT broker | `$container_name/vesselalert` | No |
+| `MQTT_DATETIME_FORMAT` | Sets the format of the date/time using Linux "date" command formatting for the "`notification:last`" and "`last_updated`" tags. Default value is "%s" (seconds since epoch). See [this link](https://www.man7.org/linux/man-pages/man1/date.1.html) for an overview of the possible formats. | seconds-since-epoch | No |
+| `MQTT_QOS` | QOS value passed to the MQTT Broker | `0` | No |
+| `MQTT_USERNAME` | Username passed to MQTT Broker | Empty | No |
+| `MQTT_PASSWORD` | Password passed to MQTT Broker | Empty | No |
 
 ## Expert Parameters (only change/set if you know what you're doing)
 

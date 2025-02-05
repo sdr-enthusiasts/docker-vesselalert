@@ -1,0 +1,143 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash disable=SC2015,SC2164,SC1090,SC1091,SC2154,SC2001
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+# This script sends a MQTT notification
+
+source /scripts/common
+
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
+
+source "$VESSELDBFILE"
+
+# shellcheck disable=SC2076
+if [[ -z "$1" ]] || [[ " -? --help " =~ " $1 " ]];
+then
+    "${s6wrap[@]}" echo "[ERROR] $0 - send a MQTT notification for a specific MMSI"
+    "${s6wrap[@]}" echo "[ERROR] Usage: $0 mmsi"
+    exit 1
+else
+    "${s6wrap[@]}" echo "[INFO] Attempting MQTT notification for $1 (${VESSELS[$1:shipname]})"
+    mmsi="$1"
+fi
+
+if [[ -z "$MQTT_URL" ]]; then
+    "${s6wrap[@]}" echo "[ERROR] At a minimum, you must set \$MQTT_URL to a MQTT server's destination"
+    exit 1
+fi
+
+declare -A mqtt_array
+
+while read -r param; do 
+    if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi
+done <<< "$(printf "%s\n" "${!VESSELS[@]}" | grep "$mmsi" | awk -F: '{print$2}')"
+
+if [[ "${*:2}" =~ .*tropoalert=.* ]]
+then
+    mqtt_array[tropo]="true"
+else
+    mqtt_array[tropo]="false"
+fi
+
+# do some clean up
+[[ -n "${mqtt_array[shipname]}" ]] && mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[shipname]}")" || true
+[[ -n "${mqtt_array[destination]}" ]] && mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")" || true
+
+# Add links
+mqtt_array[aiscatcher_link]="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}"
+mqtt_array[shipxplorer_link]="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}"
+mqtt_array[marinetraffic_link]="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}"
+mqtt_array[vesselfinder_link]="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}"
+
+# Add distance if we can find it out
+if [[ -n "${mqtt_array[lat]}" ]] && [[ -n "${mqtt_array[lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
+    mqtt_array[distance]="$(bc -l <<< "scale=1; $(distance "${mqtt_array[lat]}" "${mqtt_array[lon]}" "$LAT" "$LON") / 1")"
+    mqtt_array[distance_unit]="nm"
+fi
+
+# Add image URL if available
+if [[ -f "$IMAGECACHE/$mmsi.jpg" ]]; then mqtt_array[imagelink]="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=$mmsi"; fi
+
+# If needed, convert the dates into the desired format
+if [[ -n "$MQTT_DATETIME_FORMAT" ]]; then
+    mqtt_array[notification:last]="$(date -d "@${mqtt_array[notification:last]}" +"$MQTT_DATETIME_FORMAT")"
+    mqtt_array[last_updated]="$(date -d "@${mqtt_array[last_updated]}" +"$MQTT_DATETIME_FORMAT")"
+fi
+
+# Now send the MQTT Notification:
+# convert $msg_array[@] into a JSON object:
+MQTT_JSON="$(for i in "${!mqtt_array[@]}"; do printf '{"%s":"%s"}\n' "$i" "${mqtt_array[$i]}"; done | jq -sc add)"
+
+# prep the MQTT host, port, etc
+unset MQTT_TOPIC MQTT_PORT MQTT_USERNAME MQTT_PASSWORD MQTT_HOST
+MQTT_HOST="${MQTT_URL,,}"
+MQTT_HOST="${MQTT_HOST##*:\/\/}"                                                    # strip protocol header (mqtt:// etc)
+while [[ "${MQTT_HOST: -1}" == "/" ]]; do MQTT_HOST="${MQTT_HOST:0:-1}"; done       # remove any trailing / from the HOST
+if [[ $MQTT_HOST == *"/"* ]]; then MQTT_TOPIC="${MQTT_TOPIC:-${MQTT_HOST#*\/}}"; fi # if there's no explicitly defined topic, then use the URL's topic if that exists
+MQTT_TOPIC="${MQTT_TOPIC:-$(hostname)/vesselalert}"                                  # add default topic if there is still none defined
+MQTT_HOST="${MQTT_HOST%%/*}"                                                        # remove everything from the first / onward
+
+if [[ $MQTT_HOST == *"@"* ]]; then
+    MQTT_USERNAME="${MQTT_USERNAME:-${MQTT_HOST%@*}}"
+    MQTT_PASSWORD="${MQTT_PASSWORD:-${MQTT_USERNAME#*:}}"
+    MQTT_USERNAME="${MQTT_USERNAME%:*}"
+    MQTT_HOST="${MQTT_HOST#*@}"
+fi
+if [[ $MQTT_HOST == *":"* ]]; then MQTT_PORT="${MQTT_PORT:-${MQTT_HOST#*:}}"; fi
+MQTT_HOST="${MQTT_HOST%:*}" # finally strip the host so there's only a hostname or ip address
+
+# log the message we are going to send:
+"${s6wrap[@]}" echo "Attempting to send a MQTT notification:"
+"${s6wrap[@]}" echo "MQTT Host: $MQTT_HOST"
+"${s6wrap[@]}" echo "MQTT Port: ${MQTT_PORT:-1883}"
+"${s6wrap[@]}" echo "MQTT Topic: $MQTT_TOPIC"
+"${s6wrap[@]}" echo "MQTT Client ID: ${MQTT_CLIENT_ID:-$(hostname)}"
+if [[ -n "$MQTT_USERNAME" ]]; then "${s6wrap[@]}" echo "MQTT Username: $MQTT_USERNAME"; fi
+if [[ -n "$MQTT_PASSWORD" ]]; then "${s6wrap[@]}" echo "MQTT Password: $MQTT_PASSWORD"; fi
+if [[ -n "$MQTT_QOS" ]]; then "${s6wrap[@]}" echo "MQTT QOS: $MQTT_QOS"; fi
+"${s6wrap[@]}" echo "MQTT Payload JSON Object: $MQTT_JSON"
+
+# send the MQTT message:
+mqtt_string=(--broker "$MQTT_HOST")
+if [[ -n "$MQTT_PORT" ]]; then mqtt_string+=(--port "$MQTT_PORT"); fi
+mqtt_string+=(--topic \""$MQTT_TOPIC"\")
+if [[ -n "$MQTT_QOS" ]]; then mqtt_string+=(--qos "$MQTT_QOS"); fi
+mqtt_string+=(--client_id \""${MQTT_CLIENT_ID:-$(hostname)}"\")
+if [[ -n "$MQTT_USERNAME" ]]; then mqtt_string+=(--username "$MQTT_USERNAME"); fi
+if [[ -n "$MQTT_PASSWORD" ]]; then mqtt_string+=(--password "$MQTT_PASSWORD"); fi
+mqtt_string+=(--message "'${MQTT_JSON}'")
+
+# shellcheck disable=SC2068
+outputmsg="$(echo ${mqtt_string[@]} | xargs mqtt)"
+
+if [[ "${outputmsg:0:6}" == "Failed" ]] || [[ "${outputmsg:0:5}" == "usage" ]]; then
+    "${s6wrap[@]}" echo "MQTT Delivery Error: ${outputmsg//$'\n'/ }"
+else
+    "${s6wrap[@]}" echo "MQTT Delivery successful!"
+    if chk_enabled "$MQTT_DEBUG"; then "${s6wrap[@]}" echo "Results string: ${outputmsg//$'\n'/ }"; fi
+fi
+
+if "${s6wrap[@]}" /scripts/post2bsky.sh "$bsky_str" "${img_str[@]}"; then
+    # Update the Assoc Array with the latest values:
+    VESSELS[$1:notification:lat]="${VESSELS[$1:lat]}"
+    VESSELS[$1:notification:lon]="${VESSELS[$1:lon]}"
+    VESSELS[$1:notification:last]="$(date +%s)"
+    VESSELS[$1:notification:mqtt]="true"
+    source /usr/share/vesselalert/save_databases
+fi
+
+

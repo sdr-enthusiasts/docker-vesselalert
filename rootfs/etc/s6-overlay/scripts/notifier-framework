@@ -216,11 +216,14 @@ do
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
             # shellcheck disable=SC2086  # we want globbing of $extra_args here
-            [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args}
+            [[ -n "${MASTODON_ACCESS_TOKEN}" ]] && nice -n 20 /usr/share/vesselalert/send_mastodon "${VESSELS[${vessel}:mmsi]}" ${extra_args} || true
             # shellcheck disable=SC2086  # we want globbing of $extra_args here
-            [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args}
-                        # shellcheck disable=SC2086  # we want globbing of $extra_args here
-            [[ -n "${BLUESKY_APP_PASSWORD}" ]] && [[ -n "$BLUESKY_HANDLE" ]] && nice -n 20 /usr/share/vesselalert/send_bluesky "${VESSELS[${vessel}:mmsi]}" ${extra_args}
+            [[ -n "${DISCORD_WEBHOOKS}" ]] && nice -n 20 /usr/share/vesselalert/send_discord "${VESSELS[${vessel}:mmsi]}" ${extra_args} || true
+            # shellcheck disable=SC2086  # we want globbing of $extra_args here
+            [[ -n "${BLUESKY_APP_PASSWORD}" ]] && [[ -n "$BLUESKY_HANDLE" ]] && nice -n 20 /usr/share/vesselalert/send_bluesky "${VESSELS[${vessel}:mmsi]}" ${extra_args} || true
+            # shellcheck disable=SC2086  # we want globbing of $extra_args here
+            [[ -n "${MQTT_URL}" ]] && nice -n 20 /usr/share/vesselalert/send_mqtt "${VESSELS[${vessel}:mmsi]}" ${extra_args} || true
+
             # ---------------------------------------------------------------------------------------------
 
 
