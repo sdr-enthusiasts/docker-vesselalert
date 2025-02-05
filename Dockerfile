@@ -39,6 +39,8 @@ RUN \
     KEPT_PACKAGES+=(file) && \
     KEPT_PACKAGES+=(jpegoptim) && \
     KEPT_PACKAGES+=(pngquant) && \
+    KEPT_PACKAGES+=(python3-minimal) && \
+    KEPT_PACKAGES+=(python3-paho-mqtt) && \
     #
     # install packages
     apt-get update && \
@@ -55,14 +57,18 @@ RUN \
     echo "alias nano=\"nano -l\"" >> /root/.bashrc && \
     #
     # clean up
-    if [[ "${#TEMP_PACKAGES[@]}" -gt 0 ]]; then \
-        apt-get remove -y "${TEMP_PACKAGES[@]}"; \
-    fi && \
+    # Clean up
+    echo Uninstalling $TEMP_PACKAGES && \
+    apt-get remove -y -q ${TEMP_PACKAGES[@]} && \
     apt-get autoremove -q -o APT::Autoremove::RecommendsImportant=0 -o APT::Autoremove::SuggestsImportant=0 -y && \
-    apt-get clean -q -y && \
-    #
-    # set CONTAINER_VERSION:
-    rm -rf /src/* /tmp/* /var/lib/apt/lists/*
+    apt-get clean -y -q && \
+    rm -rf \
+    /src/* \
+    /var/cache/* \
+    /tmp/* \
+    /var/lib/apt/lists/* \
+    /.dockerenv \
+    /git
 
 COPY rootfs/ /
 
