@@ -84,7 +84,7 @@ MQTT_JSON="$(for i in "${!mqtt_array[@]}"; do if [[ -n "$i" ]]; then printf '{"%
 MQTT_JSON="$(jq -sc add <<< "$MQTT_JSON")"
 
 # prep the MQTT host, port, etc
-unset MQTT_TOPIC MQTT_PORT MQTT_USERNAME MQTT_PASSWORD MQTT_HOST
+#unset MQTT_TOPIC MQTT_PORT MQTT_USERNAME MQTT_PASSWORD MQTT_HOST
 MQTT_HOST="${MQTT_URL,,}"
 MQTT_HOST="${MQTT_HOST##*:\/\/}"                                                    # strip protocol header (mqtt:// etc)
 while [[ "${MQTT_HOST: -1}" == "/" ]]; do MQTT_HOST="${MQTT_HOST:0:-1}"; done       # remove any trailing / from the HOST
