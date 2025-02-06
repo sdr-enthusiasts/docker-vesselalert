@@ -20,8 +20,8 @@ RUN \
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 
-ENV MASTODON_NOTIFY_EVERY=86400
-ENV MASTODON_MIN_DIST=0
+ENV NOTIFY_EVERY=86400
+ENV NOTIFY_MIN_DIST=0
 ENV PATH="$PATH:/usr/share/vesselalert:/tools"
 LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/docker-vesselalert"
 

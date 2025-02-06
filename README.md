@@ -14,6 +14,7 @@
   - [Runtime Environment Variables](#runtime-environment-variables)
     - [General parameters](#general-parameters)
     - [Tropo Alert parameters](#tropo-alert-parameters)
+    - [General Notification related parameters](#general-notification-related-parameters)
     - [Mastodon and other notifications related parameters](#mastodon-and-other-notifications-related-parameters)
   - [Discord notifications related parameters](#discord-notifications-related-parameters)
   - [BlueSky notifications related parameters](#bluesky-notifications-related-parameters)
@@ -76,7 +77,7 @@ There are a series of available environment variables:
 | `NOTIFICATION_MAPURL` | If set to a URL, a link `$NOTIFICATION_MAPURL/mmsi=$mmsi` will be added to the notification. If the value is non-empty but doesn't start with "http" (e.g., if it's set to `on`, `$AIS-URL/mmsi=$mmsi` will be used. | empty | no |
 | `NOTIFY_ONLY_NEW_ON_STARTUP` | If set to any non-empty value, when restarting the container, it will not notify for any vessels in its first run, and consider these vessels "already notified". This is to avoid spamming the notification service at initial startup when many non-notified vessels are discovered | empty | no |
 | `NOTIFICATION_THROTTLE` | If set to any non-empty value, notifications will pause for 15 seconds for every 10 notifications in a run | empty | no |
-| `LANGUAGE` | Set to make notifications in one of these supported languages: `ca_ES` (Català); `de_DE` (Deutsch); `en_US` (US English); `es_ES` (Español); `fr_FR` (Français); `gl_ES`(Galego) `nl_NL` (Nederlands). If omitted, it will default to `en_US` | `en_US` | no |
+| `LANGUAGE` | Set to make notifications in one of these supported languages: `ca_ES` (Català); `de_DE` (Deutsch); `en_US` (US English); `es_ES` (Español); `fr_FR` (Français); `gl_ES`(Galego); `nl_NL` (Nederlands); `sv_SE` (Swedish). If omitted or if you select a language that is not supported, it will default to `en_US` | `en_US` | no |
 | `LAT` | Latitude of receiver station. If Lat/Lon are included, the notification will contain a "Distance to Receiver" field | empty | no |
 | `LON` | Longitude of receiver station. If Lat/Lon are included, the notification will contain a "Distance to Receiver" field | empty | no |
 
@@ -92,6 +93,18 @@ For predictions on Tropo conditions for your area, please visit the [DX Info Cen
 | `TROPOALERT_INTERVAL` | Interval in which Tropo Alerts are sent. Value should be compatible with the Linux `sleep`command, for example `600`, `10m`, or `3h` | `10m` | no |
 | `TROPO_MINDIST` | Minimum detected distance (in nm) for a Tropo Alert to be sent. | `75` | no |
 
+### General Notification related parameters
+
+The following are a few parameters that apply to all notification methods:
+
+| Environment Variable | Purpose                         | Default | Mandatory? |
+| -------------------- | ------------------------------- | ------- | ---------- |
+| `NOTIFY_SKIP_FILTER` ^ | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. An example of a filter that filters out MMSIs that are 7 digits (too short), and any navigational aids (MMSI starts with 99) is ` MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$\|^[0-9]{7}$ `| empty | no |
+| `NOTIFY_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
+| `NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
+
+Note that the parameters above used to be known as `MASTODON_SKIP_FILTER`, `MASTODON_MIN_DIST`, and `MASTODON_NOTIFY_EVERY`. These legacy parameter names are still supported for backward compatibility, but we encourage users to switch to these updated parameter names when possible.
+
 ### Mastodon and other notifications related parameters
 
 Note -- parameters that are marked with `^` are applicable to all notification mechanisms, and not only to Mastodon. In the future, we may make the names of these variables more generic.
@@ -100,9 +113,6 @@ Note -- parameters that are marked with `^` are applicable to all notification m
 | -------------------- | ------------------------------- | ------- | ---------- |
 | `MASTODON_SERVER` | Name (URL) of the Mastodon Server | `airwaves.social` | no |
 | `MASTODON_ACCESS_TOKEN` | The access token of the Mastodon Application you are using. See above for instructions. | empty | yes |
-| `MASTODON_SKIP_FILTER` ^ | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. An example of a filter that filters out MMSIs that are 7 digits (too short), and any navigational aids (MMSI starts with 99) is ` MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$\|^[0-9]{7}$ `| empty | no |
-| `MASTODON_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
-| `MASTODON_NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
 | `MASTODON_POST_VISIBILITY` | `visibility` setting for the Mastodon notification. Valid values are `public`, `unlisted`, and `private`. | `unlisted` | no |
 | `MASTODON_CUSTOM_FIELD` ^ | Custom field attached to the end of the Mastodon notification. Please keep it short and clear-text only. | empty | no |
 | `MASTODON_LINK_AISCATCHER` ^ | If set to `on`, the Mastodon notification will include a link to the vessel on aiscatcher.org. (Set to `off`/`false`/`no`/`0` to disable) | on | no |
@@ -140,6 +150,10 @@ Please note that the length of the text in BlueSky notifications is limited to 3
 | `BLUESKY_APP_PASSWORD` | BlueSky App Password as described above | (empty) | Yes |
 | `BLUESKY_HANDLE` | BlueSky handle (incl. PDS, for example `abcd.bsky.social`.) | (empty) | Yes |
 | `BLUESKY_API` | Alternative API for users who use their own PDS. (Do not set this parameter unless you know what you are doing!) | `https://bsky.social/xrpc` | No |
+| `BLUESKY_LINK_AISCATCHER` ^ | If set to `on`, the BlueSky notification will include a link to the vessel on aiscatcher.org. (Set to `off`/`false`/`no`/`0` to disable) | on | no |
+| `BLUESKY_LINK_SHIPXPLORER` ^ | If set to `on`, the BlueSky notification will include a link to the vessel on ShipXplorer | empty | no |
+| `BLUESKY_LINK_MARINETRAFFIC` ^ | If set to `on`, the BlueSky notification will include a link to the vessel on MarineTraffic | empty | no |
+| `BLUESKY_LINK_VESSELFINDER` ^ | If set to `on`, the BlueSky notification will include a link to the vessel on VesselFinder | empty | no |
 
 ## MQTT notifications related parameters
 
@@ -201,6 +215,7 @@ Without the help, advice, testing, and kicking the tires of these people, things
 - [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
 - [@Tedder](https://github.com/tedder) who created the [original screenshot container](https://github.com/tedder/browser-screenshot-service) when we needed it for Planefence
 - [@RandomRobbie](https://github.com/randomrobbie) who [motivated](https://github.com/sdr-enthusiasts/docker-planefence/issues/212) me to implement BlueSky notifications
+- [@Minglarn](https://github.com/Minglarn) for help with the Swedish localization
 - The engineers at AirNav who helped me understand things through their ShipXplorer project, and who provided the initial trigger for me to create this container
 
 ## Getting Help

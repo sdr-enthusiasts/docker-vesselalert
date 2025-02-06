@@ -5,23 +5,14 @@ services:
     hostname: vesselalert
     restart: always
     environment:
-      # mandatory parameters:
-      - AIS_URL=http://my.ais-catcher/website:8100
-      - MASTODON_SERVER=airwaves.social
-      - MASTODON_ACCESS_TOKEN=my_mastodon_token
-      # optional parameters that you may want to set:
-        # This MASTODON_SKIP_FILTER ensures no notifications are sent for AtoN beacons:
-      - MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$|^[0-9]{7}$
-      - MASTODON_MIN_DIST=
-      - MASTODON_NOTIFY_EVERY=86400
-      - MASTODON_CUSTOM_FIELD=
-      - MASTODON_POST_VISIBILITY=unlisted
-      - MASTODON_LINK_SHIPXPLORER=on
-      - MASTODON_LINK_MARINETRAFFIC=on
-      - MASTODON_LINK_VESSELFINDER=on
+      # General Notification parameters:
+      - NOTIFY_SKIP_FILTER=^[9]{2}[0-9]{7}$|^[0-9]{7}$
+      - NOTIFY_MIN_DIST=
+      - NOTIFY_EVERY=86400
       - NOTIFICATION_MAPURL=yes
       - NOTIFICATION_THROTTLE=on
       - NOTIFY_ONLY_NEW_ON_STARTUP=on
+      - AIS_URL=http://my.ais-catcher/website:8100
       # latitude and longitude of the receiver can be specified, will display the distance from in the toot
       - LAT=xx.xxxxx
       - LON=xx.xxxxx
@@ -34,6 +25,27 @@ services:
       - MAX_MSG_AGE=86400
       - DEBUG=
       - LANGUAGE=en_US
+      # Mastodon-related settings
+      - MASTODON_SERVER=mastodon.social
+      - MASTODON_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxx
+      - MASTODON_CUSTOM_FIELD=
+      - MASTODON_POST_VISIBILITY=unlisted
+      - MASTODON_LINK_SHIPXPLORER=on
+      - MASTODON_LINK_MARINETRAFFIC=on
+      - MASTODON_LINK_VESSELFINDER=on
+      # Discord-related settings
+      - DISCORD_NAME=myname mylocation
+      - DISCORD_AVATAR_URL=https://avatarlink.png
+      - DISCORD_WEBHOOKS=https://discord.com/api/webhooks/xxxxx/xxxx,https://discord.com/api/webhooks/yyyy/yyyy
+      # BlueSky-related setting
+      - BLUESKY_HANDLE=MyBskyHandle.bsky.social
+      - BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+      # MQTT-related settings
+      - MQTT_URL=192.168.0.1:1883
+      - MQTT_TOPIC=home/vesselalert
+      - MQTT_CLIENT_ID=my-client-if
+      - MQTT_DATETIME_FORMAT=%F %X
+
     tmpfs:
       - /tmp
     volumes:
