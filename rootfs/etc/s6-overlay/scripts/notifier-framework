@@ -31,9 +31,17 @@ renice -n 10 -p $$ >/dev/null 2>&1
 [[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
 
 # create some defaults and aliases, maintaining backwards compatibility
-NOTIFY_MIN_DIST="${NOTIFY_MIN_DIST:-${MASTODON_MIN_DIST}}"; if [[ -z "$MASTODON_MIN_DIST" ]] || [[ "$MASTODON_MIN_DIST" == "0" ]]; then unset MASTODON_MIN_DIST NOTIFY_MIN_DIST; fi
+NOTIFY_MIN_DIST="${NOTIFY_MIN_DIST:-${MASTODON_MIN_DIST}}"
+if [[ -z "$NOTIFY_MIN_DIST" ]] || [[ "$NOTIFY_MIN_DIST" == "0" ]]; then unset MASTODON_MIN_DIST NOTIFY_MIN_DIST; fi
 NOTIFY_SKIP_FILTER="${NOTIFY_SKIP_FILTER:-${MASTODON_SKIP_FILTER}}"
 MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
+
+if chk_enabled "$DEBUG"; then
+    "${s6wrap[@]}" echo "[DEBUG] NOTIFY_MIN_DIST=$NOTIFY_MIN_DIST"
+    "${s6wrap[@]}" echo "[DEBUG] NOTIFY_SKIP_FILTER=$NOTIFY_SKIP_FILTER"
+    "${s6wrap[@]}" echo "[DEBUG] MIN_MSG_COUNT=$MIN_MSG_COUNT"
+fi
+
 NOTIFY_EVERY="${NOTIFY_EVERY:-${MASTODON_NOTIFY_EVERY}}"
 
 notification_count=0
@@ -98,10 +106,10 @@ do
         && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
         && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + NOTIFY_EVERY ))
         then
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is NOTIFY_EVERY secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"
             notify_timing="false"
         else
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing (or NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is NOTIFY_EVERY secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing (or NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"
             export notify_timing="true"
         fi
         # Never notify if last observation was more than 10 mins ago:
@@ -114,18 +122,18 @@ do
 
         # based on distance from last notification:
         #shellcheck disable=SC2086
-        if     [[ -n "${NOTIFY_MIN_DIST}" ]] \
-        && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
-        && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
-        && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]] \
-        && [[ "$(nice -n 20 bc -l <<<"scale=2; $(nice -n 20 distance ${VESSELS[${vessel}:notification:lat]} ${VESSELS[${vessel}:notification:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $NOTIFY_MIN_DIST")" == "1" ]]
+        if [[ -n "${NOTIFY_MIN_DIST}" ]] \
+            && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
+            && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
+            && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]] \
+            && [[ "$(nice -n 20 bc -l <<<"scale=2; $(nice -n 20 distance ${VESSELS[${vessel}:notification:lat]} ${VESSELS[${vessel}:notification:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $NOTIFY_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $NOTIFY_MIN_DIST )"
         elif [[ -n "${NOTIFY_MIN_DIST}" ]] \
-        && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
-        && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
-        && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]]
+            && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
+            && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
+            && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]]
         then
             export notify_distance="true"
             chk_enabled "${DEBUG}" && [[ -n "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $NOTIFY_MIN_DIST )"
@@ -136,7 +144,7 @@ do
 
         # dont notify if it matches the Skip Filter
         if     [[ -n "${NOTIFY_SKIP_FILTER}" ]] \
-        && [[ ${VESSELS[${vessel}:mmsi]} =~ ${NOTIFY_SKIP_FILTER} ]]
+            && [[ ${VESSELS[${vessel}:mmsi]} =~ ${NOTIFY_SKIP_FILTER} ]]
         then
             notify_filter="false"
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${NOTIFY_SKIP_FILTER})"
