@@ -61,7 +61,7 @@
                     "inline": true
                 },
                 {
-                    "name": "Riktning",
+                    "name": "Kurs",
                     "value": "##HEADING## ",
                     "inline": false
                 },
