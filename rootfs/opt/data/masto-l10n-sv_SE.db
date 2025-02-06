@@ -18,7 +18,7 @@
 MASTO_TERM[TROPOMAXDIST]="Troposfäralarm - Max Avstånd"
 MASTO_TERM[SHIP]="Fartyg"
 MASTO_TERM[NEW]="#NY #Första Observationen"
-MASTO_TERM[ONTHEMOVE]="#I rörelse"
+MASTO_TERM[ONTHEMOVE]="#I-rörelse"
 MASTO_TERM[MOVING]="I rörelse"
 MASTO_TERM[SHIPNAME]="Namn"
 MASTO_TERM[CALLSIGN]="Anropssignal"
