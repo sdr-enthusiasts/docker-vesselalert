@@ -61,12 +61,12 @@
                     "inline": true
                 },
                 {
-                    "name": "Riktning",
+                    "name": "Kurs",
                     "value": "##HEADING## ",
                     "inline": false
                 },
                 ##HASDIST--{
-                    "name": "Avstånd från mottagare",
+                    "name": "Avstånd till mottagare",
                     "value": "##DISTANCE## nm",
                     "inline": false
                 },--HASDIST##
