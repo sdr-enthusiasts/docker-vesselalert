@@ -57,7 +57,6 @@ else
 fi
 source "/data/country.db"
 
-
 while read -r param; do 
     if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi
 done <<< "$(printf "%s\n" "${!VESSELS[@]}" | grep "$mmsi" | cut -d: -f2-)"
@@ -69,7 +68,7 @@ else
     mqtt_array[tropo]="false"
 fi
 
-# do some clean up
+# do some clean u
 if [[ -n "${mqtt_array[shipname]}" ]]; then mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")"; fi
 if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
 
