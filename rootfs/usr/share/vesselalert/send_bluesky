@@ -22,13 +22,28 @@ source /scripts/common
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 
 # For BlueSky Localization, we're using the Mastodon terms database:
-declare -A MASTO_TERM
+# shellcheck disable=SC2034
+declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
+
+source "/data/country.db"
+
+# get localized text equivalents
 LANGUAGE="${LANGUAGE:-en_US}"
+if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
+    source "/data/shiptype-$LANGUAGE.db"
+else
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
+    source "/data/shiptype-en_US.db"
+fi
+if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
+    source "/data/shipstatus-$LANGUAGE.db"
+else
+    source "/data/shipstatus-en_US.db"
+fi
 if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
     source "/data/masto-l10n-$LANGUAGE.db"
 else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/mast-l10n-enus.db"
+    source "/data/masto-l10n-en_US.db"
 fi
 
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"

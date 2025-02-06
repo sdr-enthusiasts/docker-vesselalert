@@ -40,7 +40,10 @@ if [[ -z "$MQTT_URL" ]]; then
     exit 1
 fi
 
-declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY
+# shellcheck disable=SC2034
+declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
+
+source "/data/country.db"
 
 # get localized text equivalents
 LANGUAGE="${LANGUAGE:-en_US}"
@@ -55,7 +58,12 @@ if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
 else
     source "/data/shipstatus-en_US.db"
 fi
-source "/data/country.db"
+if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
+    source "/data/masto-l10n-$LANGUAGE.db"
+else
+    source "/data/masto-l10n-en_US.db"
+fi
+
 
 while read -r param; do 
     if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi

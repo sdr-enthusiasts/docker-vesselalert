@@ -38,3 +38,10 @@ MASTO_TERM[AGAIN]="Wiederholung:"
 MASTO_TERM[NEW2]="Neu:"
 MASTO_TERM[DIST_SINCE_LAST]="hat sich seit der letzten Meldung um %.1f sm bewegt"
 MASTO_TERM[DISTANCE]="Entfernung"
+
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[DE]="Deutschland"

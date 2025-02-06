@@ -38,3 +38,10 @@ MASTO_TERM[AGAIN]="Nuevamente:"
 MASTO_TERM[NEW2]="Nuevo:"
 MASTO_TERM[DIST_SINCE_LAST]="se ha transladado %.1f nm desde la última notificación"
 MASTO_TERM[DISTANCE]="Distancia"
+
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[ES]="España"

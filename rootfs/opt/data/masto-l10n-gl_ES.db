@@ -38,3 +38,9 @@ MASTO_TERM[AGAIN]="De Novo:"
 MASTO_TERM[NEW2]="Novo:"
 MASTO_TERM[DIST_SINCE_LAST]="moveuse %.1f nm desde a última notificación"
 MASTO_TERM[DISTANCE]="Distancia"
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[ES]="España"
