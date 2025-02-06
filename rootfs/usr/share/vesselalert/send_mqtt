@@ -40,7 +40,23 @@ if [[ -z "$MQTT_URL" ]]; then
     exit 1
 fi
 
-declare -A mqtt_array
+declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY
+
+# get localized text equivalents
+LANGUAGE="${LANGUAGE:-en_US}"
+if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
+    source "/data/shiptype-$LANGUAGE.db"
+else
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
+    source "/data/shiptype-en_US.db"
+fi
+if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
+    source "/data/shipstatus-$LANGUAGE.db"
+else
+    source "/data/shipstatus-en_US.db"
+fi
+source "/data/country.db"
+
 
 while read -r param; do 
     if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi
@@ -54,8 +70,31 @@ else
 fi
 
 # do some clean up
-[[ -n "${mqtt_array[shipname]}" ]] && mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")" || true
-[[ -n "${mqtt_array[destination]}" ]] && mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")" || true
+if [[ -n "${mqtt_array[shipname]}" ]]; then mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")"; fi
+if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
+
+# add some text fields
+if [[ -n "${mqtt_array[status]}" ]]; then
+    mqtt_array[status_text]="${SHIPSTATUS[${mqtt_array[status]}]}"
+    mqtt_array[status_text]="${mqtt_array[status_text]//_/ }"
+    mqtt_array[status_text]="${mqtt_array[status_text]//#/}"
+else
+    mqtt_array[status_text]=""
+fi
+if [[ -n "${mqtt_array[shiptype]}" ]]; then
+    mqtt_array[shiptype_text]="${SHIPTYPE[${mqtt_array[shiptype]}]}"
+    mqtt_array[shiptype_text]="${mqtt_array[shiptype_text]//#/}"
+else
+    mqtt_array[shiptype_text]="${SHIPTYPE[0]}"
+    mqtt_array[shiptype_text]="${mqtt_array[shiptype_text]//#/}"
+fi
+if [[ -n "${mqtt_array[country]}" ]]; then
+    mqtt_array[country_text]="${COUNTRY[${mqtt_array[country]}]}"
+    mqtt_array[country_text]="${mqtt_array[country_text]//_/ }"
+
+else
+    mqtt_array[country_text]=""
+fi
 
 # Add links
 mqtt_array[aiscatcher_link]="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}"
