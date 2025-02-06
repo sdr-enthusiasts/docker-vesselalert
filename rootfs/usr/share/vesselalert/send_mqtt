@@ -84,6 +84,7 @@ fi
 if [[ -n "${mqtt_array[shiptype]}" ]]; then
     mqtt_array[shiptype_text]="${SHIPTYPE[${mqtt_array[shiptype]}]}"
     mqtt_array[shiptype_text]="${mqtt_array[shiptype_text]//#/}"
+    mqtt_array[shiptype_text]="${mqtt_array[shiptype_text],,}"
 else
     mqtt_array[shiptype_text]="${SHIPTYPE[0]}"
     mqtt_array[shiptype_text]="${mqtt_array[shiptype_text]//#/}"
