@@ -102,7 +102,7 @@ The following are a few parameters that apply to all notification methods:
 | `NOTIFY_SKIP_FILTER` ^ | RegEx that is applied to the `mmsi` of a vessel. If the RegEx matches, the vessel is excluded from notifications. An example of a filter that filters out MMSIs that are 7 digits (too short), and any navigational aids (MMSI starts with 99) is ` MASTODON_SKIP_FILTER=^[9]{2}[0-9]{7}$\|^[0-9]{7}$ `| empty | no |
 | `NOTIFY_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. | `86400` (1 day) | no |
-
+| `NOTIFY_WHEN_SHIPNAME_EMPTY` | If set to `off`, notifications will not be sent if the vessel's `shipname` property is empty | `on` | no |
 Note that the parameters above used to be known as `MASTODON_SKIP_FILTER`, `MASTODON_MIN_DIST`, and `MASTODON_NOTIFY_EVERY`. These legacy parameter names are still supported for backward compatibility, but we encourage users to switch to these updated parameter names when possible.
 
 ### Mastodon and other notifications related parameters

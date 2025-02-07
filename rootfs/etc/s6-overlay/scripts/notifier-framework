@@ -172,22 +172,21 @@ do
         fi
 
         # Notify only if validated =="1"
-        [[ "${VESSELS[${vessel}:validated]}" == "1" ]] && notify_validated="true" || notify_validated="false"
+        if chk_enabled "${VESSELS[${vessel}:validated]}"; then notify_validated="true"; else notify_validated="false"; fi
 
         # Notification logic here for clarity:
-        unset notify_now
-        [[ "$notify_timing" == "true" ]] && notify_now="true"       # notify when timing is right or when the timing is undefined
-        [[ "$notify_distance" == "true" ]] && notify_now="true"     # notify when the distance traveled is far enough
-        [[ "$notify_filter" == "false" ]] && unset notify_now       # stop and overrule notification if the MMSI filter has a match
-        [[ "$notify_count" == "false" ]] && unset notify_now	    # overrule notification because there are too few messages
-        [[ "$notify_validated" == "false" ]] && unset notify_now	# overrule notification because validation hasn't been done
+        notify_now="false"
+        if chk_enabled "$notify_timing"; then notify_now="true"; fi       # notify when timing is right or when the timing is undefined
+        if chk_enabled "$notify_distance"; then notify_now="true"; fi     # notify when the distance traveled is far enough
+        if chk_disabled "$notify_filter"; then notify_now="false"; fi       # stop and overrule notification if the MMSI filter has a match
+        if chk_disabled "$notify_count"; then notify_now="false"; fi	    # overrule notification because there are too few messages
+        if chk_disabled "$notify_validated"; then notify_now="false"; fi	# overrule notification because validation hasn't been done
+        if chk_disabled "$NOTIFY_WHEN_SHIPNAME_EMPTY" && [[ -z "${VESSELS[${vessel}:shipname]}" ]]; then notify_now="false"; fi	# overrule notification because there's no shipname
 
+        if chk_enabled "${DEBUG}" && chk_enabled "$notify_now" ]]; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
+        if chk_enabled "${DEBUG}" && chk_disabled "$notify_now" ]]; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
 
-        chk_enabled "${DEBUG}" && [[ -n "$notify_now" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
-        chk_enabled "${DEBUG}" && [[ -z "$notify_now" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"
-
-        if [[ -n "$notify_now" ]]
-        then
+        if chk_enabled "$notify_now"; then
             # we need to notify
             extra_args=""
             [[ "$notify_timing" == "true" ]] && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && extra_args+="timing=$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) "  # notify when timing is right or when the timing is undefined
