@@ -70,11 +70,23 @@ if [[ -z "${BLUESKY_APP_PASSWORD}" ]] || [[ -z "$BLUESKY_HANDLE" ]]; then
 fi
 
 # First do some clean up
-[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
-[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then
+    VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' \
+                                -e 's|["'\''.]||g' -e 's|_| |g' \
+                                -e 's|[^[:space:]A-Z0-9,\.\-]\+|_|g' \
+                                -e 's|_,|,|g' \
+                            <<< "${VESSELS[$1:shipname]}")"
+fi
+if [[ -n "${VESSELS[$1:destination]}" ]];then
+    VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' \
+                                -e 's|["'\''.]||g' \
+                                -e 's|_| |g' \
+                                -e 's|[^[:space:]A-Z0-9,\.\-]\+|_|g' \
+                                -e 's|_,|,|g' \
+                            <<< "${VESSELS[$1:destination]}")"
+fi
 
 # Build the message - create notification string
-
 links=""
 chk_enabled "${BLUESKY_LINK_AISCATCHER:-on}" && links+="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}\n" || true
 chk_enabled "$BLUESKY_LINK_SHIPXPLORER" && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
