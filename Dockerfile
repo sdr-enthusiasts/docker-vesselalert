@@ -4,7 +4,7 @@ SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 RUN \
     --mount=type=bind,source=./,target=/ghrepo/  \
     apt-get update -y && \
-    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends --no-install-suggests \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y \
         git gcc && \
     mkdir -p /src && \
     cd /src && \
