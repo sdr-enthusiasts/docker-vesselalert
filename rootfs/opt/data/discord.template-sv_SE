@@ -21,7 +21,7 @@
                     "inline": true
                 },
                 {
-                    "name": "Anropssignal",
+                    "name": "Anropsnamn",
                     "value": "##CALLSIGN## ",
                     "inline": true
                 },
@@ -36,7 +36,7 @@
                     "inline": false
                 },
                 {
-                    "name": "Flagga",
+                    "name": "Nationalitet",
                     "value": "##FLAG##",
                     "inline": true
                 },
