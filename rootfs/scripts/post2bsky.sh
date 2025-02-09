@@ -246,7 +246,8 @@ done
 # echo "DEBUG: urluri: ${urluri[*]} for indices ${!urluri[*]}"
 
 post_text="${post_text:0:$BLUESKY_MAXLENGTH}"      # limit to 300 characters
-post_text="${post_text//[[:cntrl:]]/\\n}"
+post_text="${post_text//[[:cntrl:]]/\\n}"          # remove control characters
+post_text="$(sed -e 's/\([[:alnum:]]\)_\([[:alnum:]]\)/\1 \2/g' <<<  "$post_text")"    # replace_ between words with a space
 #echo "DEBUG: post_text after URL/hashtag processing: $post_text"
 
 # Prepare the post data
