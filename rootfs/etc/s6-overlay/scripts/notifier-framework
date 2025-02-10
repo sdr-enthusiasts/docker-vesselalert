@@ -1,6 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2015,SC1090,SC2164,SC2001,SC1091,SC2154
+#shellcheck disable=SC2004,SC2015,SC1090,SC2164,SC2001,SC1091,SC2154
 
 # Notifier Framework
 # Determine if a notification needs to be sent
@@ -98,14 +98,13 @@ do
     for vessel in "${VESSEL_INDEX[@]}"
     do
 
-        [[ -z "${VESSELS[${vessel}:mmsi]}" ]] && continue || true    # capture empty mmsi and skip
+        if [[ -z "${VESSELS[${vessel}:mmsi]}" ]]; then continue; fi    # capture empty mmsi and skip
         # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
 
         # based on timing:
-        if     [[ -n "$NOTIFY_EVERY" ]] \
-        && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
-        && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + NOTIFY_EVERY ))
-        then
+        if [[ -n "$NOTIFY_EVERY" ]] \
+           && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
+           && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + NOTIFY_EVERY )); then
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"
             notify_timing="false"
         else
@@ -114,8 +113,7 @@ do
         fi
         # Never notify if last observation was more than 10 mins ago:
         if [[ -n "${VESSELS[${vessel}:last_signal]}" ]] \
-        && (( ${VESSELS[${vessel}:last_signal]} > 600 ))
-        then
+           && (( ${VESSELS[${vessel}:last_signal]} > 600 )); then
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
             notify_timing="false"
         fi
@@ -183,8 +181,8 @@ do
         if chk_disabled "$notify_validated"; then notify_now="false"; fi	# overrule notification because validation hasn't been done
         if chk_disabled "$NOTIFY_WHEN_SHIPNAME_EMPTY" && [[ -z "${VESSELS[${vessel}:shipname]}" ]]; then notify_now="false"; fi	# overrule notification because there's no shipname
 
-        if chk_enabled "${DEBUG}" && chk_enabled "$notify_now" ]]; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
-        if chk_enabled "${DEBUG}" && chk_disabled "$notify_now" ]]; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
+        if chk_enabled "${DEBUG}" && chk_enabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
+        if chk_enabled "${DEBUG}" && chk_disabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
 
         if chk_enabled "$notify_now"; then
             # we need to notify
@@ -222,6 +220,28 @@ do
             else
                 "${s6wrap[@]}" echo "[INFO] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
+
+            # Calculate ship's beam (=width) and length before notifying:
+            savenow=false
+            if [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
+                && [[ "${VESSELS[${vessel}:to_starboard]}" != "null" ]] \
+                && [[ -n "${VESSELS[${vessel}:to_port]}" ]] \
+                && [[ "${VESSELS[${vessel}:to_port]}" != "null" ]] \
+                && [[ -z "${VESSELS[${vessel}:beam]}" ]]; then
+                    VESSELS[${vessel}:beam]="$((${VESSELS[${vessel}:to_starboard]} + ${VESSELS[${vessel}:to_port]}))"
+                    VESSELS[${vessel}:beam_unit]="m"
+                    savenow=true
+            fi
+            if [[ -n "${VESSELS[${vessel}:to_bow]}" ]] \
+                && [[ "${VESSELS[${vessel}:to_bow]}" != "null" ]] \
+                && [[ -n "${VESSELS[${vessel}:to_stern]}" ]] \
+                && [[ "${VESSELS[${vessel}:to_stern]}" != "null" ]] \
+                && [[ -z "${VESSELS[${vessel}:length]}" ]]; then
+                    VESSELS[${vessel}:length]="$((${VESSELS[${vessel}:to_bow]} + ${VESSELS[${vessel}:to_stern]} ))"
+                    VESSELS[${vessel}:length_unit]="m"
+                    savenow=true
+            fi
+            if $savenow; then source /usr/share/vesselalert/save_databases; fi
 
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
