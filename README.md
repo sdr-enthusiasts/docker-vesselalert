@@ -34,7 +34,7 @@
 Docker container providing social media notification for Vessels that are received with @jvde-github's excellent [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package.
 Builds and runs on `arm64`, `armv7/armhf`, and `amd64/x86`.
 
-Currently, posts to [Mastodon](https://airwaves.social), Discord, and BlueSky are supported. We can consider adding additional social media targets upon request. Post an Issue or vote up an existing feature request.
+Currently, posts to [Mastodon](https://airwaves.social), Discord, BlueSky, and MQTT are supported. We can consider adding additional social media targets upon request. Post an Issue or vote up an existing feature request.
 
 ## Prerequisites
 
