@@ -102,7 +102,10 @@ do
         # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
 
         # based on timing:
-        if [[ -n "$NOTIFY_EVERY" ]] \
+        if chk_disabled "$NOTIFY_EVERY"; then
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"
+            notify_timing="false"
+        elif [[ -n "$NOTIFY_EVERY" ]] \
            && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
            && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + NOTIFY_EVERY )); then
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"
