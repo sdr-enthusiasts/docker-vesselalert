@@ -105,13 +105,12 @@ do
         if chk_disabled "$NOTIFY_EVERY"; then
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"
             notify_timing="false"
-        elif [[ -n "$NOTIFY_EVERY" ]] \
-           && [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
-           && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + NOTIFY_EVERY )); then
+        elif [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
+           && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + ${NOTIFY_EVERY:-86400} )); then
             chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"
             notify_timing="false"
         else
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing (or NOTIFY_EVERY is off). (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"
+            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing. (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"
             export notify_timing="true"
         fi
         # Never notify if last observation was more than 10 mins ago:
