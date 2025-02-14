@@ -103,6 +103,7 @@ The following are a few parameters that apply to all notification methods:
 | `NOTIFY_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. If set to `off`, `disabled`, or `0`, no notifications based on timing will be sent. | `86400` (1 day) | no |
 | `NOTIFY_WHEN_SHIPNAME_EMPTY` | If set to `off`, notifications will not be sent if the vessel's `shipname` property is empty | `on` | no |
+
 Note that the parameters above used to be known as `MASTODON_SKIP_FILTER`, `MASTODON_MIN_DIST`, and `MASTODON_NOTIFY_EVERY`. These legacy parameter names are still supported for backward compatibility, but we encourage users to switch to these updated parameter names when possible.
 
 ### Mastodon and other notifications related parameters
@@ -179,6 +180,8 @@ Note - at this time, only MQTT deliveries via the mqtt protocol are supported. T
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
+| `PHOTOS_RETENTION` * | Expiration time, in minutes, of the cache of downloaded vessel photos. If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `20160` (2 weeks) | no |
+| `SCREENSHOT_RETENTION` * | Expiration time, in minutes, of the cache of latest screenshot used for notifications. (Note that for each notification, when enabled, a new [screenshot](#adding-screenshots-to-your-notifications) is retrieved. This cache is purely so the user can retrieve or check the screenshot for a short time after the notification was sent.) If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `60` (1 hour) | no |
 
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
 

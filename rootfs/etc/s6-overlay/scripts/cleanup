@@ -66,15 +66,19 @@ fi
 touch "$VESSELDBLOCK"
 
 "${s6wrap[@]}" echo -n "[INFO] Removing obsolete screenshots... "
-find /data/imagecache/screenshots -maxdepth 1 -mmin +${SCREENSHOT_RETENTION}     -type f -iname "*.jpg" -delete >/dev/null 2>&1
-echo -n "images... "
-find /data/imagecache             -maxdepth 1 -mmin +${PHOTOS_RETENTION}          -type f -iname "*.jpg" -delete >/dev/null 2>&1
+if ! chk_disabled "${SCREENSHOT_RETENTION}"; then
+	find /data/imagecache/screenshots -maxdepth 1 -mmin +"${SCREENSHOT_RETENTION}"     -type f -iname "*.jpg" -delete >/dev/null 2>&1
+fi
+if ! chk_disabled "${PHOTOS_RETENTION}"; then
+	echo -n "images... "
+	find /data/imagecache           -maxdepth 1 -mmin +"${PHOTOS_RETENTION}"          -type f -iname "*.jpg" -delete >/dev/null 2>&1
+fi
 echo -n "old backups... "
-find /data                        -maxdepth 1 -mmin +${COUNTRY_BKUP_RETENTION}    -type f -iname "country.db.*" -delete >/dev/null 2>&1
-find /data                        -maxdepth 1 -mmin +${DISCTMPL_BKUP_RETENTION}   -type f -iname "discord.template.*" -delete >/dev/null 2>&1
-find /data                        -maxdepth 1 -mmin +${SHIPSTATUS_BKUP_RETENTION} -type f -iname "shipstatus.db.*" -delete >/dev/null 2>&1
-find /data                        -maxdepth 1 -mmin +${SHIPTYPE_BKUP_RETENTION}   -type f -iname "shiptype.db.*" -delete >/dev/null 2>&1
-find /data                        -maxdepth 1 -mmin +${VESSELDB_BKUP_RETENTION}   -type f -iname "vessel.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +"${COUNTRY_BKUP_RETENTION}"    -type f -iname "country.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +"${DISCTMPL_BKUP_RETENTION}"   -type f -iname "discord.template.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +"${SHIPSTATUS_BKUP_RETENTION}" -type f -iname "shipstatus.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +"${SHIPTYPE_BKUP_RETENTION}"   -type f -iname "shiptype.db.*" -delete >/dev/null 2>&1
+find /data                        -maxdepth 1 -mmin +"${VESSELDB_BKUP_RETENTION}"   -type f -iname "vessel.db.*" -delete >/dev/null 2>&1
 
 # iterate through the vessels and clean up the old ones:
 echo -n "vessels... "
