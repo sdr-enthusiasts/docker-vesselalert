@@ -180,7 +180,7 @@ Note - at this time, only MQTT deliveries via the mqtt protocol are supported. T
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
-| `PHOTOS_RETENTION` * | Expiration time, in minutes, of the cache of downloaded vessel photos. If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `20160` (2 weeks) | no |
+| `PHOTOS_RETENTION` * | Expiration time, in minutes, of the cache of downloaded vessel photos. Note that the expiration timer starts counting from the last time the photo was used for a notification. If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `20160` (2 weeks) | no |
 | `SCREENSHOT_RETENTION` * | Expiration time, in minutes, of the cache of latest screenshot used for notifications. (Note that for each notification, when enabled, a new [screenshot](#adding-screenshots-to-your-notifications) is retrieved. This cache is purely so the user can retrieve or check the screenshot for a short time after the notification was sent.) If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `60` (1 hour) | no |
 
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
