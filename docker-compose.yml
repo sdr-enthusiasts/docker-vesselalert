@@ -45,11 +45,10 @@ services:
       - MQTT_TOPIC=home/vesselalert
       - MQTT_CLIENT_ID=my-client-if
       - MQTT_DATETIME_FORMAT=%F %X
-
     tmpfs:
       - /tmp
     volumes:
-      - /opt/ais/data:/data
+      - ./data:/data
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
 

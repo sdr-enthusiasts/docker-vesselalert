@@ -130,7 +130,8 @@ for image in "${IMAGES[@]}"; do
 
      # figure out what type the image is: jpeg, png, gif, and reduce size if necessary/possible.
      mimetype_local="$(file --mime-type -b "$image")"
-     imgsize_org="$(stat -c%s "$image")"
+     imgsize_org="$(stat -c "%s" "$image")"
+     modtime_org="$(stat -c "%y" "$image")"
 
     if (( imgsize_org < 10000 )); then
         "${s6wrap[@]}" echo "Image size for $image is less than 10 KB ($imgsize_org). Is it really an image? Skipping..."
@@ -157,6 +158,7 @@ for image in "${IMAGES[@]}"; do
             "${s6wrap[@]}" echo "Omitting image $image as it is too big ($imgsize)"
             continue # skip if it's not JPG or PNG
         fi
+        touch -d "$modtime_org" "$image"    # restore original modification date of the image (for cache management purposes)
         "${s6wrap[@]}" echo "Image size of $image reduced from $imgsize_org to $(stat -c%s "$image")"
     fi
     if (( $(stat -c%s "$image") >= 950000 )); then

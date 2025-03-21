@@ -1,4 +1,5 @@
 # Send a Mastodon Post for each new vessel in VesselAlert
+
 This utility enables sending Mastodon posts of new events. Ever since Twitter started to restrict posting about locations of vessels, are encouraging people to post to Mastodon,
 
 There are two major parts to install this. Each of these parts is described below.
@@ -37,16 +38,18 @@ Once you have an account, please do the following:
 
 Please set the following parameters in your `docker-compose.yml` file:
 
-```
+```config
 MASTODON_SERVER=airwaves.social
 MASTODON_ACCESS_TOKEN=vsafdwafewarewdcvdsafwaefaewfdw
 MASTODON=ON
 ```
+
 Replace by the applicable server name and access token.
 For other parameters, see the included [sample `docker-compose.yml`](docker-compose.yml).
 
-# Summary of License Terms
-Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+## Summary of License Terms
+
+Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

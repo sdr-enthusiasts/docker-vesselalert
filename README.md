@@ -20,6 +20,7 @@
   - [BlueSky notifications related parameters](#bluesky-notifications-related-parameters)
   - [MQTT notifications related parameters](#mqtt-notifications-related-parameters)
   - [Expert Parameters (only change/set if you know what you're doing)](#expert-parameters-only-changeset-if-you-know-what-youre-doing)
+  - [Adding your own vessel photos](#adding-your-own-vessel-photos)
   - [Adding screenshots to your notifications](#adding-screenshots-to-your-notifications)
   - [Logging](#logging)
   - [Modifications of Ship Status and Ship Type descriptions](#modifications-of-ship-status-and-ship-type-descriptions)
@@ -180,19 +181,36 @@ Note - at this time, only MQTT deliveries via the mqtt protocol are supported. T
 | `MAX_MSG_AGE` * | If a vessel hasn't been heard of for more than this amount of time (in seconds), it will be removed from the notification database | `604800` (1 week) | no |
 | `CHECK_INTERVAL` * | Interval (in secs) between "runs" of the Mastodon Notifier. | `30` | no |
 | `DEBUG` * | If this variable is set to any non-empty value, (a lot of) debug information will be printer to the Container Logs | empty | no |
-| `PHOTOS_RETENTION` * | Expiration time, in minutes, of the cache of downloaded vessel photos. Note that the expiration timer starts counting from the last time the photo was used for a notification. If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `20160` (2 weeks) | no |
+| `PHOTOS_RETENTION` * | Expiration time, in minutes, of the cache of downloaded vessel photos. Note that the expiration timer starts counting from the last time the photo was used for a notification. If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself. Note - to separately manage the retention of any photos you add yourself, see below. | `20160` (2 weeks) | no |
 | `SCREENSHOT_RETENTION` * | Expiration time, in minutes, of the cache of latest screenshot used for notifications. (Note that for each notification, when enabled, a new [screenshot](#adding-screenshots-to-your-notifications) is retrieved. This cache is purely so the user can retrieve or check the screenshot for a short time after the notification was sent.) If set to `0`, `disabled`, `off`, or `no`, the cache will never expire and you will need to manage the cache disk space yourself | `60` (1 hour) | no |
 
 \* You probably shouldn't change the value of these parameters unless you really know what you are doing.
 
+## Adding your own vessel photos
+
+When you have photos of vessels that you took yourself (or are otherwise licensed to use), you can add these to VesselAlert to be used in notifications. The easiest way of doing this, is by adding them to the cache and then to ensure that they don't expire in the cache. You can only store 1 photo per vessel, and the image should be in JPG format. If it isn't JPG, it will be ignored.
+To ensure that the photo can be used for BlueSky notifications, please make sure that the file size of the image is less than 950 kb. Files larger than 950kb may be compressed and reduced in file size by VesselAlert.
+
+For the purpose of the instructions below, let's assume that you have mapped the `data` directory to `./data`, as described in the [`docker-compose.yml`](https://github.com/sdr-enthusiasts/docker-vesselalert/blob/main/docker-compose.yml#L51-L52) file.
+
+```bash
+# Copy my_ship_photo.jpg to the imagecache directory. The target name should be <mmsi>.jpg
+# (replace my_ship_photo.jpg with the actual path/name of the image, and 123456789 by the actual MMSI of the vessel)
+sudo cp my_ship_photo.jpg ./data/imagecache/123456789.jpg
+#
+# Now make sure it won't expire in the cache by setting the creation date to something far into the future.
+# Again, replace 123456789 by the actual MMSI of the vessel
+sudo touch -d "2099-12-31" ./data/imagecache/123456789.jpg
+```
+
 ## Adding screenshots to your notifications
 
-VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, it will run much faster and smoother on Raspberry Pi 4 or x86 with a 64-bits OS.
+VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, it will run much faster and smoother on Raspberry Pi 4 or x86 machine with a 64-bits OS and a few Gb of RAM memory.
 The screenshot container accesses the AIS-catcher website to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
 A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
 The screenshot container is Open Source and can be found [here](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
 
-Please note that you must use the screenshot container's `aiscatcher` tag and branch as these include special configuration options for use with VesselAlert.
+Please note that you must use the screenshot container's `aiscatcher` tag and branch as this include special configuration options for use with VesselAlert.
 
 ## Logging
 
@@ -224,13 +242,13 @@ Without the help, advice, testing, and kicking the tires of these people, things
 ## Getting Help
 
 You can [log an issue](https://github.com/sdr-enthusiasts/docker-vesselalert/issues) on the project's GitHub.
-I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The #ais-catcher channel is appropriate for conversations about this package.
+I'm also active in a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The `#ais-catcher` channel is appropriate for conversations about this package.
 
 ## Summary of License Terms
 
 ### VesselAlert
 
-Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -256,7 +274,7 @@ For license terms, see https://github.com/jeff-luszcz/AISTropoAlert/blob/1ed4837
 ```
 
 All improvements on AISTropoAlert version 1.0.0 are:
-Copyright (C) 2022-2023, Ramon F. Kolb (kx1t) and licenseable under GPLv3 in accordance with this summary:
+Copyright (C) 2022-2025, Ramon F. Kolb (kx1t) and licenseable under GPLv3 in accordance with this summary:
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
