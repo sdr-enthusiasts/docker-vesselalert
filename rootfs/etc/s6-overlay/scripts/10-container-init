@@ -7,13 +7,12 @@ source /scripts/common
 
 # Put databases in place but don't overwrite any existing ones as they may have been changed by the user
 mkdir -p /data/imagecache/screenshots/
-cp -u --backup=numbered /opt/data/* /data >/dev/null 2>&1
-if [[ -f /data/discord.error.log ]]
-then
+cp -u --backup=numbered /opt/data/* /data >/dev/null 2>&1 || true
+if [[ -f /data/discord.error.log ]]; then
 	tail -500 /data/discord.error.log > /tmp/discord.error.log
-	mv -f /tmp/discord.error.log /data/discord.error.log
+	mv -f /tmp/discord.error.log /data/discord.error.log || true
 fi
 rm -f "/run/vesseldb.lock"
 
 # one-time move in case the user just upgraded from an older (pre-22-Mar-2025) container version
-mv -f /data/container_has_run_before /data/.container_has_run_before
+mv -f /data/container_has_run_before /data/.container_has_run_before || true
