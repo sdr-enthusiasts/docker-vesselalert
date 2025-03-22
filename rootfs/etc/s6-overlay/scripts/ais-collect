@@ -42,7 +42,6 @@ MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
 RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
 
 touch "$VESSELDBFILE"
-rm -f "$VESSELDBLOCK"
 
 for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
@@ -87,17 +86,6 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     done
 
     for vessel in "${VESSEL_INDEX[@]}"; do
-        # Make sure that no notifications will be sent if NOTIFY_ONLY_NEW_ON_STARTUP is set and this is the first run ever:
-        # Note -- this code has cross-contamination from the Mastodon-Notifier and will need to be updated if new
-        # notification media are added. This is unfortunate but to avoid it means adding a LOT more logic.
-        # If the criteria are met, we will tag the last notification time to the current time, so it won't renotify until much later.
-        if [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
-            && [[ ! -f /data/.container_has_run_before ]]; then
-                    spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
-                    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
-                    VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
-        fi
-
         # Calculate ship's beam (=width) and length, if not already available:
         if [[ -z "${VESSELS[${vessel}:beam]}" ]] \
             && [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
@@ -116,11 +104,6 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
                 VESSELS[${vessel}:length_unit]="m"
         fi
     done
-
-    if [[ ! -f /data/.container_has_run_before ]]; then
-        touch /data/.container_has_run_before
-        if chk_enabled "$DEBUG" && chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then "${s6wrap[@]}" echo "[DEBUG] This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"; fi
-    fi
 
     # Write back to file
     source "/usr/share/vesselalert/save_databases"

@@ -1,0 +1,54 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1090,SC1091,SC2154,SC2004,SC2034
+
+# Make sure that no notifications will be sent if NOTIFY_ONLY_NEW_ON_STARTUP is set
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+source /scripts/common
+
+"${s6wrap[@]}" echo "[INFO] Started as an s6 init script"
+
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
+
+NOTIFY_EVERY="${NOTIFY_EVERY:-${MASTODON_NOTIFY_EVERY}}"
+
+touch "$VESSELDBFILE"
+touch "$VESSELDBLOCK"
+
+# First read the existing entries in from file
+if (( $(wc -l < "$VESSELDBFILE") > 0 )); then
+    source "$VESSELDBFILE"
+else
+    rm -f "$VESSELDBLOCK"
+    exit 0  # nothing to be done!
+fi
+
+# Now add the current time to all existing vessels
+for vessel in "${VESSEL_INDEX[@]}"; do
+     if chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
+                spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
+                printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
+                VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
+    fi
+done
+
+# Write back to file
+source "/usr/share/vesselalert/save_databases"
+
+# Unlock Vessel DB
+rm -f "$VESSELDBLOCK"
