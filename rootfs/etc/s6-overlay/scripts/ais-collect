@@ -36,7 +36,6 @@ CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
-MAX_MSG_AGE="${MAX_MSG_AGE:-604800}" && MAX_MSG_AGE=604800    # 1 week before a record gets erased from the database
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 
@@ -48,8 +47,7 @@ rm -f "$VESSELDBLOCK"
 for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ ))
 do
     # If there's a lock file, wait until it's gone
-    while [[ -f  $VESSELDBLOCK ]]
-    do
+    while [[ -f  $VESSELDBLOCK ]]; do
         sleep 1
     done
 
@@ -57,19 +55,17 @@ do
     touch "$VESSELDBLOCK"
 
     # First read the existing entries in from file
-    if (( $(wc -l < "$VESSELDBFILE") > 0 ))
-    then
+    if (( $(wc -l < "$VESSELDBFILE") > 0 )); then
         [[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[DEBUG] reading VESSELS dict from file" || true
         source "$VESSELDBFILE"
     fi
 
     # Now update it with the ones from the AIS_URL website.
     # Read VESSELS from the AIS_URL:
-    ships_json="$(curl --compressed -sSL $AIS_URL)"
+    ships_json="$(curl --compressed -sSL "$AIS_URL")"
 
     # check if ships_json is empty. If so, continue the loop but don't count against loop counter
-    if [[ -z "$ships_json" ]]
-    then
+    if [[ -z "$ships_json" ]]; then
         "${s6wrap[@]}" echo "[WARNING] $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
         rm -f "$VESSELDBLOCK"
         sleep $CHECK_INTERVAL
@@ -79,55 +75,53 @@ do
 
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
-    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
+    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json" | sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
     # create the indices and clean up text
-    for keyvalue in ${!VESSELS[@]}
-    do
+    for keyvalue in ${!VESSELS[@]}; do
         # add key to KEY_INDEX:
-        [[ -n "${keyvalue#*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue#*:} " ]] && KEY_INDEX+=("${keyvalue#*:}") || true
+        if [[ -n "${keyvalue#*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue#*:} " ]]; then KEY_INDEX+=("${keyvalue#*:}"); fi
         # add mmsi to VESSEL_INDEX:
-        [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]] && VESSEL_INDEX+=("${keyvalue%%:*}") || true
+        if [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]]; then VESSEL_INDEX+=("${keyvalue%%:*}"); fi
     done
 
-    # Clean out the ones that are too old:
-    for vessel in "${VESSEL_INDEX[@]}"
-    do
-
-        [[ -n "${VESSELS[${vessel}:last_updated]}" ]] && age=$(( $(date +%s) - ${VESSELS[${vessel}:last_updated]} )) || age=0
-
-        if     [[ ! $age =~ ^[0-9]+$ ]] \
-            || (( age > MAX_MSG_AGE ))
-        then
-            [[ -n "$DEBUG" ]] && echo "removed ${vessel}: pattern ($age)=$([[ ! $age =~ ^[0-9]+$ ]] && echo -n true || echo -n false) >maxage ($age>$MAX_MSG_AGE)=$( (( age > MAX_MSG_AGE )) && echo -n true || echo -n false)"
-            for key in "${KEY_INDEX[@]}"
-            do
-                unset "VESSELS[${vessel}:${key}]"
-            done
-        fi
-
+    for vessel in "${VESSEL_INDEX[@]}"; do
         # Make sure that no notifications will be sent if NOTIFY_ONLY_NEW_ON_STARTUP is set and this is the first run ever:
         # Note -- this code has cross-contamination from the Mastodon-Notifier and will need to be updated if new
         # notification media are added. This is unfortunate but to avoid it means adding a LOT more logic.
         # If the criteria are met, we will tag the last notification time to the current time, so it won't renotify until much later.
-        if     [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
-            && [[ ! -f /data/container_has_run_before ]]
-        then
-            spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
-	    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
-            VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
+        if [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
+            && [[ ! -f /data/.container_has_run_before ]]; then
+                    spread="$(bc -l <<< "$MASTODON_NOTIFY_EVERY * 0.2")"
+                    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
+                    VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
+        fi
+
+        # Calculate ship's beam (=width) and length, if not already available:
+        if [[ -z "${VESSELS[${vessel}:beam]}" ]] \
+            && [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
+            && [[ "${VESSELS[${vessel}:to_starboard]}" != "null" ]] \
+            && [[ -n "${VESSELS[${vessel}:to_port]}" ]] \
+            && [[ "${VESSELS[${vessel}:to_port]}" != "null" ]]; then
+                VESSELS[${vessel}:beam]="$((${VESSELS[${vessel}:to_starboard]} + ${VESSELS[${vessel}:to_port]}))"
+                VESSELS[${vessel}:beam_unit]="m"
+        fi
+        if [[ -z "${VESSELS[${vessel}:length]}" ]] \
+            && [[ -n "${VESSELS[${vessel}:to_bow]}" ]] \
+            && [[ "${VESSELS[${vessel}:to_bow]}" != "null" ]] \
+            && [[ -n "${VESSELS[${vessel}:to_stern]}" ]] \
+            && [[ "${VESSELS[${vessel}:to_stern]}" != "null" ]]; then
+                VESSELS[${vessel}:length]="$((${VESSELS[${vessel}:to_bow]} + ${VESSELS[${vessel}:to_stern]} ))"
+                VESSELS[${vessel}:length_unit]="m"
         fi
     done
 
-    if     [[ -n "$NOTIFY_ONLY_NEW_ON_STARTUP" ]] \
-        && [[ ! -f /data/container_has_run_before ]]
-    then
-        touch /data/container_has_run_before
-        [[ -n "$DEBUG" ]] &&"${s6wrap[@]}" echo "[DEBUG] This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"
+    if [[ ! -f /data/.container_has_run_before ]]; then
+        touch /data/.container_has_run_before
+        if chk_enabled "$DEBUG" && chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then "${s6wrap[@]}" echo "[DEBUG] This was the first container run ever and NOTIFY_ONLY_NEW_ON_STARTUP was set. All vessels known as of this initial run have been tagged notified with date ${VESSELS[${vessel}:notification:last]}"; fi
     fi
 
     # Write back to file
-
     source "/usr/share/vesselalert/save_databases"
 
     # Clean up memory; arrays will be re-read next turn
