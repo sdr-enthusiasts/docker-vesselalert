@@ -24,7 +24,7 @@
 source /scripts/common
 
 "${s6wrap[@]}" echo "[INFO] Started as an s6 service"
-[[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[INFO] DEBUG=ON" || "${s6wrap[@]}" echo "[INFO] DEBUG=OFF"
+if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] DEBUG=ON"; else "${s6wrap[@]}" echo "[INFO] DEBUG=OFF"; fi
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
@@ -44,8 +44,9 @@ RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
 touch "$VESSELDBFILE"
 rm -f "$VESSELDBLOCK"
 
-for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ ))
-do
+for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
+
+    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] starting run"; fi
     # If there's a lock file, wait until it's gone
     while [[ -f  $VESSELDBLOCK ]]; do
         sleep 1
@@ -56,7 +57,7 @@ do
 
     # First read the existing entries in from file
     if (( $(wc -l < "$VESSELDBFILE") > 0 )); then
-        [[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "[DEBUG] reading VESSELS dict from file" || true
+        if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] reading VESSELS dict from file"; fi
         source "$VESSELDBFILE"
     fi
 
@@ -133,7 +134,7 @@ do
     unset COUNTRY 
 
     rm -f "$VESSELDBLOCK"
-
+    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] finished with run"; fi
     sleep $CHECK_INTERVAL
 
 done
