@@ -37,15 +37,17 @@ else
     rm -f "$VESSELDBLOCK"
     exit 0  # nothing to be done!
 fi
-
+if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo -n "Adjusting notification timeframe of: "; fi
 # Now add the current time to all existing vessels
-for vessel in "${VESSEL_INDEX[@]}"; do
-     if chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
-                spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
-                printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
-                VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))"
-    fi
-done
+if chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
+    for vessel in "${VESSEL_INDEX[@]}"; do
+        if chk_enabled "$DEBUG"; then echo -n "$vessel "; fi    
+        spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
+        printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
+        VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))" 
+    done
+    if chk_enabled "$DEBUG"; then echo ""; fi
+fi
 
 # Write back to file
 source "/usr/share/vesselalert/save_databases"
