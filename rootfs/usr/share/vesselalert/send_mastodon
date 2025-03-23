@@ -22,28 +22,8 @@ source /scripts/common
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 
 # shellcheck disable=SC2034
-declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
 
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
+source "/usr/share/vesselalert/load_databases"
 
 MASTODON_POST_VISIBILITY="${MASTODON_POST_VISIBILITY:-unlisted}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
@@ -52,8 +32,6 @@ MASTODON_SERVER="${MASTODON_SERVER:-airwaves.social}"
 [[ "${MASTODON_SERVER:0:7}" == "http://" ]] && MASTODON_SERVER="${MASTODON_SERVER:7}" || true
 [[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
 MASTODON_SERVER="https://${MASTODON_SERVER}"
-
-source "$VESSELDBFILE"
 
 if [[ -z "$1" ]]
 then

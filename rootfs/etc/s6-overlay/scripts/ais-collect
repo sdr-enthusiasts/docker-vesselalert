@@ -41,7 +41,6 @@ MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
 
 RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
 
-touch "$VESSELDBFILE"
 
 for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
@@ -55,10 +54,7 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     touch "$VESSELDBLOCK"
 
     # First read the existing entries in from file
-    if (( $(wc -l < "$VESSELDBFILE") > 0 )); then
-        if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] reading VESSELS dict from file"; fi
-        source "$VESSELDBFILE"
-    fi
+    source "/usr/share/vesselalert/load_databases"
 
     # Now update it with the ones from the AIS_URL website.
     # Read VESSELS from the AIS_URL:
@@ -77,16 +73,12 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     # Add a last_updated field to all the newly entered or updated vessels:
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json" | sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
-    # create the indices and clean up text
-    for keyvalue in ${!VESSELS[@]}; do
-        # add key to KEY_INDEX:
-        if [[ -n "${keyvalue#*:}" ]] && [[ ! " ${KEY_INDEX[*]} " =~ " ${keyvalue#*:} " ]]; then KEY_INDEX+=("${keyvalue#*:}"); fi
-        # add mmsi to VESSEL_INDEX:
-        if [[ -n "${keyvalue%%:*}" ]] && [[ ! " ${VESSEL_INDEX[*]} " =~ " ${keyvalue%%:*} " ]]; then VESSEL_INDEX+=("${keyvalue%%:*}"); fi
-    done
+    # create the indices
+    readarray -t VESSEL_INDEX <<< "$({ for vessel in "${!VESSELS[@]}"; do echo "${vessel%%:*}"; done; } | sort -un)"
+    readarray -t KEY_INDEX <<< "$({ for vessel in "${!VESSELS[@]}"; do echo "${vessel#*:}"; done; } | sort -u )"
 
+    # Calculate ship's beam (=width) and length, if not already available:
     for vessel in "${VESSEL_INDEX[@]}"; do
-        # Calculate ship's beam (=width) and length, if not already available:
         if [[ -z "${VESSELS[${vessel}:beam]}" ]] \
             && [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
             && [[ "${VESSELS[${vessel}:to_starboard]}" != "null" ]] \
@@ -109,12 +101,7 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     source "/usr/share/vesselalert/save_databases"
 
     # Clean up memory; arrays will be re-read next turn
-    unset KEY_INDEX
-    unset VESSEL_INDEX
-    unset VESSELS
-    unset SHIPTYPE
-    unset SHIPSTATUS
-    unset COUNTRY 
+    unset KEY_INDEX VESSEL_INDEX VESSELS SHIPTYPE SHIPSTATUS COUNTRY 
 
     rm -f "$VESSELDBLOCK"
     if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] finished with run"; fi

@@ -24,22 +24,28 @@ source /scripts/common
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
+NOTIFY_ONLY_NEW_ON_STARTUP="${NOTIFY_ONLY_NEW_ON_STARTUP:-true}"
 
 NOTIFY_EVERY="${NOTIFY_EVERY:-${MASTODON_NOTIFY_EVERY}}"
 
-touch "$VESSELDBFILE"
+if ! chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
+    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "NOTIFY_ONLY_NEW_ON_STARTUP not switched on; skipping"; fi
+    exit 0
+fi
+
 touch "$VESSELDBLOCK"
 
-# First read the existing entries in from file
-if (( $(wc -l < "$VESSELDBFILE") > 0 )); then
-    source "$VESSELDBFILE"
-else
-    rm -f "$VESSELDBLOCK"
-    exit 0  # nothing to be done!
+# read the existing entries in from file
+source "/usr/share/vesselalert/load_databases"
+
+if (( "${#VESSEL_INDEX[@]}" == 0 )); then
+    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "No vessels in index so no adjustments are needed"; fi
+    exit 0
 fi
-if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo -n "Adjusting notification timeframe of: "; fi
+
 # Now add the current time to all existing vessels
-if chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
+
+    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo -n "Adjusting notification timeframe of: "; fi
     for vessel in "${VESSEL_INDEX[@]}"; do
         if chk_enabled "$DEBUG"; then echo -n "$vessel "; fi    
         spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
@@ -47,7 +53,6 @@ if chk_enabled "$NOTIFY_ONLY_NEW_ON_STARTUP"; then
         VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))" 
     done
     if chk_enabled "$DEBUG"; then echo ""; fi
-fi
 
 # Write back to file
 source "/usr/share/vesselalert/save_databases"

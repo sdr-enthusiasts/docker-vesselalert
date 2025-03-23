@@ -89,10 +89,7 @@ do
     # Now lock the process for myself:
     touch "$VESSELDBLOCK"
 
-    # First read the existing entries in from file
-    chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] reading shipdict from file" || true
-
-    source "$VESSELDBFILE"
+    source "/usr/share/vesselalert/load_databases"
 
     # Iterate through the ships:
     for vessel in "${VESSEL_INDEX[@]}"
@@ -222,28 +219,6 @@ do
             else
                 "${s6wrap[@]}" echo "[INFO] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
-
-            # Calculate ship's beam (=width) and length before notifying:
-            savenow=false
-            if [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_starboard]}" != "null" ]] \
-                && [[ -n "${VESSELS[${vessel}:to_port]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_port]}" != "null" ]] \
-                && [[ -z "${VESSELS[${vessel}:beam]}" ]]; then
-                    VESSELS[${vessel}:beam]="$((${VESSELS[${vessel}:to_starboard]} + ${VESSELS[${vessel}:to_port]}))"
-                    VESSELS[${vessel}:beam_unit]="m"
-                    savenow=true
-            fi
-            if [[ -n "${VESSELS[${vessel}:to_bow]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_bow]}" != "null" ]] \
-                && [[ -n "${VESSELS[${vessel}:to_stern]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_stern]}" != "null" ]] \
-                && [[ -z "${VESSELS[${vessel}:length]}" ]]; then
-                    VESSELS[${vessel}:length]="$((${VESSELS[${vessel}:to_bow]} + ${VESSELS[${vessel}:to_stern]} ))"
-                    VESSELS[${vessel}:length_unit]="m"
-                    savenow=true
-            fi
-            if $savenow; then source /usr/share/vesselalert/save_databases; fi
 
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES

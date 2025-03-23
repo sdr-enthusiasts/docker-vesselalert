@@ -21,11 +21,7 @@
 source /scripts/common
 
 {   declare -p KEY_INDEX 2>/dev/null || true
-    declare -p VESSEL_INDEX 2>/dev/null || true
     declare -p VESSELS 2>/dev/null || true
-    declare -p SHIPTYPE 2>/dev/null || true
-    declare -p SHIPSTATUS 2>/dev/null || true
-    declare -p COUNTRY 2>/dev/null || true
 } > "${VESSELDBFILE:-/data/vessel.db}" 2>/dev/null || true
 
 if [[ -n "$DEBUG" ]]; then "${s6wrap[@]}" echo "wrote back to file"; fi

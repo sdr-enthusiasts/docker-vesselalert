@@ -83,7 +83,7 @@ find /data                        -maxdepth 1 -mmin +"${VESSELDB_BKUP_RETENTION}
 # iterate through the vessels and clean up the old ones:
 echo -n "vessels... "
 # get VESSEL data:
-source "${VESSELDBFILE}"
+source "/usr/share/vesselalert/load_databases"
 #	echo -n "obsolete vessels: "
 	removed=()
 for mmsi in "${VESSEL_INDEX[@]}"
@@ -94,14 +94,6 @@ do
 		for key in "${KEY_INDEX[@]}"
 		do
 			unset "VESSELS[$mmsi:$key]"
-		done
-		for i in "${!VESSEL_INDEX[@]}"
-		do
-			if [[ "${VESSEL_INDEX[$i]}" == "${mmsi}" ]]
-			then
-				unset "VESSEL_INDEX[$i]"
-				break
-			fi
 		done
 	fi
 done
