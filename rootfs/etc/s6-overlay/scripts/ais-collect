@@ -35,6 +35,7 @@ renice -n 10 -p $$ >/dev/null 2>&1
 CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
+MAX_MSG_AGE="${MAX_MSG_AGE:-604800}" && MAX_MSG_AGE=604800    # 1 week before a record gets erased from the database
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"
 
@@ -52,10 +53,11 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
     # Now update it with the ones from the AIS_URL website.
     # Read VESSELS from the AIS_URL:
-    ships_json="$(curl --compressed -sSL "$AIS_URL")"
+    ships_json="$(curl --compressed -sSL $AIS_URL)"
 
     # check if ships_json is empty. If so, continue the loop but don't count against loop counter
-    if [[ -z "$ships_json" ]]; then
+    if [[ -z "$ships_json" ]]
+    then
         "${s6wrap[@]}" echo "[WARNING] $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
         rm -f "$VESSELDBLOCK"
         sleep $CHECK_INTERVAL
@@ -65,7 +67,7 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
-    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json" | sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
+    eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json"|sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
     # create the indices
     readarray -t VESSEL_INDEX <<< "$({ for vessel in "${!VESSELS[@]}"; do echo "${vessel%%:*}"; done; } | sort -un)"
@@ -92,6 +94,7 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     done
 
     # Write back to file
+
     source "/usr/share/vesselalert/save_databases"
 
     # Clean up memory; arrays will be re-read next turn
