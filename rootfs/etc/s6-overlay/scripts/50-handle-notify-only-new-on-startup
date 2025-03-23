@@ -44,15 +44,16 @@ if (( "${#VESSEL_INDEX[@]}" == 0 )); then
 fi
 
 # Now add the current time to all existing vessels
-
-    if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo -n "Adjusting notification timeframe of: "; fi
-    for vessel in "${VESSEL_INDEX[@]}"; do
-        if chk_enabled "$DEBUG"; then echo -n "$vessel "; fi    
-        spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
-        printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
-        VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))" 
-    done
-    if chk_enabled "$DEBUG"; then echo ""; fi
+spread="$(bc -l <<< "$NOTIFY_EVERY * 0.2")"
+if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo -n "Adjusting notification timeframe of: "; fi
+for vessel in "${VESSEL_INDEX[@]}"; do
+    if chk_enabled "$DEBUG"; then echo -n "$vessel "; fi    
+    printf -v adjust "%.0f" "$(bc -l <<< "($RANDOM/32767)*$spread - $spread/2")"
+    VESSELS[${vessel}:notification:last]="$(( $(date +%s) + adjust ))" 
+done
+if chk_enabled "$DEBUG"; then 
+    echo ""
+fi
 
 # Write back to file
 source "/usr/share/vesselalert/save_databases"
