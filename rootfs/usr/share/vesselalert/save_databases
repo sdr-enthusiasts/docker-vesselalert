@@ -20,10 +20,8 @@
 
 source /scripts/common
 
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-
 {   declare -p KEY_INDEX 2>/dev/null || true
     declare -p VESSELS 2>/dev/null || true
 } > "${VESSELDBFILE:-/data/vessel.db}" 2>/dev/null || true
 
-[[ -n "$DEBUG" ]] && "${s6wrap[@]}" echo "wrote back to file" || true
+if [[ -n "$DEBUG" ]]; then "${s6wrap[@]}" echo "wrote back to file"; fi
