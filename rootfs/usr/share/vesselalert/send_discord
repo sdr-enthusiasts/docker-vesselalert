@@ -22,47 +22,8 @@ source /scripts/common
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
-source "$VESSELDBFILE"
-
-[[ -n "$DEBUG" ]] && set -x
-# load the notification JSON from the template:
-
 # shellcheck disable=SC2034
-declare -A SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
-if [[ -f "/data/discord.template-$LANGUAGE" ]]; then
-    notif_json="$(<"/data/discord.template-$LANGUAGE")"
-else
-    notif_json="$(</data/discord.template)"
-fi
-
-declare -A MASTO_TERM
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
-    source "/data/mast-l10n-enus.db"
-fi
+source "/usr/share/vesselalert/load_databases"
 
 
 if [[ -z "$1" ]]

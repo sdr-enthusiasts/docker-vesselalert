@@ -26,7 +26,7 @@ renice -n 20 -p $$ >/dev/null 2>/dev/null
 CLEANUP_EVERY="${CLEANUP_EVER:-1800}"			# 30 minutes in seconds
 PHOTOS_RETENTION="${PHOTOS_RETENTION:-20160}"		# 2 weeks in minutes
 SCREENSHOT_RETENTION="${SCREENSHOT_RETENTION:-60}"	# 1 hour in minutes
-MMSI_RETENTION="${MMSI_RETENTION:-1209600}"			# 2 weeks in seconds
+MMSI_RETENTION="${MAX_MSG_AGE:-604800}"			# 1 weeks in seconds
 COUNTRY_BKUP_RETENTION="${VESSELDB_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 DISCTMPL_BKUP_RETENTION="${DISCTMPL_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 SHIPSTATUS_BKUP_RETENTION="${SHIPSTATUS_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
@@ -34,36 +34,14 @@ SHIPTYPE_BKUP_RETENTION="${SHIPTYPE_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 VESSELDB_BKUP_RETENTION="${VESSELDB_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 MASTODON_CLEANUP_EVERY="${MASTODON_CLEANUP_EVERY:-43200}"	# 12 hours in seconds
 DBLOCK_MAXWAIT="${DBLOCK_MAXWAIT:-600}"				# don't wait more than 600 secs for the dblock to be removed
-
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
-VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 [[ ! -f /run/.last_mastodon_cleanup ]] && date +%s > /run/.last_mastodon_cleanup || true
 
 "${s6wrap[@]}" echo "[INFO] Starting Cleanup"
-if [[ -f  $VESSELDBLOCK ]]; then
-	"${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."
-	is_locked=true
-else
-	is_locked=false
-fi
 
-lockstarttime="$(date +%s)"
-while [[ -f  $VESSELDBLOCK ]]
-do
-	sleep "0.$((RANDOM % 100))"
-	if (( $(date +%s) > lockstarttime + DBLOCK_MAXWAIT )); then
-		"${s6wrap[@]}" echo "[WARNING] vessel.db has been locked for more than $DBLOCK_MAXWAIT secs. Force-unlocking stale lock process!"
-		break
-	fi
-done
-
-if [[ "$is_locked" == true ]]; then
-	"${s6wrap[@]}" echo "[INFO] Vessel.db is now unlocked - continuing cleanup"
-fi
-
-# Now lock the process for myself:
-touch "$VESSELDBLOCK"
+# lock the database:
+source "/usr/share/vesselalert/vesseldb_lock"
 
 "${s6wrap[@]}" echo -n "[INFO] Removing obsolete screenshots... "
 if ! chk_disabled "${SCREENSHOT_RETENTION}"; then
@@ -83,7 +61,7 @@ find /data                        -maxdepth 1 -mmin +"${VESSELDB_BKUP_RETENTION}
 # iterate through the vessels and clean up the old ones:
 echo -n "vessels... "
 # get VESSEL data:
-source "${VESSELDBFILE}"
+source "/usr/share/vesselalert/load_databases"
 #	echo -n "obsolete vessels: "
 	removed=()
 for mmsi in "${VESSEL_INDEX[@]}"
@@ -94,14 +72,6 @@ do
 		for key in "${KEY_INDEX[@]}"
 		do
 			unset "VESSELS[$mmsi:$key]"
-		done
-		for i in "${!VESSEL_INDEX[@]}"
-		do
-			if [[ "${VESSEL_INDEX[$i]}" == "${mmsi}" ]]
-			then
-				unset "VESSEL_INDEX[$i]"
-				break
-			fi
 		done
 	fi
 done

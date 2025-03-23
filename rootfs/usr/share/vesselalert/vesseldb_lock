@@ -20,8 +20,25 @@
 
 source /scripts/common
 
-{   declare -p KEY_INDEX 2>/dev/null || true
-    declare -p VESSELS 2>/dev/null || true
-} > "${VESSELDBFILE:-/data/vessel.db}" 2>/dev/null || true
+DBLOCK_MAXWAIT="${DBLOCK_MAXWAIT:-600}"				# don't wait more than 600 secs for the dblock to be removed
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
-if [[ -n "$DEBUG" ]]; then "${s6wrap[@]}" echo "wrote back to file"; fi
+sleep "0.$((RANDOM % 100))"	# sleep a random time in case multiple processes want to lock the DB at the same time
+
+if [[ -f $VESSELDBLOCK ]]; then
+	if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."; fi
+	lockstarttime="$(date +%s)"
+	while [[ -f $VESSELDBLOCK ]]; do
+		sleep "0.$((RANDOM % 100))"
+		if (( $(date +%s) > lockstarttime + DBLOCK_MAXWAIT )); then
+			"${s6wrap[@]}" echo "[WARNING] vessel.db has been locked for more than $DBLOCK_MAXWAIT secs. Force-unlocking stale lock process!"
+			break
+		fi
+	done
+	if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] Vessel.db is now available - locking it for our purposes"; fi
+elif chk_enabled "$DEBUG"; then 
+	"${s6wrap[@]}" echo "[INFO] Vessel.db is available - locking it for our purposes"; 
+fi
+
+touch "$VESSELDBLOCK"
+
