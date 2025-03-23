@@ -28,10 +28,6 @@ if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] DEBUG=ON"; else "${s6w
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
-! declare -p VESSELS >/dev/null 2>&1 && declare -A VESSELS || true
-! declare -p KEY_INDEX >/dev/null 2>&1 && declare -a KEY_INDEX || true
-! declare -p VESSEL_INDEX >/dev/null 2>&1 && declare -a VESSEL_INDEX || true
-
 CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
