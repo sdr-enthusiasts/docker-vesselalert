@@ -1,7 +1,5 @@
 #!/command/with-contenv bash
-#shellcheck shell=bash
-#shellcheck disable=SC2016,SC2068,SC2076,SC2086,SC2015,SC2164,SC1090,SC1091,SC2154
-
+#shellcheck shell=bash disable=SC1091,SC2154,SC2034,SC2004
 # AIS-Collect:
 # read AIS data from a AIS-Catcher web service and
 # create and maintain a database with this data
@@ -54,13 +52,15 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
     if [[ -z "$ships_json" ]]; then
         "${s6wrap[@]}" echo "[WARNING] $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
         rm -f "$VESSELDBLOCK"
-        sleep $CHECK_INTERVAL
+        sleep "$CHECK_INTERVAL"
         (( loops-- ))
         continue
     fi
 
+    # shellcheck disable=SC2016
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | @sh "VESSELS[\("\($mmsi):\(.key)")]=\(.value)"' <<< "$ships_json" )"
     # Add a last_updated field to all the newly entered or updated vessels:
+    # shellcheck disable=SC2016
     eval "$(nice -n 20 jq -r '.ships[] | .mmsi as $mmsi | to_entries[] | "VESSELS[\("\($mmsi):")"' <<< "$ships_json" | sort -u | sed 's/:/:last_updated\]='"$(date +%s)"'/g')"
 
     # create the indices
@@ -95,7 +95,7 @@ for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
     rm -f "$VESSELDBLOCK"
     if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] finished with run"; fi
-    sleep $CHECK_INTERVAL
+    sleep "$CHECK_INTERVAL"
 
 done
 "${s6wrap[@]}" echo "[INFO] restarting $0 to clean up memory"
