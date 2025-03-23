@@ -15,4 +15,4 @@ fi
 rm -f "/run/vesseldb.lock"
 
 # one-time move in case the user just upgraded from an older (pre-22-Mar-2025) container version
-mv -f /data/container_has_run_before /data/.container_has_run_before || true
+if [[ -f /data/container_has_run_before ]]; then mv -f /data/container_has_run_before /data/.container_has_run_before; fi
