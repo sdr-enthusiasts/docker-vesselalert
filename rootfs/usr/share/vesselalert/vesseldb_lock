@@ -1,0 +1,42 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash disable=SC2015,SC2154,SC1091
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+# This script is sourced from several services to make sure that all of the persistent arrays are stored
+
+source /scripts/common
+
+DBLOCK_MAXWAIT="${DBLOCK_MAXWAIT:-600}"				# don't wait more than 600 secs for the dblock to be removed
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
+
+sleep "0.$((RANDOM % 100))"	# sleep a random time in case multiple processes want to lock the DB at the same time
+
+if [[ -f $VESSELDBLOCK ]]; then
+	if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] Waiting for vessel.db to become unlocked..."; fi
+	lockstarttime="$(date +%s)"
+	while [[ -f $VESSELDBLOCK ]]; do
+		sleep "0.$((RANDOM % 100))"
+		if (( $(date +%s) > lockstarttime + DBLOCK_MAXWAIT )); then
+			"${s6wrap[@]}" echo "[WARNING] vessel.db has been locked for more than $DBLOCK_MAXWAIT secs. Force-unlocking stale lock process!"
+			break
+		fi
+	done
+	if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] Vessel.db is now available - locking it for our purposes"; fi
+fi
+
+touch "$VESSELDBLOCK"
+

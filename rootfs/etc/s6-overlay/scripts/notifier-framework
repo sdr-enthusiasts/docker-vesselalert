@@ -26,9 +26,9 @@ source /scripts/common
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
-[[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 # create some defaults and aliases, maintaining backwards compatibility
 NOTIFY_MIN_DIST="${NOTIFY_MIN_DIST:-${MASTODON_MIN_DIST}}"
@@ -50,10 +50,6 @@ notification_count=0
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
 
-
-touch "$VESSELDBFILE"
-rm -f "$VESSELDBLOCK"
-
 mkdir -p "${IMAGECACHE}/screenshots"
 
 # add some random time to the check interval (0-5 secs)
@@ -68,27 +64,10 @@ sleep "$CHECK_INTERVAL"
 
 for (( loops=0; loops < RUNS_BEFORE_RESTART; loops++ ))
 do
+    # lock the databases:
+    source "/usr/share/vesselalert/vesseldb_lock"
 
-    # 3 main arrays:
-    # - VESSELDICT is an associative array that contains all the vessels, indexed by their MMSI.
-    #   So: ${!VESSELDICT[@]} contains the list of MMSIs, and ${VESSELDICT[$mmsi]}
-    #   contains a comma-separated list of parameter values.
-    #
-    # - vesselinfo is an associative array that contains the information of a single vessel from
-    #   the VESSELDICT array. The ${headers[@]} array contains the keys for each of these values.
-    #
-    # - mast_status is extracted from the right-most "notif_x" field from vesselinfo that starts with "mast="
-    #   This array contains information about previous notifications to Mastodon for this MMSI
-
-    # If there's a lock file, wait until it's gone\
-    while [[ -f $VESSELDBLOCK ]]
-    do
-        sleep "0.$((RANDOM % 100))"
-    done
-
-    # Now lock the process for myself:
-    touch "$VESSELDBLOCK"
-
+    # load the databases:
     source "/usr/share/vesselalert/load_databases"
 
     # Iterate through the ships:

@@ -41,17 +41,12 @@ MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
 
 RUNS_BEFORE_RESTART="$((3 * 60 * 60 / CHECK_INTERVAL))"
 
-
 for (( loops=0; loops<RUNS_BEFORE_RESTART; loops++ )); do
 
     if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[DEBUG] starting run"; fi
-    # If there's a lock file, wait until it's gone
-    while [[ -f  $VESSELDBLOCK ]]; do
-        sleep 1
-    done
 
-    # Now lock the process for myself:
-    touch "$VESSELDBLOCK"
+    # lock the database:
+    source "/usr/share/vesselalert/vesseldb_lock"
 
     # First read the existing entries in from file
     source "/usr/share/vesselalert/load_databases"
