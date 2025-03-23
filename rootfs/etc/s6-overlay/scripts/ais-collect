@@ -34,7 +34,6 @@ renice -n 10 -p $$ >/dev/null 2>&1
 
 CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
-VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 MIN_MSG_COUNT="${MIN_MSG_COUNT:-10}"
 [[ "${AIS_URL:0:4}" != "http" ]] && AIS_URL="http://${AIS_URL}"
 [[ "${AIS_URL: -4}" != "json" ]] && AIS_URL="${AIS_URL}/ships.json"

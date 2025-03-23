@@ -34,9 +34,7 @@ SHIPTYPE_BKUP_RETENTION="${SHIPTYPE_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 VESSELDB_BKUP_RETENTION="${VESSELDB_BKUP_RETENTION:-20160}"	# 2 weeks in minutes
 MASTODON_CLEANUP_EVERY="${MASTODON_CLEANUP_EVERY:-43200}"	# 12 hours in seconds
 DBLOCK_MAXWAIT="${DBLOCK_MAXWAIT:-600}"				# don't wait more than 600 secs for the dblock to be removed
-
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
-VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 [[ ! -f /run/.last_mastodon_cleanup ]] && date +%s > /run/.last_mastodon_cleanup || true
 

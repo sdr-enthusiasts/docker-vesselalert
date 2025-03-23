@@ -36,6 +36,8 @@ if [[ -f $VESSELDBLOCK ]]; then
 		fi
 	done
 	if chk_enabled "$DEBUG"; then "${s6wrap[@]}" echo "[INFO] Vessel.db is now available - locking it for our purposes"; fi
+elif chk_enabled "$DEBUG"; then 
+	"${s6wrap[@]}" echo "[INFO] Vessel.db is available - locking it for our purposes"; 
 fi
 
 touch "$VESSELDBLOCK"
