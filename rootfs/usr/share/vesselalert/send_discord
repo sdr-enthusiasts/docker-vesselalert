@@ -219,7 +219,9 @@ notif_json="${notif_json//\" \"/\"--\"}"
 notif_json="${notif_json//\"\"/\"--\"}"
 
 # make the JSON object into a single line:
-notif_json="$(jq -c . <<< "${notif_json}")"
+if ! notif_json="$(jq -c . <<< "${notif_json}")"; then 
+    "${s6wrap[@]}" echo "[ERROR] JSON error for $1 (${VESSELS[$1:shipname]}). JSON is invalid: ${notif_json}"
+fi
 
 # Now send the Discord notification:
 #shellcheck disable=SC2086
