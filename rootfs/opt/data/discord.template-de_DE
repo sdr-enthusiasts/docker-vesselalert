@@ -65,6 +65,7 @@
                     "value": "##HEADING## ",
                     "inline": false
                 },
+                ##HASDIST--{
                     "name": "Entfernung vom Empfänger",
                     "value": "##DISTANCE## nm",
                     "inline": false
