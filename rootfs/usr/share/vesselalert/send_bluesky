@@ -71,11 +71,6 @@ fi
 
 # First do some clean up
 if [[ -n "${VESSELS[$1:shipname]}" ]]; then
-#    VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' \
-#                                -e 's|["'\''.]||g' -e 's|_| |g' \
-#                                -e 's|[^[:space:]A-Z0-9,\.\-]\+|_|g' \
-#                                -e 's|_,|,|g' \
-#                            <<< "${VESSELS[$1:shipname]}")"
     VESSELS[$1:shipname]="$(sed \
             -e 's|["'\''.]||g' \
             -e 's|[^A-Z0-9,\.\-]\+|_|g' \
@@ -84,12 +79,6 @@ if [[ -n "${VESSELS[$1:shipname]}" ]]; then
 
 fi
 if [[ -n "${VESSELS[$1:destination]}" ]]; then
-#    VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' \
-#                                -e 's|["'\''.]||g' \
-#                                -e 's|_| |g' \
-#                                -e 's|[^[:space:]A-Z0-9,\.\-]\+|_|g' \
-#                                -e 's|_,|,|g' \
-#                            <<< "${VESSELS[$1:destination]}")"
     VESSELS[$1:destination]="$(sed \
             -e 's|["'\''.]||g' \
             -e 's|[^A-Z0-9,\.\-]\+|_|g' \
@@ -99,10 +88,10 @@ fi
 
 # Build the message - create notification string
 links=""
-chk_enabled "${BLUESKY_LINK_AISCATCHER:-on}" && links+="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}\n" || true
-chk_enabled "$BLUESKY_LINK_SHIPXPLORER" && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
-chk_enabled "$BLUESKY_LINK_MARINETRAFFIC" && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
-chk_enabled "$BLUESKY_LINK_VESSELFINDER" && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
+if chk_enabled "${BLUESKY_LINK_AISCATCHER:-on}"; then links+="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}\n"; fi
+if chk_enabled "$BLUESKY_LINK_SHIPXPLORER"; then links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n"; fi
+if chk_enabled "$BLUESKY_LINK_MARINETRAFFIC"; then links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n"; fi
+if chk_enabled "$BLUESKY_LINK_VESSELFINDER"; then links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n"; fi
 
 unset bsky_str
 
@@ -111,23 +100,25 @@ if [[ -n "$notify_tropo" ]]; then
 fi
 
 bsky_str+="#VesselAlert"
-[[ "${MASTO_TERM[SHIP]}" != "Ship" ]] && bsky_str+=" #${MASTO_TERM[SHIP]}" || true
-[[ -z "${VESSELS[$1:notification:last]}" ]] && bsky_str+=" ${MASTO_TERM[NEW]}" || true
-[[ "${notify_distance}" == "true" ]] && bsky_str+=" #${MASTO_TERM[ONTHEMOVE]}" || true
+if [[ "${MASTO_TERM[SHIP]}" != "Ship" ]]; then bsky_str+=" #${MASTO_TERM[SHIP]}"; fi
+if [[ -z "${VESSELS[$1:notification:last]}" ]]; then bsky_str+=" ${MASTO_TERM[NEW]}"; fi
+if [[ "${notify_distance}" == "true" ]]; then bsky_str+=" #${MASTO_TERM[ONTHEMOVE]}"; fi
 bsky_str+="\n"
-[[ -n "${VESSELS[$1:shipname]}" ]] && bsky_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n" || true
-[[ -n "${VESSELS[$1:mmsi]}" ]] && bsky_str+="#MMSI: #${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${VESSELS[$1:callsign]}" ]] && bsky_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n" || true
-[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && bsky_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n" || true
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then bsky_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n"; fi
+if [[ -n "${VESSELS[$1:mmsi]}" ]]; then bsky_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${VESSELS[$1:callsign]}" ]]; then bsky_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n"; fi
+if [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]]; then bsky_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n"; fi
 
-[[ -n "${VESSELS[$1:country]}" ]] && bsky_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n" || true
+if [[ -n "${VESSELS[$1:country]}" ]]; then bsky_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n"; fi
 # bsky_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
 bsky_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
-[[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && bsky_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n" || true
-[[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && bsky_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n" || true
-[[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]] && bsky_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n" || true
-[[ -n "${VESSELS[$1:destination]}" ]] && bsky_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n" || true
+if [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]]; then bsky_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"; fi
+if [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]]; then bsky_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n"; fi
+if [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]; then bsky_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n"; fi
+if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]; then
+    bsky_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination:friendly]}\n"
+elif [[ -n "${VESSELS[$1:destination]}" ]]; then bsky_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"; fi
 
 if [[ -n "${VESSELS[$1:lat]}" ]] && [[ -n "${VESSELS[$1:lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
     distance="$(bc -l <<< "scale=1; $(distance "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}" "$LAT" "$LON") / 1")"
@@ -136,13 +127,13 @@ fi
 
 bsky_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && bsky_str+="${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && bsky_str+="${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${links}" ]] && bsky_str+="${links}\n" || true
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]]; then bsky_str+="${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]]; then bsky_str+="${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${links}" ]]; then bsky_str+="${links}\n"; fi
 
 bsky_str+="\n"
 
-[[ -n "$BLUESKY_CUSTOM_FIELD" ]] && bsky_str+="$BLUESKY_CUSTOM_FIELD\n" || true
+if [[ -n "$BLUESKY_CUSTOM_FIELD" ]]; then bsky_str+="$BLUESKY_CUSTOM_FIELD\n"; fi
 
 bsky_str+="#${MASTO_TERM[SHIP]} #AIS #VesselAlert © #kx1t https://sdr-e.com/docker-vesselalert"
 

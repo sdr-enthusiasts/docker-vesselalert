@@ -73,7 +73,7 @@ do
         "${s6wrap[@]}" echo "[WARNING] $AIS_URL did not return a valid ships.json object. This may be a start-up fluke, but if the message continues to appear, please check your ships.json data source!"
         rm -f "$VESSELDBLOCK"
         sleep $CHECK_INTERVAL
-        (( loops-- ))
+        (( loops-- )) || true
         continue
     fi
 

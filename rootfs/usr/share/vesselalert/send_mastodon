@@ -49,8 +49,8 @@ MASTODON_POST_VISIBILITY="${MASTODON_POST_VISIBILITY:-unlisted}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 MASTODON_SERVER="${MASTODON_SERVER,,}"
 MASTODON_SERVER="${MASTODON_SERVER:-airwaves.social}"
-[[ "${MASTODON_SERVER:0:7}" == "http://" ]] && MASTODON_SERVER="${MASTODON_SERVER:7}" || true
-[[ "${MASTODON_SERVER:0:8}" == "https://" ]] && MASTODON_SERVER="${MASTODON_SERVER:8}" || true
+if [[ "${MASTODON_SERVER:0:7}" == "http://" ]]; then MASTODON_SERVER="${MASTODON_SERVER:7}"; fi
+if [[ "${MASTODON_SERVER:0:8}" == "https://" ]]; then MASTODON_SERVER="${MASTODON_SERVER:8}"; fi
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 
 source "$VESSELDBFILE"
@@ -77,8 +77,8 @@ then
 fi
 
 # First do some clean up
-[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
-[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"; fi
+if [[ -n "${VESSELS[$1:destination]}" ]]; then VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"; fi
 
 # Build the message - create notification string
 
@@ -95,23 +95,30 @@ if [[ -n "$notify_tropo" ]]; then
 fi
 
 mast_str+="#VesselAlert"
-[[ "${MASTO_TERM[SHIP]}" != "Ship" ]] && mast_str+=" #${MASTO_TERM[SHIP]}" || true
-[[ -z "${VESSELS[$1:notification:last]}" ]] && mast_str+=" ${MASTO_TERM[NEW]}" || true
-[[ "${notify_distance}" == "true" ]] && mast_str+=" #${MASTO_TERM[ONTHEMOVE]}" || true
+if [[ "${MASTO_TERM[SHIP]}" != "Ship" ]]; then mast_str+=" #${MASTO_TERM[SHIP]}"; fi
+if [[ -z "${VESSELS[$1:notification:last]}" ]]; then mast_str+=" ${MASTO_TERM[NEW]}"; fi
+if [[ "${notify_distance}" == "true" ]]; then mast_str+=" #${MASTO_TERM[ONTHEMOVE]}"; fi
 mast_str+="\n"
-[[ -n "${VESSELS[$1:shipname]}" ]] && mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n" || true
-[[ -n "${VESSELS[$1:mmsi]}" ]] && mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${VESSELS[$1:callsign]}" ]] && mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n" || true
-[[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]] && mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n" || true
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n"; fi
+if [[ -n "${VESSELS[$1:mmsi]}" ]]; then mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${VESSELS[$1:callsign]}" ]]; then mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n"; fi
+if [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]]; then mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n"; fi
 
-[[ -n "${VESSELS[$1:country]}" ]] && mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n" || true
+if [[ -n "${VESSELS[$1:country]}" ]]; then mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n"; fi
 mast_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
 mast_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
-[[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]] && mast_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n" || true
-[[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]] && mast_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n" || true
-[[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]] && mast_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n" || true
-[[ -n "${VESSELS[$1:destination]}" ]] && mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n" || true
+if [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]]; then mast_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"; fi
+if [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]]; then mast_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n"; fi
+if [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]; then mast_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n"; fi
+
+if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]; then
+    mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination:friendly]}\n"
+elif [[ -n "${VESSELS[$1:destination]}" ]]; then
+    mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"
+fi
+
+if [[ -n "${VESSELS[$1:destination]}" ]]; then mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"; fi
 
 if [[ -n "${VESSELS[$1:lat]}" ]] && [[ -n "${VESSELS[$1:lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
     distance="$(bc -l <<< "scale=1; $(distance "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}" "$LAT" "$LON") / 1")"
@@ -120,13 +127,13 @@ fi
 
 mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]] && mast_str+="${MASTO_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]] && mast_str+="${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n" || true
-[[ -n "${links}" ]] && mast_str+="${links}\n" || true
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]]; then mast_str+="${MASTO_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]]; then mast_str+="${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${links}" ]]; then mast_str+="${links}\n"; fi
 
 mast_str+="\n"
 
-[[ -n "$MASTODON_CUSTOM_FIELD" ]] && mast_str+="$MASTODON_CUSTOM_FIELD\n" || true
+if [[ -n "$MASTODON_CUSTOM_FIELD" ]]; then mast_str+="$MASTODON_CUSTOM_FIELD\n"; fi
 
 mast_str+="#${MASTO_TERM[SHIP]} #AIS #VesselAlert © 2022-2025 #kx1t"
 
@@ -148,7 +155,7 @@ if [[ -f "$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg" ]]
 then
     response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg")"
     [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
-    [[ -n "${mast_id}" ]] && media_id="-F media_ids[]=${mast_id} " || true
+    if [[ -n "${mast_id}" ]]; then media_id="-F media_ids[]=${mast_id} "; fi
     "${s6wrap[@]}" echo "[INFO] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
 else
     "${s6wrap[@]}" echo "[WARNING] no image available for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]})"
@@ -159,7 +166,7 @@ if [[ -f "${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg" ]]
 then
     response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg")"
     [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
-    [[ -n "${mast_id}" ]] && media_id+="-F media_ids[]=${mast_id} " || true
+    if [[ -n "${mast_id}" ]]; then media_id+="-F media_ids[]=${mast_id} "; fi
 fi
 
 # Now send the toot:
@@ -170,10 +177,10 @@ response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTO
 if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
 then
     "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs)"
-    [[ -z "${VESSELS[$1:notification:last]}" ]] && "${s6wrap[@]}" echo -n "[INFO] #NEW " || true
+    if [[ -z "${VESSELS[$1:notification:last]}" ]]; then "${s6wrap[@]}" echo -n "[INFO] #NEW "; fi
     #shellcheck disable=SC2154
-    [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n "#OLD " || true
-    [[ "${notify_distance}" == "true" ]] && echo -n "#ONTHEMOVE" || true
+if     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]]; then echo -n "#OLD "; fi
+    if [[ "${notify_distance}" == "true" ]]; then echo -n "#ONTHEMOVE"; fi
     echo ""
 
     # Update the Assoc Array with the latest values:

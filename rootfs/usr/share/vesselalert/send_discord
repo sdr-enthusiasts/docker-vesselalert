@@ -167,7 +167,14 @@ notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
 {   type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
     notif_json="${notif_json//##TYPE##/${type//#/}}"
 }
-notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
+
+{  if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]
+    then
+        notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination:friendly]//_/ }}"
+    else
+        notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
+    fi
+}
 
 {   flag="${COUNTRY[${VESSELS[$1:country]}]}"
     notif_json="${notif_json//##FLAG##/${flag}}"
