@@ -1,10 +1,11 @@
+# hadolint global ignore=DL3003,DL3008,DL3015,SC2034,SC2068
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS build
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 RUN \
     --mount=type=bind,source=./,target=/ghrepo/  \
     apt-get update -y && \
-    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends --no-install-suggests\
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-suggests\
         gcc && \
     mkdir -p /src && \
     cd /src && \
@@ -24,7 +25,6 @@ ENV PATH="$PATH:/usr/share/vesselalert:/tools"
 LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-vesselalert"
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
-# hadolint ignore=DL3008,SC2086,SC2039,SC2068
 RUN \
     --mount=type=bind,from=build,source=/,target=/build \
     # define required packages
