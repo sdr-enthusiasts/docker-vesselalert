@@ -65,7 +65,7 @@ sleep "$CHECK_INTERVAL"
 for (( loops=0; loops < RUNS_BEFORE_RESTART; loops++ ))
 do
     # lock the databases:
-    source "/usr/share/vesselalert/vesseldb_lock"
+    touch "/usr/share/vesselalert/vesseldb_lock"
 
     # load the databases:
     source "/usr/share/vesselalert/load_databases"
