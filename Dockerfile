@@ -4,8 +4,8 @@ SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 RUN \
     --mount=type=bind,source=./,target=/ghrepo/  \
     apt-get update -y && \
-    apt-get install -q -o Dpkg::Options::="--force-confnew" -y \
-        git gcc && \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends --no-install-suggests\
+        gcc && \
     mkdir -p /src && \
     cd /src && \
     cp -f /ghrepo/src/distance.c . && \
@@ -13,16 +13,15 @@ RUN \
     # Add Container Version:
     cd / && \
     branch="##BRANCH##" && \
-    { [[ "${branch:0:1}" == "#" ]] && branch="main" || true; } && \
-    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-vesselalert.git && \
-    cd docker-vesselalert && \
-    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION
+    # Add Container Version
+    if [[ "${VERSION_BRANCH:0:1}" == "#" ]]; then VERSION_BRANCH="main"; fi && \
+    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(curl -ssL "https://api.github.com/repos/$VERSION_REPO/commits/$VERSION_BRANCH" | awk '{if ($1=="\"sha\":") {print substr($2,2,7); exit}}')_$VERSION_BRANCH" > /.CONTAINER_VERSION
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 
 ENV NOTIFY_EVERY=86400
 ENV PATH="$PATH:/usr/share/vesselalert:/tools"
-LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/docker-vesselalert"
+LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-vesselalert"
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008,SC2086,SC2039,SC2068
