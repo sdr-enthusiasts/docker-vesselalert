@@ -21,29 +21,8 @@ source /scripts/common
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 
-# shellcheck disable=SC2034
-declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
+# load the notification JSON from the template:
+source "/usr/share/vesselalert/load_databases"
 
 MASTODON_POST_VISIBILITY="${MASTODON_POST_VISIBILITY:-unlisted}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
@@ -53,7 +32,6 @@ if [[ "${MASTODON_SERVER:0:7}" == "http://" ]]; then MASTODON_SERVER="${MASTODON
 if [[ "${MASTODON_SERVER:0:8}" == "https://" ]]; then MASTODON_SERVER="${MASTODON_SERVER:8}"; fi
 MASTODON_SERVER="https://${MASTODON_SERVER}"
 
-source "$VESSELDBFILE"
 
 if [[ -z "$1" ]]
 then
@@ -78,7 +56,7 @@ fi
 
 # First do some clean up
 if [[ -n "${VESSELS[$1:shipname]}" ]]; then VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"; fi
-if [[ -n "${VESSELS[$1:destination]}" ]]; then VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"; fi
+if [[ -n "${VESSELS[$1:destination]}" ]]; then VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-<>]\+|_|g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"; fi
 
 # Build the message - create notification string
 

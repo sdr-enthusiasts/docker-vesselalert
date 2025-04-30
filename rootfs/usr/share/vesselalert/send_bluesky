@@ -20,34 +20,10 @@
 source /scripts/common
 
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+# load the databases:
 
-# For BlueSky Localization, we're using the Mastodon terms database:
-# shellcheck disable=SC2034
-declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
-
+source "/usr/share/vesselalert/load_databases"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
-source "$VESSELDBFILE"
 
 if [[ -z "$1" ]]
 then
@@ -81,7 +57,7 @@ fi
 if [[ -n "${VESSELS[$1:destination]}" ]]; then
     VESSELS[$1:destination]="$(sed \
             -e 's|["'\''.]||g' \
-            -e 's|[^A-Z0-9,\.\-]\+|_|g' \
+            -e 's|[^A-Z0-9,\.\-<>]\+|_|g' \
             -e 's|_,|,|g' \
          <<< "${VESSELS[$1:destination]}")"
 fi

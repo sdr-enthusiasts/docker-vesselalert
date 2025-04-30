@@ -24,46 +24,15 @@ IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
-[[ -n "$DEBUG" ]] && set -x
+[[ -n "$DEBUG" ]] && set -x || true
+
 # load the notification JSON from the template:
-
-# shellcheck disable=SC2034
-declare -A SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
+source "/usr/share/vesselalert/load_databases"
 if [[ -f "/data/discord.template-$LANGUAGE" ]]; then
     notif_json="$(<"/data/discord.template-$LANGUAGE")"
 else
     notif_json="$(</data/discord.template)"
 fi
-
-declare -A MASTO_TERM
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
-    source "/data/mast-l10n-enus.db"
-fi
-
 
 if [[ -z "$1" ]]
 then
@@ -114,7 +83,7 @@ readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 
 # First do some clean up
 [[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
-[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-<>]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
 
 # If a screenshot exists, then make sure we'll include it:
 if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]

@@ -198,7 +198,8 @@ do
             fi
 
             # Add friendly destination name if possible
-            if [[ -n "${VESSELS[${vessel}:destination]}" ]] && [[ -z "${VESSELS[${vessel}:destination:friendly]}" ]]; then
+            if [[ -n "${VESSELS[${vessel}:destination]}" ]]; then
+                friendly_name=false
                 d="${VESSELS[${vessel}:destination]^^}"
                 if ! grep -qe  ">" <<< "$d"; then d=">$d"; fi
                 d="${d// /}"
@@ -211,8 +212,10 @@ do
                                             -v loc="\"${d_org:2:3}\"" \
                                             '{if ($2 == country && $3 == loc) {print $5 ", " country_bare; exit}}' /data/*UNLOCODE*.csv)"
                     d_org_friendly="${d_org_friendly//\"/}"
+                    friendly_name=true
                 elif (( ${#d_org} == 4 )); then # US GUID lookup
                     d_org_friendly="$(awk -F, -v var="$d_org" '{if ($1 == var) {print $9 ", " $10; exit}}' /data/GUID*.csv)"
+                    friendly_name=true
                 else d_org_friendly=""
                 fi
                 
@@ -223,14 +226,16 @@ do
                                             -v loc="\"${d_dst:2:3}\"" \
                                             '{if ($2 == country && $3 == loc) {print $5 ", " country_bare; exit}}' /data/*UNLOCODE*.csv)"
                     d_dst_friendly="${d_dst_friendly//\"/}"
+                    friendly_name=true
                 elif (( ${#d_dst} == 4 )); then # US GUID lookup
                     d_dst_friendly="$(awk -F, -v var="$d_dst" '{if ($1 == var) {print $9 ", " $10; exit}}' /data/GUID*.csv)"
+                    friendly_name=true
                 else d_dst_friendly=""
                 fi
             
-                if [[ $d =~ '<>' ]]; then
+                if $friendly_name && [[ $d =~ '<>' ]]; then
                     destination_friendly="BETWEEN $d_org_friendly AND $d_dst_friendly"
-                elif [[ $d =~ '>' ]]; then
+                elif $friendly_name && [[ $d =~ '>' ]]; then
                     if [[ -n "$d_org_friendly" ]]; then
                         destination_friendly="FROM $d_org_friendly TO $d_dst_friendly"
                     else

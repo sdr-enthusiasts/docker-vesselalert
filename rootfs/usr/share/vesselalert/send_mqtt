@@ -22,7 +22,8 @@ source /scripts/common
 VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
-source "$VESSELDBFILE"
+# load the notification JSON from the template:
+source "/usr/share/vesselalert/load_databases"
 
 # shellcheck disable=SC2076
 if [[ -z "$1" ]] || [[ " -? --help " =~ " $1 " ]];
@@ -40,30 +41,7 @@ if [[ -z "$MQTT_URL" ]]; then
     exit 1
 fi
 
-# shellcheck disable=SC2034
-declare -A mqtt_array SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
-
+declare -A mqtt_array
 
 while read -r param; do 
     if [[ -n "$param" ]]; then mqtt_array[$param]="${VESSELS[$mmsi:$param]}"; fi
@@ -76,9 +54,9 @@ else
     mqtt_array[tropo]="false"
 fi
 
-# do some clean u
+# do some clean up
 if [[ -n "${mqtt_array[shipname]}" ]]; then mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")"; fi
-if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
+if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-<>]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
 
 # add some text fields
 if [[ -n "${mqtt_array[status]}" ]]; then
