@@ -24,7 +24,7 @@ IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
-[[ -n "$DEBUG" ]] && set -x || true
+# [[ -n "$DEBUG" ]] && set -x || true
 
 # load the notification JSON from the template:
 source "/usr/share/vesselalert/load_databases"

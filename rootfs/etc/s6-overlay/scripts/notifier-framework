@@ -77,20 +77,20 @@ do
 
         # based on timing:
         if chk_disabled "$NOTIFY_EVERY"; then
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"; fi
             notify_timing="false"
         elif [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
            && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + ${NOTIFY_EVERY:-86400} )); then
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"; fi
             notify_timing="false"
         else
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing. (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing. (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"; fi
             export notify_timing="true"
         fi
         # Never notify if last observation was more than 10 mins ago:
         if [[ -n "${VESSELS[${vessel}:last_signal]}" ]] \
            && (( ${VESSELS[${vessel}:last_signal]} > 600 )); then
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled/skipped notify based on timing: last heard was too long ago: ${VESSELS[${vessel}:last_signal]} > 600 secs "; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled/skipped notify based on timing: last heard was too long ago: ${VESSELS[${vessel}:last_signal]} > 600 secs "; fi
             notify_timing="false"
         fi
 
@@ -103,17 +103,17 @@ do
             && [[ "$(nice -n 20 bc -l <<<"scale=2; $(nice -n 20 distance ${VESSELS[${vessel}:notification:lat]} ${VESSELS[${vessel}:notification:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $NOTIFY_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $NOTIFY_MIN_DIST )"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $NOTIFY_MIN_DIST )"; fi
         elif [[ -n "${NOTIFY_MIN_DIST}" ]] \
             && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
             && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
             && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]]
         then
             export notify_distance="true"
-            chk_enabled "${DEBUG}" && [[ -n "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $NOTIFY_MIN_DIST )"
+            #chk_enabled "${DEBUG}" && [[ -n "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $NOTIFY_MIN_DIST )"
         else
             notify_distance="false"
-            chk_enabled "${DEBUG}" && [[ -z "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: NOTIFY_MIN_DIST not defined"
+            #chk_enabled "${DEBUG}" && [[ -z "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: NOTIFY_MIN_DIST not defined"
         fi
 
         # dont notify if it matches the Skip Filter
@@ -121,28 +121,28 @@ do
             && [[ ${VESSELS[${vessel}:mmsi]} =~ ${NOTIFY_SKIP_FILTER} ]]
         then
             notify_filter="false"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${NOTIFY_SKIP_FILTER})"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${NOTIFY_SKIP_FILTER})"; fi
         elif [[ -n "${NOTIFY_SKIP_FILTER}" ]]
         then
             notify_filter="true"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: NOTIFY_SKIP_FILTER defined but no mmsi skip filter match"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: NOTIFY_SKIP_FILTER defined but no mmsi skip filter match"; fi
         else
             notify_filter="true"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no NOTIFY_SKIP_FILTER defined"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no NOTIFY_SKIP_FILTER defined"; fi
         fi
 
         # check once more the min_msg_count. Too few messages means the screenshot won't be complete and it'd be better to wait
         if [[ ! ${VESSELS[${vessel}:count]}  =~ ^[0-9]+$ ]] || (( ${VESSELS[${vessel}:count]} < MIN_MSG_COUNT ))
         then
             notify_count="false"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
         elif [[ -z "${VESSELS[${vessel}:shipname]}" ]] && (( ${VESSELS[${vessel}:count]} < 25 ))
         then
             notify_count="false"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
         else
             notify_count="true"
-            if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"; fi
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"; fi
         fi
 
         # Notify only if validated =="1"
