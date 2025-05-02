@@ -245,6 +245,7 @@ do
 
                 if [[ -n "$destination_friendly" ]]; then
                     VESSELS[${vessel}:destination:friendly]="$destination_friendly"
+                    source /usr/share/vesselalert/save_databases
                 fi
             fi
 
