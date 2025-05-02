@@ -1,0 +1,51 @@
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+NOTIF_TERM[TROPOMAXDIST]="TropoAlert - Maximale Distanz"
+NOTIF_TERM[SHIP]="Schiffe"
+NOTIF_TERM[NEW]="#NEU #ERSTE_ERSTE BEOBACHTUNG"
+NOTIF_TERM[ONTHEMOVE]="#Unterwegs"
+NOTIF_TERM[MOVING]="unterwegs"
+NOTIF_TERM[SHIPNAME]="Schiffsname"
+NOTIF_TERM[CALLSIGN]="Rufzeichen"
+NOTIF_TERM[SHIPTYPE]="Typ"
+NOTIF_TERM[FLAG]="Flagge"
+NOTIF_TERM[MSGS_RECVD]="Berichte entvangen"
+NOTIF_TERM[SEEN_ON]="Gesehn um"
+NOTIF_TERM[STATUS]="Status"
+NOTIF_TERM[SPEED]="Geschwindigkeit"
+NOTIF_TERM[HEADING]="Richtung"
+NOTIF_TERM[DESTINATION]="Reiseziel"
+NOTIF_TERM[SIGNAL]="Signal"
+NOTIF_TERM[LOCATION]="Schiffsangaben"
+NOTIF_TERM[ISMOVING]="is unterwegs"
+NOTIF_TERM[ISSEENON]="beobachtet um"
+NOTIF_TERM[AGAIN]="Wiederholung:"
+NOTIF_TERM[NEW2]="Neu:"
+NOTIF_TERM[DIST_SINCE_LAST]="hat sich seit der letzten Meldung um %.1f sm bewegt"
+NOTIF_TERM[DISTANCE]="Entfernung"
+NOTIF_TERM[FROM]=Von"
+NOTIF_TERM[TO]="Nach"
+NOTIF_TERM[BETWEEN]="Zwischen"
+NOTIF_TERM[AND]="Und"
+
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[DE]="Deutschland"

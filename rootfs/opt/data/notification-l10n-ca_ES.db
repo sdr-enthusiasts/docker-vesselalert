@@ -1,5 +1,5 @@
-# Format: [#]MASTO_TERM[term]="LOCALIZED TERM"
-# If the line starts with "#", it means that there's no description in the notification for this MASTO_TERM
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
 #
@@ -15,30 +15,33 @@
 # You should have received a copy of the GNU General Public License along with this program.
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
-MASTO_TERM[TROPOMAXDIST]="TropoAlert - Distància Màxima"
-MASTO_TERM[SHIP]="Vaixell"
-MASTO_TERM[NEW]="#NOU Primera Observació"
-MASTO_TERM[ONTHEMOVE]="#En_Moviment"
-MASTO_TERM[MOVING]="en moviment"
-MASTO_TERM[SHIPNAME]="Nom del Vaixell"
-MASTO_TERM[CALLSIGN]="Indicatiu"
-MASTO_TERM[SHIPTYPE]="Tipus"
-MASTO_TERM[FLAG]="Bandera"
-MASTO_TERM[MSGS_RECVD]="Missatges Rebuts"
-MASTO_TERM[SEEN_ON]="Vist a"
-MASTO_TERM[STATUS]="Estat"
-MASTO_TERM[SPEED]="Velocitat"
-MASTO_TERM[HEADING]="Direcció"
-MASTO_TERM[DESTINATION]="Destinació"
-MASTO_TERM[SIGNAL]="Senyal"
-MASTO_TERM[LOCATION]="Detalls"
-MASTO_TERM[ISMOVING]="està en moviment"
-MASTO_TERM[ISSEENON]="es veu a"
-MASTO_TERM[AGAIN]="De nou:"
-MASTO_TERM[NEW2]="Nou:"
-MASTO_TERM[DIST_SINCE_LAST]="es va moure %.1f nm des de l'última notificació"
-MASTO_TERM[DISTANCE]="Distància"
-
+NOTIF_TERM[TROPOMAXDIST]="TropoAlert - Distància Màxima"
+NOTIF_TERM[SHIP]="Vaixell"
+NOTIF_TERM[NEW]="#NOU Primera Observació"
+NOTIF_TERM[ONTHEMOVE]="#En_Moviment"
+NOTIF_TERM[MOVING]="en moviment"
+NOTIF_TERM[SHIPNAME]="Nom del Vaixell"
+NOTIF_TERM[CALLSIGN]="Indicatiu"
+NOTIF_TERM[SHIPTYPE]="Tipus"
+NOTIF_TERM[FLAG]="Bandera"
+NOTIF_TERM[MSGS_RECVD]="Missatges Rebuts"
+NOTIF_TERM[SEEN_ON]="Vist a"
+NOTIF_TERM[STATUS]="Estat"
+NOTIF_TERM[SPEED]="Velocitat"
+NOTIF_TERM[HEADING]="Direcció"
+NOTIF_TERM[DESTINATION]="Destinació"
+NOTIF_TERM[SIGNAL]="Senyal"
+NOTIF_TERM[LOCATION]="Detalls"
+NOTIF_TERM[ISMOVING]="està en moviment"
+NOTIF_TERM[ISSEENON]="es veu a"
+NOTIF_TERM[AGAIN]="De nou:"
+NOTIF_TERM[NEW2]="Nou:"
+NOTIF_TERM[DIST_SINCE_LAST]="es va moure %.1f nm des de l'última notificació"
+NOTIF_TERM[DISTANCE]="Distància"
+NOTIF_TERM[FROM]="De"
+NOTIF_TERM[TO]="A"
+NOTIF_TERM[BETWEEN]="Entre"
+NOTIF_TERM[AND]="I"
 #
 # The following will override any country names, which are by default in English
 # This is so at least the target country will be in the local language, but it's

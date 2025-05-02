@@ -69,51 +69,51 @@ chk_enabled "$MASTODON_LINK_VESSELFINDER" && links+="https://www.vesselfinder.co
 unset mast_str
 
 if [[ -n "$notify_tropo" ]]; then
-    mast_str="#${MASTO_TERM[TROPOMAXDIST]} = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
+    mast_str="#${NOTIF_TERM[TROPOMAXDIST]} = $(printf "%.1f" "${VESSELS[$1:distance]}") nm\n"
 fi
 
 mast_str+="#VesselAlert"
-if [[ "${MASTO_TERM[SHIP]}" != "Ship" ]]; then mast_str+=" #${MASTO_TERM[SHIP]}"; fi
-if [[ -z "${VESSELS[$1:notification:last]}" ]]; then mast_str+=" ${MASTO_TERM[NEW]}"; fi
-if [[ "${notify_distance}" == "true" ]]; then mast_str+=" #${MASTO_TERM[ONTHEMOVE]}"; fi
+if [[ "${NOTIF_TERM[SHIP]}" != "Ship" ]]; then mast_str+=" #${NOTIF_TERM[SHIP]}"; fi
+if [[ -z "${VESSELS[$1:notification:last]}" ]]; then mast_str+=" ${NOTIF_TERM[NEW]}"; fi
+if [[ "${notify_distance}" == "true" ]]; then mast_str+=" #${NOTIF_TERM[ONTHEMOVE]}"; fi
 mast_str+="\n"
-if [[ -n "${VESSELS[$1:shipname]}" ]]; then mast_str+="${MASTO_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n"; fi
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then mast_str+="${NOTIF_TERM[SHIPNAME]}: #${VESSELS[$1:shipname]}\n"; fi
 if [[ -n "${VESSELS[$1:mmsi]}" ]]; then mast_str+="#MMSI: #${VESSELS[$1:mmsi]}\n"; fi
-if [[ -n "${VESSELS[$1:callsign]}" ]]; then mast_str+="${MASTO_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n"; fi
-if [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]]; then mast_str+="${MASTO_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n"; fi
+if [[ -n "${VESSELS[$1:callsign]}" ]]; then mast_str+="${NOTIF_TERM[CALLSIGN]}: #${VESSELS[$1:callsign]}\n"; fi
+if [[ -n "${VESSELS[$1:shiptype]}" ]] && [[ -n "${SHIPTYPE[${VESSELS[$1:shiptype]}]}" ]]; then mast_str+="${NOTIF_TERM[SHIPTYPE]}: ${SHIPTYPE[${VESSELS[$1:shiptype]}]}\n"; fi
 
-if [[ -n "${VESSELS[$1:country]}" ]]; then mast_str+="#${MASTO_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n"; fi
-mast_str+="${MASTO_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
-mast_str+="${MASTO_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
+if [[ -n "${VESSELS[$1:country]}" ]]; then mast_str+="#${NOTIF_TERM[FLAG]}: #${COUNTRY[${VESSELS[$1:country]}]}\n"; fi
+mast_str+="${NOTIF_TERM[MSGS_RECVD]}: ${VESSELS[$1:count]}\n"
+mast_str+="${NOTIF_TERM[SEEN_ON]}: $(date -d @$(( $(date +%s) - ${VESSELS[$1:last_signal]} )) +"%d-%b-%Y %H:%M:%S %Z")\n"
 
-if [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]]; then mast_str+="${MASTO_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"; fi
-if [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]]; then mast_str+="${MASTO_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n"; fi
-if [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]; then mast_str+="${MASTO_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n"; fi
+if [[ -n "${VESSELS[$1:status]}" ]] && [[ -n "${SHIPSTATUS[${VESSELS[$1:status]}]}" ]]; then mast_str+="${NOTIF_TERM[STATUS]}: ${SHIPSTATUS[${VESSELS[$1:status]}]}\n"; fi
+if [[ -n "${VESSELS[$1:speed]}" ]] && [[ "${VESSELS[$1:speed]}" != "0" ]] && [[ "${VESSELS[$1:speed]}" != "null" ]]; then mast_str+="${NOTIF_TERM[SPEED]}: $(printf "%.1f" "${VESSELS[$1:speed]}") kts\n"; fi
+if [[ -n "${VESSELS[$1:heading]}" ]] && [[ "${VESSELS[$1:heading]}" != "0" ]] && [[ "${VESSELS[$1:heading]}" != "null" ]]; then mast_str+="${NOTIF_TERM[HEADING]}: ${VESSELS[$1:heading]} deg\n"; fi
 
 if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]; then
-    mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination:friendly]}\n"
+    mast_str+="${NOTIF_TERM[DESTINATION]}: ${VESSELS[$1:destination:friendly]}\n"
 elif [[ -n "${VESSELS[$1:destination]}" ]]; then
-    mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"
+    mast_str+="${NOTIF_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"
 fi
 
-if [[ -n "${VESSELS[$1:destination]}" ]]; then mast_str+="${MASTO_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"; fi
+if [[ -n "${VESSELS[$1:destination]}" ]]; then mast_str+="${NOTIF_TERM[DESTINATION]}: ${VESSELS[$1:destination]}\n"; fi
 
 if [[ -n "${VESSELS[$1:lat]}" ]] && [[ -n "${VESSELS[$1:lon]}" ]] && [[ -n "$LAT" ]] && [[ -n "$LON" ]]; then
     distance="$(bc -l <<< "scale=1; $(distance "${VESSELS[$1:lat]}" "${VESSELS[$1:lon]}" "$LAT" "$LON") / 1")"
-    mast_str+="${MASTO_TERM[DISTANCE]}: $distance nm\n"
+    mast_str+="${NOTIF_TERM[DISTANCE]}: $distance nm\n"
 fi
 
-mast_str+="${MASTO_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
+mast_str+="${NOTIF_TERM[SIGNAL]} #RSSI: $(printf "%.1f dBFS" "${VESSELS[$1:level]}")\n"
 
-if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]]; then mast_str+="${MASTO_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
-if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]]; then mast_str+="${MASTO_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" != "http" ]]; then mast_str+="${NOTIF_TERM[LOCATION]}: ${AIS_URL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
+if [[ -n "${NOTIFICATION_MAPURL}" ]] && [[ "${NOTIFICATION_MAPURL:0:4}" == "http" ]]; then mast_str+="${NOTIF_TERM[LOCATION]}: ${NOTIFICATION_MAPURL}?mmsi=${VESSELS[$1:mmsi]}\n"; fi
 if [[ -n "${links}" ]]; then mast_str+="${links}\n"; fi
 
 mast_str+="\n"
 
 if [[ -n "$MASTODON_CUSTOM_FIELD" ]]; then mast_str+="$MASTODON_CUSTOM_FIELD\n"; fi
 
-mast_str+="#${MASTO_TERM[SHIP]} #AIS #VesselAlert © 2022-2025 #kx1t"
+mast_str+="#${NOTIF_TERM[SHIP]} #AIS #VesselAlert © 2022-2025 #kx1t"
 
 #shellcheck disable=SC2001
 mast_str="$(sed -e 's|\\n|\n|g' <<< "$mast_str")"

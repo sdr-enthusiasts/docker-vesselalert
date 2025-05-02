@@ -1,0 +1,59 @@
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+NOTIF_TERM[TROPOMAXDIST]="TropoAlert - Grootste Afstand"
+NOTIF_TERM[SHIP]="Schip"
+NOTIF_TERM[NEW]="#NIEUW #EERSTE OBSERVERING"
+NOTIF_TERM[ONTHEMOVE]="#Onderweg"
+NOTIF_TERM[SHIPNAME]="Naam"
+NOTIF_TERM[CALLSIGN]="Callsign"
+NOTIF_TERM[SHIPTYPE]="Type"
+NOTIF_TERM[FLAG]="Vlag"
+NOTIF_TERM[MSGS_RECVD]="Berichten ontvangen"
+NOTIF_TERM[SEEN_ON]="Gezien op"
+NOTIF_TERM[STATUS]="Status"
+NOTIF_TERM[SPEED]="Snelheid"
+NOTIF_TERM[HEADING]="Richting"
+NOTIF_TERM[DESTINATION]="Doel"
+NOTIF_TERM[SIGNAL]="Signaal"
+NOTIF_TERM[LOCATION]="Details"
+NOTIF_TERM[ISMOVING]="is onderweg"
+NOTIF_TERM[ISSEENON]="is gezien om"
+NOTIF_TERM[AGAIN]="Herhaling:"
+NOTIF_TERM[NEW2]="Nieuw:"
+NOTIF_TERM[DIST_SINCE_LAST]="%.1f nm verplaatst sinds de vorige notificatie"
+NOTIF_TERM[DISTANCE]="Afstand"
+NOTIF_TERM[FROM]="Van"
+NOTIF_TERM[TO]="Naar"
+NOTIF_TERM[BETWEEN]="Tussen"
+NOTIF_TERM[AND]="En"
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[NL]="Nederland"
+COUNTRY[DE]="Duitsland"
+COUNTRY[GB]="Verenigd_Koninkrijk"
+COUNTRY[UK]="Verenigd_Koninkrijk"
+COUNTRY[US]="Verenigde_Staten_van_Amerika"
+COUNTRY[FR]="Frankrijk"
+COUNTRY[BE]="België"
+COUNTRY[ES]="Spanje"
+COUNTRY[DK]="Denemarken"
+COUNTRY[SE]="Zweden"
+COUNTRY[IR]="Ierland"

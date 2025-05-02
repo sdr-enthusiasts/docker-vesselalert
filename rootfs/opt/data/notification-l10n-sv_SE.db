@@ -1,5 +1,5 @@
-# Format: [#]MASTO_TERM[term]="LOCALIZED TERM"
-# If the line starts with "#", it means that there's no description in the notification for this MASTO_TERM
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
 #
@@ -15,32 +15,36 @@
 # You should have received a copy of the GNU General Public License along with this program.
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
-MASTO_TERM[TROPOMAXDIST]="TropoAlert - Distancia Máxima"
-MASTO_TERM[SHIP]="Embarcación"
-MASTO_TERM[NEW]="#NOVO #PREIMERA Observación"
-MASTO_TERM[ONTHEMOVE]="#EnMovemento"
-MASTO_TERM[MOVING]="en movemento"
-MASTO_TERM[SHIPNAME]="Nome"
-MASTO_TERM[CALLSIGN]="Indicativo"
-MASTO_TERM[SHIPTYPE]="Tipo"
-MASTO_TERM[FLAG]="Bandeira"
-MASTO_TERM[MSGS_RECVD]="Mensaxes recibidas"
-MASTO_TERM[SEEN_ON]="Visto últ."
-MASTO_TERM[STATUS]="Estado"
-MASTO_TERM[SPEED]="Velocidade"
-MASTO_TERM[HEADING]="Curso"
-MASTO_TERM[DESTINATION]="Destino"
-MASTO_TERM[SIGNAL]="Sinal"
-MASTO_TERM[LOCATION]="Detalles"
-MASTO_TERM[ISMOVING]="está en movemento"
-MASTO_TERM[ISSEENON]="foi visto en"
-MASTO_TERM[AGAIN]="De Novo:"
-MASTO_TERM[NEW2]="Novo:"
-MASTO_TERM[DIST_SINCE_LAST]="moveuse %.1f nm desde a última notificación"
-MASTO_TERM[DISTANCE]="Distancia"
+NOTIF_TERM[TROPOMAXDIST]="Troposfäralarm - Max Avstånd"
+NOTIF_TERM[SHIP]="Fartyg"
+NOTIF_TERM[NEW]="#NY #Första Observationen"
+NOTIF_TERM[ONTHEMOVE]="#I-rörelse"
+NOTIF_TERM[MOVING]="I rörelse"
+NOTIF_TERM[SHIPNAME]="Fartygsnamn"
+NOTIF_TERM[CALLSIGN]="Anropsnamn"
+NOTIF_TERM[SHIPTYPE]="Typ"
+NOTIF_TERM[FLAG]="Nationalitet"
+NOTIF_TERM[MSGS_RECVD]="Mottagna medd."
+NOTIF_TERM[SEEN_ON]="Sett"
+NOTIF_TERM[STATUS]="Status"
+NOTIF_TERM[SPEED]="Hastighet"
+NOTIF_TERM[HEADING]="Kurs"
+NOTIF_TERM[DESTINATION]="Dest."
+NOTIF_TERM[SIGNAL]="Signal"
+NOTIF_TERM[LOCATION]="Lokation"
+NOTIF_TERM[ISMOVING]="är på väg"
+NOTIF_TERM[ISSEENON]="sågs senast"
+NOTIF_TERM[AGAIN]="Upprepad:"
+NOTIF_TERM[NEW2]="Ny:"
+NOTIF_TERM[DIST_SINCE_LAST]="rörde sig %.1f nm sedan senaste meddelandet"
+NOTIF_TERM[DISTANCE]="Distans"
+NOTIF_TERM[FROM]="Från"
+NOTIF_TERM[TO]="Till"
+NOTIF_TERM[BETWEEN]="Mellan"
+NOTIF_TERM[AND]="Och"
 #
 # The following will override any country names, which are by default in English
 # This is so at least the target country will be in the local language, but it's
 # possible to add other country name localizations here as well.
 
-COUNTRY[ES]="España"
+COUNTRY[SE]="Sverige"

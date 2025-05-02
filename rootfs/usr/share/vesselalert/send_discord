@@ -117,9 +117,9 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
     if [[ -n "${notify_tropo}" ]]; then
         description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
     else
-        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${MASTO_TERM[NEW2]} " || description+="${MASTO_TERM[AGAIN]} "
-        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${MASTO_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${MASTO_TERM[SHIP]} $1 "
-        [[ -n "${notify_distance}" ]] && description+="${MASTO_TERM[ISMOVING]} " || description+="${MASTO_TERM[ISSEENON]} "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${NOTIF_TERM[NEW2]} " || description+="${NOTIF_TERM[AGAIN]} "
+        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${NOTIF_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${NOTIF_TERM[SHIP]} $1 "
+        [[ -n "${notify_distance}" ]] && description+="${NOTIF_TERM[ISMOVING]} " || description+="${NOTIF_TERM[ISSEENON]} "
     fi
     description+="$(date +"%R %Z")"
     notif_json="${notif_json//##DESCRIPTION##/${description}}"
@@ -166,7 +166,7 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 
 {   if [[ -n "${notify_distance}" ]] && [[ -n "${VESSELS[$1:speed]}" ]]
     then
-        printf -v speed -- "%.1f kts -  ${MASTO_TERM[DIST_SINCE_LAST]}" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
+        printf -v speed -- "%.1f kts -  ${NOTIF_TERM[DIST_SINCE_LAST]}" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
     else
         printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]:-0}"
     fi
