@@ -198,7 +198,7 @@ do
             fi
 
             # Add friendly destination name if possible
-            if [[ -n "${VESSELS[${vessel}:destination]}" ]] && [[ "${VESSELS[${vessel}:destination]}" != "${VESSELS[${vessel}:destination:org]}" ]]; then
+            if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[${vessel}:destination]}" ]] && [[ "${VESSELS[${vessel}:destination]}" != "${VESSELS[${vessel}:destination:org]}" ]]; then
                 friendly_name=false
                 VESSELS[${vessel}:destination:org]="${VESSELS[${vessel}:destination]}"
                 d="${VESSELS[${vessel}:destination]^^}"
