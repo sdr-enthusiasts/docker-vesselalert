@@ -56,7 +56,7 @@ fi
 
 # do some clean up
 if [[ -n "${mqtt_array[shipname]}" ]]; then mqtt_array[shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' <<< "${mqtt_array[shipname]}")"; fi
-if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-<>]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
+if [[ -n "${mqtt_array[destination]}" ]]; then mqtt_array[destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-\<\>]\+|_|g' -e 's|_,|,|g' <<< "${mqtt_array[destination]}")"; fi
 
 # add some text fields
 if [[ -n "${mqtt_array[status]}" ]]; then
