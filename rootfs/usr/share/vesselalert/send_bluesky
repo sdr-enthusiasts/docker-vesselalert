@@ -57,7 +57,7 @@ fi
 if [[ -n "${VESSELS[$1:destination]}" ]]; then
     VESSELS[$1:destination]="$(sed \
             -e 's|["'\''.]||g' \
-            -e 's|[^A-Z0-9,\.\-<>]\+|_|g' \
+            -e 's|[^A-Z0-9,\.\-\<\>]\+|_|g' \
             -e 's|_,|,|g' \
          <<< "${VESSELS[$1:destination]}")"
 fi
