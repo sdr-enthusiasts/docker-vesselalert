@@ -1,0 +1,50 @@
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+NOTIF_TERM[TROPOMAXDIST]="Troposfäralarm - Max Avstånd"
+NOTIF_TERM[SHIP]="Fartyg"
+NOTIF_TERM[NEW]="#NY #Första Observationen"
+NOTIF_TERM[ONTHEMOVE]="#I-rörelse"
+NOTIF_TERM[MOVING]="I rörelse"
+NOTIF_TERM[SHIPNAME]="Fartygsnamn"
+NOTIF_TERM[CALLSIGN]="Anropsnamn"
+NOTIF_TERM[SHIPTYPE]="Typ"
+NOTIF_TERM[FLAG]="Nationalitet"
+NOTIF_TERM[MSGS_RECVD]="Mottagna medd."
+NOTIF_TERM[SEEN_ON]="Sett"
+NOTIF_TERM[STATUS]="Status"
+NOTIF_TERM[SPEED]="Hastighet"
+NOTIF_TERM[HEADING]="Kurs"
+NOTIF_TERM[DESTINATION]="Dest."
+NOTIF_TERM[SIGNAL]="Signal"
+NOTIF_TERM[LOCATION]="Lokation"
+NOTIF_TERM[ISMOVING]="är på väg"
+NOTIF_TERM[ISSEENON]="sågs senast"
+NOTIF_TERM[AGAIN]="Upprepad:"
+NOTIF_TERM[NEW2]="Ny:"
+NOTIF_TERM[DIST_SINCE_LAST]="rörde sig %.1f nm sedan senaste meddelandet"
+NOTIF_TERM[DISTANCE]="Distans"
+NOTIF_TERM[FROM]="Från"
+NOTIF_TERM[TO]="Till"
+NOTIF_TERM[BETWEEN]="Mellan"
+NOTIF_TERM[AND]="Och"
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[SE]="Sverige"

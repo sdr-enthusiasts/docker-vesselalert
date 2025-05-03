@@ -24,46 +24,15 @@ IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 
 source "$VESSELDBFILE"
 
-[[ -n "$DEBUG" ]] && set -x
+# [[ -n "$DEBUG" ]] && set -x || true
+
 # load the notification JSON from the template:
-
-# shellcheck disable=SC2034
-declare -A SHIPTYPE SHIPSTATUS COUNTRY MASTO_TERM
-
-source "/data/country.db"
-
-# get localized text equivalents
-LANGUAGE="${LANGUAGE:-en_US}"
-if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
-    source "/data/shiptype-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
-    source "/data/shiptype-en_US.db"
-fi
-if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
-    source "/data/shipstatus-$LANGUAGE.db"
-else
-    source "/data/shipstatus-en_US.db"
-fi
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    source "/data/masto-l10n-en_US.db"
-fi
+source "/usr/share/vesselalert/load_databases"
 if [[ -f "/data/discord.template-$LANGUAGE" ]]; then
     notif_json="$(<"/data/discord.template-$LANGUAGE")"
 else
     notif_json="$(</data/discord.template)"
 fi
-
-declare -A MASTO_TERM
-if [[ -f "/data/masto-l10n-$LANGUAGE.db" ]]; then
-    source "/data/masto-l10n-$LANGUAGE.db"
-else
-    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"enus\" (US English)"
-    source "/data/mast-l10n-enus.db"
-fi
-
 
 if [[ -z "$1" ]]
 then
@@ -113,8 +82,12 @@ fi
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 
 # First do some clean up
-[[ -n "${VESSELS[$1:shipname]}" ]] && VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
-[[ -n "${VESSELS[$1:destination]}" ]] && VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+if [[ -n "${VESSELS[$1:shipname]}" ]]; then
+    VESSELS[$1:shipname]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:shipname]}")"
+fi
+if [[ -n "${VESSELS[$1:destination]}" ]]; then
+    VESSELS[$1:destination]="$(sed -e ':a;s/^\(\([^"]*[,.]\?\|"[^",.]*"[,.]\?\)*"[^",.]*\)[,.]/\1 /;ta' -e 's|["'\''.]||g' -e 's|[^A-Z0-9,\.\-\<\>]\+| |g' -e 's|_,|,|g' <<< "${VESSELS[$1:destination]}")"
+fi
 
 # If a screenshot exists, then make sure we'll include it:
 if [[ -f "${IMAGECACHE}/screenshots/$1.jpg" ]]
@@ -148,9 +121,9 @@ notif_json="${notif_json//##USER##/${DISCORD_NAME}}"
     if [[ -n "${notify_tropo}" ]]; then
         description+="TropoAlert - Long Distance Atmospheric Propagation: $(bc -l <<< "scale=1; ${VESSELS[$1:distance]} / 1") nm "
     else
-        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${MASTO_TERM[NEW2]} " || description+="${MASTO_TERM[AGAIN]} "
-        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${MASTO_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${MASTO_TERM[SHIP]} $1 "
-        [[ -n "${notify_distance}" ]] && description+="${MASTO_TERM[ISMOVING]} " || description+="${MASTO_TERM[ISSEENON]} "
+        [[ -z "${VESSELS[$1:notification:last]}" ]] && description+="${NOTIF_TERM[NEW2]} " || description+="${NOTIF_TERM[AGAIN]} "
+        [[ -n "${VESSELS[$1:shipname]}" ]] && description+="${NOTIF_TERM[SHIP]} ${VESSELS[$1:shipname]//_/ } " || description+="${NOTIF_TERM[SHIP]} $1 "
+        [[ -n "${notify_distance}" ]] && description+="${NOTIF_TERM[ISMOVING]} " || description+="${NOTIF_TERM[ISSEENON]} "
     fi
     description+="$(date +"%R %Z")"
     notif_json="${notif_json//##DESCRIPTION##/${description}}"
@@ -167,7 +140,14 @@ notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
 {   type="${SHIPTYPE[${VESSELS[$1:shiptype]}]}"
     notif_json="${notif_json//##TYPE##/${type//#/}}"
 }
-notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
+
+{  if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]
+    then
+        notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination:friendly]//_/ }}"
+    else
+        notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination]//_/ }}"
+    fi
+}
 
 {   flag="${COUNTRY[${VESSELS[$1:country]}]}"
     notif_json="${notif_json//##FLAG##/${flag}}"
@@ -190,7 +170,7 @@ notif_json="${notif_json//##COUNT##/${VESSELS[$1:count]}}"
 
 {   if [[ -n "${notify_distance}" ]] && [[ -n "${VESSELS[$1:speed]}" ]]
     then
-        printf -v speed -- "%.1f kts -  ${MASTO_TERM[DIST_SINCE_LAST]}" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
+        printf -v speed -- "%.1f kts -  ${NOTIF_TERM[DIST_SINCE_LAST]}" "${VESSELS[$1:speed]:-0}" "${notify_distance}"
     else
         printf -v speed -- "%.1f kts" "${VESSELS[$1:speed]:-0}"
     fi

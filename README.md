@@ -104,6 +104,7 @@ The following are a few parameters that apply to all notification methods:
 | `NOTIFY_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. If set to `off`, `disabled`, or `0`, no notifications based on timing will be sent. | `86400` (1 day) | no |
 | `NOTIFY_WHEN_SHIPNAME_EMPTY` | If set to `off`, notifications will not be sent if the vessel's `shipname` property is empty | `on` | no |
+| `USE_FRIENDLY_DESTINATION_NAMES` | If set to `on`, notifications will tranlate UNLOCODE and (US) GUID location identifiers to longer, friendly names. Note that these may cause the max msg length to be exceeded because these friendly names can be very long | `off` | no |
 
 Note that the parameters above used to be known as `MASTODON_SKIP_FILTER`, `MASTODON_MIN_DIST`, and `MASTODON_NOTIFY_EVERY`. These legacy parameter names are still supported for backward compatibility, but we encourage users to switch to these updated parameter names when possible.
 

@@ -1,0 +1,43 @@
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+NOTIF_TERM[TROPOMAXDIST]="TropoAlerte - Distance Max"
+NOTIF_TERM[SHIP]="Navire"
+NOTIF_TERM[NEW]="#NOUVEAU #Première_observation"
+NOTIF_TERM[ONTHEMOVE]="#En_mouvement"
+NOTIF_TERM[SHIPNAME]="Nom"
+NOTIF_TERM[CALLSIGN]="Indicatif"
+NOTIF_TERM[SHIPTYPE]="Type"
+NOTIF_TERM[FLAG]="Pavillon"
+NOTIF_TERM[MSGS_RECVD]="Msgs reçus"
+NOTIF_TERM[SEEN_ON]="Vu à"
+NOTIF_TERM[STATUS]="Statut"
+NOTIF_TERM[SPEED]="Vitesse"
+NOTIF_TERM[HEADING]="Cap"
+NOTIF_TERM[DESTINATION]="Destination"
+NOTIF_TERM[SIGNAL]="Signal"
+NOTIF_TERM[LOCATION]="Détails"
+NOTIF_TERM[ISMOVING]="est en mouvement"
+NOTIF_TERM[ISSEENON]="est vu à"
+NOTIF_TERM[AGAIN]="A nouveau:"
+NOTIF_TERM[NEW2]="Nouveau:"
+NOTIF_TERM[DIST_SINCE_LAST]="déplacé de %.1f nm depuis la dernière notification"
+NOTIF_TERM[DISTANCE]="Distance"
+NOTIF_TERM[FROM]="De"
+NOTIF_TERM[TO]="A"
+NOTIF_TERM[BETWEEN]="Entre"
+NOTIF_TERM[AND]="Et"

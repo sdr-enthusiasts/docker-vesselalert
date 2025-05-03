@@ -1,0 +1,53 @@
+#!/command/with-contenv bash
+#shellcheck shell=bash disable=SC2015,SC2154,SC1091,SC1090,SC2034
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+# This script is sourced from several services to make sure that all of the persistent arrays are loaded
+
+source /scripts/common
+
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+
+declare -a KEY_INDEX VESSEL_INDEX
+declare -A VESSELS SHIPTYPE SHIPSTATUS COUNTRY NOTIF_TERM
+
+if [[ -f "$VESSELDBFILE" ]] && (( $(wc -l < "$VESSELDBFILE") > 0 )); then
+    source "$VESSELDBFILE"
+    readarray -t VESSEL_INDEX <<< "$({ for vessel in "${!VESSELS[@]}"; do echo "${vessel%%:*}"; done; } | sort -un)"
+    readarray -t KEY_INDEX <<< "$({ for vessel in "${!VESSELS[@]}"; do echo "${vessel#*:}"; done; } | sort -u )"
+fi
+
+source "/data/country.db"
+
+# get localized text equivalents
+LANGUAGE="${LANGUAGE:-en_US}"
+if [[ -f "/data/shiptype-$LANGUAGE.db" ]]; then
+    source "/data/shiptype-$LANGUAGE.db"
+else
+    "${s6wrap[@]}" echo "[WARNING] Language $LANGUAGE is not supported. Reverting to \"en_US\" (US English)"
+    source "/data/shiptype-en_US.db"
+fi
+if [[ -f "/data/shipstatus-$LANGUAGE.db" ]]; then
+    source "/data/shipstatus-$LANGUAGE.db"
+else
+    source "/data/shipstatus-en_US.db"
+fi
+if [[ -f "/data/notification-l10n-$LANGUAGE.db" ]]; then
+    source "/data/notification-l10n-$LANGUAGE.db"
+else
+    source "/data/notification-l10n-en_US.db"
+fi

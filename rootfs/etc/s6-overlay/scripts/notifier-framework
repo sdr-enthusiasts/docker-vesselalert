@@ -1,6 +1,6 @@
 #!/command/with-contenv bash
 #shellcheck shell=bash
-#shellcheck disable=SC2004,SC2015,SC1090,SC2164,SC2001,SC1091,SC2154
+#shellcheck disable=SC2004,SC2015,SC1090,SC2164,SC2001,SC1091,SC2016,SC2154
 
 # Notifier Framework
 # Determine if a notification needs to be sent
@@ -26,9 +26,9 @@ source /scripts/common
 
 renice -n 10 -p $$ >/dev/null 2>&1
 
-[[ -z "${CHECK_INTERVAL}" ]] && CHECK_INTERVAL=30 || true
-[[ -z "${VESSELDBFILE}" ]] && VESSELDBFILE="/data/vessel.db" || true
-[[ -z "${VESSELDBLOCK}" ]] && VESSELDBLOCK="/run/vesseldb.lock" || true
+CHECK_INTERVAL="${CHECK_INTERVAL:-30}"
+VESSELDBFILE="${VESSELDBFILE:-/data/vessel.db}"
+VESSELDBLOCK="${VESSELDBLOCK:-/run/vesseldb.lock}"
 
 # create some defaults and aliases, maintaining backwards compatibility
 NOTIFY_MIN_DIST="${NOTIFY_MIN_DIST:-${MASTODON_MIN_DIST}}"
@@ -50,10 +50,6 @@ notification_count=0
 IMAGECACHE="${VESSELDBFILE%/*}/imagecache"
 [[ -z "${MIN_MSG_COUNT}" ]] && MIN_MSG_COUNT=10 || true
 
-
-touch "$VESSELDBFILE"
-rm -f "$VESSELDBLOCK"
-
 mkdir -p "${IMAGECACHE}/screenshots"
 
 # add some random time to the check interval (0-5 secs)
@@ -68,55 +64,33 @@ sleep "$CHECK_INTERVAL"
 
 for (( loops=0; loops < RUNS_BEFORE_RESTART; loops++ ))
 do
+    # lock the databases:
+    touch "/usr/share/vesselalert/vesseldb_lock"
 
-    # 3 main arrays:
-    # - VESSELDICT is an associative array that contains all the vessels, indexed by their MMSI.
-    #   So: ${!VESSELDICT[@]} contains the list of MMSIs, and ${VESSELDICT[$mmsi]}
-    #   contains a comma-separated list of parameter values.
-    #
-    # - vesselinfo is an associative array that contains the information of a single vessel from
-    #   the VESSELDICT array. The ${headers[@]} array contains the keys for each of these values.
-    #
-    # - mast_status is extracted from the right-most "notif_x" field from vesselinfo that starts with "mast="
-    #   This array contains information about previous notifications to Mastodon for this MMSI
-
-    # If there's a lock file, wait until it's gone\
-    while [[ -f $VESSELDBLOCK ]]
-    do
-        sleep "0.$((RANDOM % 100))"
-    done
-
-    # Now lock the process for myself:
-    touch "$VESSELDBLOCK"
-
-    # First read the existing entries in from file
-    chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] reading shipdict from file" || true
-
-    source "$VESSELDBFILE"
+    # load the databases:
+    source "/usr/share/vesselalert/load_databases"
 
     # Iterate through the ships:
-    for vessel in "${VESSEL_INDEX[@]}"
-    do
-
+    for vessel in "${VESSEL_INDEX[@]}"; do
         if [[ -z "${VESSELS[${vessel}:mmsi]}" ]]; then continue; fi    # capture empty mmsi and skip
         # now we have the mastodon notification status of the vessel in mast_status. Let's check if we need to notify:
 
         # based on timing:
         if chk_disabled "$NOTIFY_EVERY"; then
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing because NOTIFY_EVERY is $NOTIFY_EVERY"; fi
             notify_timing="false"
         elif [[ -n "${VESSELS[${vessel}:notification:last]}" ]] \
            && (( $(date +%s) <= ${VESSELS[${vessel}:notification:last]} + ${NOTIFY_EVERY:-86400} )); then
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped notify based on timing. (Last notification was $(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago, minimum interval is $NOTIFY_EVERY secs )"; fi
             notify_timing="false"
         else
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing. (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify based on timing. (Last notification was $( [[ -n "${VESSELS[${vessel}:notification:last]}" ]] && echo "$(( $(date +%s) - ${VESSELS[${vessel}:notification:last]} )) secs ago" || echo "never"), minimum interval is $NOTIFY_EVERY secs )"; fi
             export notify_timing="true"
         fi
         # Never notify if last observation was more than 10 mins ago:
         if [[ -n "${VESSELS[${vessel}:last_signal]}" ]] \
            && (( ${VESSELS[${vessel}:last_signal]} > 600 )); then
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled notify based on timing. (Last time heard was ${VESSELS[${vessel}:last_signal]} > 600 secs )"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) overruled/skipped notify based on timing: last heard was too long ago: ${VESSELS[${vessel}:last_signal]} > 600 secs "; fi
             notify_timing="false"
         fi
 
@@ -129,17 +103,17 @@ do
             && [[ "$(nice -n 20 bc -l <<<"scale=2; $(nice -n 20 distance ${VESSELS[${vessel}:notification:lat]} ${VESSELS[${vessel}:notification:lon]} ${VESSELS[${vessel}:lat]} ${VESSELS[${vessel}:lon]}) <= $NOTIFY_MIN_DIST")" == "1" ]]
         then
             notify_distance="false"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $NOTIFY_MIN_DIST )"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) traveled distance too short - do not notify (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") < allowed $NOTIFY_MIN_DIST )"; fi
         elif [[ -n "${NOTIFY_MIN_DIST}" ]] \
             && [[ -n "${VESSELS[${vessel}:lat]}" ]] && [[ -n "${VESSELS[${vessel}:lon]}" ]] \
             && [[ "${VESSELS[${vessel}:lat]}" != "null" ]] && [[ "${VESSELS[${vessel}:lon]}" != "null" ]] \
             && [[ -n "${VESSELS[${vessel}:notification:lat]}" ]] && [[ -n "${VESSELS[${vessel}:notification:lon]}" ]]
         then
             export notify_distance="true"
-            chk_enabled "${DEBUG}" && [[ -n "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $NOTIFY_MIN_DIST )"
+            #chk_enabled "${DEBUG}" && [[ -n "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify by distance: traveled distance far enough (measured $(nice -n 20 distance "${VESSELS[${vessel}:notification:lat]}" "${VESSELS[${vessel}:notification:lon]}" "${VESSELS[${vessel}:lat]}" "${VESSELS[${vessel}:lon]}") >= allowed $NOTIFY_MIN_DIST )"
         else
             notify_distance="false"
-            chk_enabled "${DEBUG}" && [[ -z "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: NOTIFY_MIN_DIST not defined"
+            #chk_enabled "${DEBUG}" && [[ -z "${NOTIFY_MIN_DIST}" ]] && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by distance: NOTIFY_MIN_DIST not defined"
         fi
 
         # dont notify if it matches the Skip Filter
@@ -147,28 +121,28 @@ do
             && [[ ${VESSELS[${vessel}:mmsi]} =~ ${NOTIFY_SKIP_FILTER} ]]
         then
             notify_filter="false"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${NOTIFY_SKIP_FILTER})"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) skipped because of mmsi filter match (${NOTIFY_SKIP_FILTER})"; fi
         elif [[ -n "${NOTIFY_SKIP_FILTER}" ]]
         then
             notify_filter="true"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: NOTIFY_SKIP_FILTER defined but no mmsi skip filter match"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: NOTIFY_SKIP_FILTER defined but no mmsi skip filter match"; fi
         else
             notify_filter="true"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no NOTIFY_SKIP_FILTER defined"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) no need to notify by filter: no NOTIFY_SKIP_FILTER defined"; fi
         fi
 
         # check once more the min_msg_count. Too few messages means the screenshot won't be complete and it'd be better to wait
         if [[ ! ${VESSELS[${vessel}:count]}  =~ ^[0-9]+$ ]] || (( ${VESSELS[${vessel}:count]} < MIN_MSG_COUNT ))
         then
             notify_count="false"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification: MIN_MSG_COUNT of $MIN_MSG_COUNT not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
         elif [[ -z "${VESSELS[${vessel}:shipname]}" ]] && (( ${VESSELS[${vessel}:count]} < 25 ))
         then
             notify_count="false"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Skipped notification:  no shipname and min msg count of 25 not yet exceeded (count=${VESSELS[${vessel}:count]})"; fi
         else
             notify_count="true"
-            chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"
+            #if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) ready to notify: MIN_MSG_COUNT of $MIN_MSG_COUNT exceeded (count=${VESSELS[${vessel}:count]})"; fi
         fi
 
         # Notify only if validated =="1"
@@ -183,8 +157,8 @@ do
         if chk_disabled "$notify_validated"; then notify_now="false"; fi	# overrule notification because validation hasn't been done
         if chk_disabled "$NOTIFY_WHEN_SHIPNAME_EMPTY" && [[ -z "${VESSELS[${vessel}:shipname]}" ]]; then notify_now="false"; fi	# overrule notification because there's no shipname
 
-        if chk_enabled "${DEBUG}" && chk_enabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
-        if chk_enabled "${DEBUG}" && chk_disabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a Mastodon notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
+        if chk_enabled "${DEBUG}" && chk_enabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will do a notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
+        if chk_enabled "${DEBUG}" && chk_disabled "$notify_now"; then "${s6wrap[@]}" echo "[DEBUG] ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]}) Final result: Will not do a notification (timing=$notify_timing; distance=$notify_distance; filter=$notify_filter; count=$notify_count)"; fi
 
         if chk_enabled "$notify_now"; then
             # we need to notify
@@ -223,27 +197,58 @@ do
                 "${s6wrap[@]}" echo "[INFO] Failed to get screenshot for ${VESSELS[${vessel}:mmsi]} (${VESSELS[${vessel}:shipname]})"
             fi
 
-            # Calculate ship's beam (=width) and length before notifying:
-            savenow=false
-            if [[ -n "${VESSELS[${vessel}:to_starboard]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_starboard]}" != "null" ]] \
-                && [[ -n "${VESSELS[${vessel}:to_port]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_port]}" != "null" ]] \
-                && [[ -z "${VESSELS[${vessel}:beam]}" ]]; then
-                    VESSELS[${vessel}:beam]="$((${VESSELS[${vessel}:to_starboard]} + ${VESSELS[${vessel}:to_port]}))"
-                    VESSELS[${vessel}:beam_unit]="m"
-                    savenow=true
+            # Add friendly destination name if possible
+            if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[${vessel}:destination]}" ]] && [[ "${VESSELS[${vessel}:destination]}" != "${VESSELS[${vessel}:destination:org]}" ]]; then
+                friendly_name=false
+                VESSELS[${vessel}:destination:org]="${VESSELS[${vessel}:destination]}"
+                d="${VESSELS[${vessel}:destination]^^}"
+                if ! grep -qe  ">" <<< "$d"; then d=">$d"; fi
+                d="${d// /}"
+                d="${d//US\^/}"
+                
+                d_org="$(sed -nE 's|^([A-Z0-9]{4,5})[<>]{1,2}.*$|\1|p' <<< "$d")"
+                if (( ${#d_org} == 5 )); then # UNLOCODE lookup
+                    d_org_friendly="$(awk -F, -v country_bare="${d_org:0:2}" \
+                                            -v country="\"${d_org:0:2}\"" \
+                                            -v loc="\"${d_org:2:3}\"" \
+                                            '{if ($2 == country && $3 == loc) {print $5 ", " country_bare; exit}}' /data/*UNLOCODE*.csv)"
+                    d_org_friendly="${d_org_friendly//\"/}"
+                    friendly_name=true
+                elif (( ${#d_org} == 4 )); then # US GUID lookup
+                    d_org_friendly="$(awk -F, -v var="$d_org" '{if ($1 == var) {print $9 ", " $10; exit}}' /data/GUID*.csv)"
+                    friendly_name=true
+                else d_org_friendly=""
+                fi
+                
+                d_dst="$(sed -nE 's|^.*[<>]{1,2}([A-Z0-9]{4,5})[^A-Z0-9]*$|\1|p' <<< "$d")"
+                if (( ${#d_dst} == 5 )); then # UNLOCODE lookup
+                    d_dst_friendly="$(awk -F, -v country_bare="${d_dst:0:2}" \
+                                            -v country="\"${d_dst:0:2}\"" \
+                                            -v loc="\"${d_dst:2:3}\"" \
+                                            '{if ($2 == country && $3 == loc) {print $5 ", " country_bare; exit}}' /data/*UNLOCODE*.csv)"
+                    d_dst_friendly="${d_dst_friendly//\"/}"
+                    friendly_name=true
+                elif (( ${#d_dst} == 4 )); then # US GUID lookup
+                    d_dst_friendly="$(awk -F, -v var="$d_dst" '{if ($1 == var) {print $9 ", " $10; exit}}' /data/GUID*.csv)"
+                    friendly_name=true
+                else d_dst_friendly=""
+                fi
+            
+                if $friendly_name && [[ $d =~ '<>' ]]; then
+                    destination_friendly="${NOTIF_TERM[BETWEEN]} $d_org_friendly ${NOTIF_TERM[AND],,} $d_dst_friendly"
+                elif $friendly_name && [[ $d =~ '>' ]]; then
+                    if [[ -n "$d_org_friendly" ]]; then
+                        destination_friendly="${NOTIF_TERM[FROM]} $d_org_friendly ${NOTIF_TERM[TO],,} $d_dst_friendly"
+                    else
+                        destination_friendly="${NOTIF_TERM[TO]} $d_dst_friendly"
+                    fi
+                else
+                    destination_friendly=""
+                fi
+
+                VESSELS[${vessel}:destination:friendly]="$destination_friendly"
+                source /usr/share/vesselalert/save_databases
             fi
-            if [[ -n "${VESSELS[${vessel}:to_bow]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_bow]}" != "null" ]] \
-                && [[ -n "${VESSELS[${vessel}:to_stern]}" ]] \
-                && [[ "${VESSELS[${vessel}:to_stern]}" != "null" ]] \
-                && [[ -z "${VESSELS[${vessel}:length]}" ]]; then
-                    VESSELS[${vessel}:length]="$((${VESSELS[${vessel}:to_bow]} + ${VESSELS[${vessel}:to_stern]} ))"
-                    VESSELS[${vessel}:length_unit]="m"
-                    savenow=true
-            fi
-            if $savenow; then source /usr/share/vesselalert/save_databases; fi
 
             # ---------------------------------------------------------------------------------------------
             # INSERT ANY CALLS TO ACTUAL NOTIFIERS BETWEEN THE TWO LINES
@@ -266,13 +271,13 @@ do
             if [[ -n "$NOTIFICATION_THROTTLE" ]] && [[ "$(nice -n 20 bc <<< "${notification_count}%10")" == "0" ]]
             then
                 # we need to throttle - let's wait 15 seconds
-                chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] Notification Count is ${notification_count}; throttling for 15 seconds"
+                if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] Notification Count is ${notification_count}; throttling for 15 seconds"; fi
                 sleep 15
             fi
         fi
     done
 
-    chk_enabled "${DEBUG}" && "${s6wrap[@]}" echo "[DEBUG] Notification count: ${notification_count}"
+    if chk_enabled "${DEBUG}"; then "${s6wrap[@]}" echo "[DEBUG] Notification count: ${notification_count}"; fi
 
     notification_count=0
 

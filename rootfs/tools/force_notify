@@ -40,7 +40,7 @@ done
 # Now lock the process for myself:
 touch "$VESSELDBLOCK"
 
-source "$VESSELDBFILE"
+source "/usr/share/vesselalert/load_databases"
 for key in "${KEY_INDEX[@]}"
 do
 	echo "Removing $1:$key"

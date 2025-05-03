@@ -1,0 +1,51 @@
+# Format: [#]NOTIF_TERM[term]="LOCALIZED TERM"
+# If the line starts with "#", it means that there's no description in the notification for this NOTIF_TERM
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+NOTIF_TERM[TROPOMAXDIST]="TropoAlert - Distància Màxima"
+NOTIF_TERM[SHIP]="Vaixell"
+NOTIF_TERM[NEW]="#NOU Primera Observació"
+NOTIF_TERM[ONTHEMOVE]="#En_Moviment"
+NOTIF_TERM[MOVING]="en moviment"
+NOTIF_TERM[SHIPNAME]="Nom del Vaixell"
+NOTIF_TERM[CALLSIGN]="Indicatiu"
+NOTIF_TERM[SHIPTYPE]="Tipus"
+NOTIF_TERM[FLAG]="Bandera"
+NOTIF_TERM[MSGS_RECVD]="Missatges Rebuts"
+NOTIF_TERM[SEEN_ON]="Vist a"
+NOTIF_TERM[STATUS]="Estat"
+NOTIF_TERM[SPEED]="Velocitat"
+NOTIF_TERM[HEADING]="Direcció"
+NOTIF_TERM[DESTINATION]="Destinació"
+NOTIF_TERM[SIGNAL]="Senyal"
+NOTIF_TERM[LOCATION]="Detalls"
+NOTIF_TERM[ISMOVING]="està en moviment"
+NOTIF_TERM[ISSEENON]="es veu a"
+NOTIF_TERM[AGAIN]="De nou:"
+NOTIF_TERM[NEW2]="Nou:"
+NOTIF_TERM[DIST_SINCE_LAST]="es va moure %.1f nm des de l'última notificació"
+NOTIF_TERM[DISTANCE]="Distància"
+NOTIF_TERM[FROM]="De"
+NOTIF_TERM[TO]="A"
+NOTIF_TERM[BETWEEN]="Entre"
+NOTIF_TERM[AND]="I"
+#
+# The following will override any country names, which are by default in English
+# This is so at least the target country will be in the local language, but it's
+# possible to add other country name localizations here as well.
+
+COUNTRY[ES]="Espanya"
+COUNTRY[FR]="França"
