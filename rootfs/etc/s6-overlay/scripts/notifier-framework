@@ -242,12 +242,12 @@ do
                     else
                         destination_friendly="${NOTIF_TERM[TO]} $d_dst_friendly"
                     fi
+                else
+                    destination_friendly=""
                 fi
 
-                if [[ -n "$destination_friendly" ]]; then
-                    VESSELS[${vessel}:destination:friendly]="$destination_friendly"
-                    source /usr/share/vesselalert/save_databases
-                fi
+                VESSELS[${vessel}:destination:friendly]="$destination_friendly"
+                source /usr/share/vesselalert/save_databases
             fi
 
             # ---------------------------------------------------------------------------------------------
