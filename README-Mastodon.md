@@ -9,20 +9,20 @@ There are two major parts to install this. Each of these parts is described belo
 
 ## Signing up for a Mastodon Account and creating an Application
 
-Mastodon is a distributed social media service. This means, that you have your choice of Mastodon servers to create and maintain your account on. Any of them will work (as long as they allow bots), but we recommend joining this one. It's the one where many of us post results of our SDR and radio reception endeavors: https://airwaves.social/
+Mastodon is a distributed social media service. This means, that you have your choice of Mastodon servers to create and maintain your account on. Any of them will work (as long as they allow bots), but we recommend joining [airwaves.social](https://airwaves.social/). It's the one where many of us post results of our SDR and radio reception endeavors.
 
 Once you have an account, please do the following:
 
-- Sign in to Mastodon and go to the home page, for example: https://airwaves.social/home
+- Sign in to Mastodon and go to the [home page](https://airwaves.social/home)
 - Click `Preferences` on the bottom right of the page
-<img src="https://user-images.githubusercontent.com/15090643/208437930-ee33596d-5015-4283-923c-12913552f6db.png"/>
+<img src="https://user-images.githubusercontent.com/15090643/208437930-ee33596d-5015-4283-923c-12913552f6db.png" alt="preferences"/>
 
 - On the bottom left, click `</> Development`
-<img src="https://user-images.githubusercontent.com/15090643/208438201-27c29fec-cad9-43fe-88f6-c4009961b162.png" width="50%" />
+<img src="https://user-images.githubusercontent.com/15090643/208438201-27c29fec-cad9-43fe-88f6-c4009961b162.png" width="50%" alt="development"/>
 
 - Create a new Application by clicking the button, then:
   - Give it a name (for example, "VesselAlert")
-  - Add a URL (if you don't have one, use something like "https://airwaves.social/@myhandle" (replace `myhandle` by your Mastodon handle))
+  - <!-- markdownlint-disable MD034 -->Add a URL (if you don't have one, use something like "https://airwaves.social/@myhandle" (replace `myhandle` by your Mastodon handle)) <!-- markdownlint-disable MD034 -->
   - Make sure that the following scopes are selected (important!!!): `read`, `write`, `follow`
   - Press `Submit` at the bottom of the page
 ![image](https://user-images.githubusercontent.com/15090643/208438325-2f5dd1b7-ebd8-404e-8929-7bf5e7875037.png)

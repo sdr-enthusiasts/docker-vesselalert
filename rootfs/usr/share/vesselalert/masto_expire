@@ -81,7 +81,7 @@ while : ; do
                 (( expired++ )) || true
                 if [[ "$1" == "delete" ]]; then
                     delete_toot "$t";
-                fi 
+                fi
             else
                 (( unexpired++ )) || true
             fi

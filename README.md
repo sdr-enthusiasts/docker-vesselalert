@@ -42,7 +42,7 @@ Currently, posts to [Mastodon](https://airwaves.social), Discord, BlueSky, and M
 We expect you to have the following:
 
 - An installed and working version of the [AIS-Catcher](https://github.com/jvde-github/AIS-catcher) package with the Web Functionality installed and accessible to this container. This means that you need to be using [v0.42](https://github.com/jvde-github/AIS-catcher/releases/tag/v0.42) or later, and that you must configure the Web Server as per the [documentation](https://github.com/jvde-github/AIS-catcher/blob/main/README.md). We advise to put the Web Server on a fixed and known port number as you will have to configure a link to this for VesselAlert to work. Note -- the version of AIS-Catcher in the official ShipXplorer distribution is too old. You must install a newer version (or switch to the [containerized version](https://github.com/sdr-enthusiasts/docker-shipxplorer), which includes an up-to-date version of AIS-Catcher).
-- Docker must be installed on your system. If you don't know how to do that, please read [here](https://github.com/sdr-enthusiasts/docker-install).
+- Docker must be installed on your system. If you don't know how to do that, please read [the docker install instructions](https://github.com/sdr-enthusiasts/docker-install).
 - Some basic knowledge on how to use Linux and how to configure docker containers with `docker-compose`.
 
 ## Multi Architecture Support
@@ -57,11 +57,11 @@ Other architectures (Windows, Mac, armel) are not currently supported, but feel 
 
 ## Configuring Mastodon: create an application and get an `access token`
 
-Please follow the instructions [here](README-Mastodon.md).
+Please follow the [instructions](README-Mastodon.md).
 
 ## Up-and-Running with Docker Compose
 
-An example `docker-compose.yml` can be found [here](docker-compose.yml).
+If you need it, this is an example [docker-compose.yml](docker-compose.yml).
 
 Make sure to map the `/data` directory to a volume, as per the [example file](docker-compose.yml). If you forget to do this, the ships database will be erased upon container recreation, and a new notification will be sent for every ship that is heard after restart. This will probably spam your Mastodon account!
 
@@ -104,7 +104,7 @@ The following are a few parameters that apply to all notification methods:
 | `NOTIFY_MIN_DIST` ^ | Minimum distance (in nautical miles) a vessel must have traveled before it is eligible for a new notification. | empty | no |
 | `NOTIFY_EVERY` | Minimum amount of time (in seconds) between two notifications for the same vessel. If set to `off`, `disabled`, or `0`, no notifications based on timing will be sent. | `86400` (1 day) | no |
 | `NOTIFY_WHEN_SHIPNAME_EMPTY` | If set to `off`, notifications will not be sent if the vessel's `shipname` property is empty | `on` | no |
-| `USE_FRIENDLY_DESTINATION_NAMES` | If set to `on`, notifications will tranlate UNLOCODE and (US) GUID location identifiers to longer, friendly names. Note that these may cause the max msg length to be exceeded because these friendly names can be very long | `off` | no |
+| `USE_FRIENDLY_DESTINATION_NAMES` | If set to `on`, notifications will translate UNLOCODE and (US) GUID location identifiers to longer, friendly names. Note that these may cause the max msg length to be exceeded because these friendly names can be very long | `off` | no |
 
 Note that the parameters above used to be known as `MASTODON_SKIP_FILTER`, `MASTODON_MIN_DIST`, and `MASTODON_NOTIFY_EVERY`. These legacy parameter names are still supported for backward compatibility, but we encourage users to switch to these updated parameter names when possible.
 
@@ -192,7 +192,7 @@ Note - at this time, only MQTT deliveries via the mqtt protocol are supported. T
 When you have photos of vessels that you took yourself (or are otherwise licensed to use), you can add these to VesselAlert to be used in notifications. The easiest way of doing this, is by adding them to the cache and then to ensure that they don't expire in the cache. You can only store 1 photo per vessel, and the image should be in JPG format. If it isn't JPG, it will be ignored.
 To ensure that the photo can be used for BlueSky notifications, please make sure that the file size of the image is less than 950 kb. Files larger than 950kb may be compressed and reduced in file size by VesselAlert.
 
-For the purpose of the instructions below, let's assume that you have mapped the `data` directory to `./data`, as described in the [`docker-compose.yml`](https://github.com/sdr-enthusiasts/docker-vesselalert/blob/main/docker-compose.yml#L51-L52) file.
+For the purpose of the instructions below, let's assume that you have mapped the `data` directory to `./data`, as described in the [`docker-compose.yml`](https://github.com/sdr-enthusiasts/docker-vesselalert/blob/8a5009f5a82db39bbd0558d75ff28693187100d4/docker-compose.yml#L51-L52) file.
 
 ```bash
 # Copy my_ship_photo.jpg to the imagecache directory. The target name should be <mmsi>.jpg
@@ -207,9 +207,9 @@ sudo touch -d "2099-12-31" ./data/imagecache/123456789.jpg
 ## Adding screenshots to your notifications
 
 VesselAlert has an option to add screenshots to your notifications. This is done by adding and configuring a separate screenshot container. The reason for not integrating this functionality directly into VesselAlert is that the screenshot container is large (~250 Mb) and requires a lot of system resources when running. Although this container is known to be able to run on `armhf` devices like Raspberry Pi 3B+, it will run much faster and smoother on Raspberry Pi 4 or x86 machine with a 64-bits OS and a few Gb of RAM memory.
-The screenshot container accesses the AIS-catcher website to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requestor.
+The screenshot container accesses the AIS-catcher website to request a screenshot. It uses headless Chromium to make the screenshot and provide it to the requester.
 A configuration example is provided in the sample [docker-compose.yml](docker-compose.yml) file.
-The screenshot container is Open Source and can be found [here](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
+The screenshot container is Open Source and can be found [at the browser screenshot repository](https://github.com/kx1t/browser-screenshot-service/tree/aiscatcher).
 
 Please note that you must use the screenshot container's `aiscatcher` tag and branch as this include special configuration options for use with VesselAlert.
 
@@ -231,7 +231,7 @@ You can change those with a text editor. Lines that start with "#" are ignored, 
 Without the help, advice, testing, and kicking the tires of these people, things wouldn't have been possible. In random order:
 
 - [@jvde-github](https://github.com/jvde-github) for his advice and help. He's also the author of [AIS-Catcher](https://github.com/jvde-github/AIS-catcher), which is a prerequisite for this container to work
-- [@wiedehopf](https://github.com/wiedehopf) for his continous help, advice, and expertise
+- [@wiedehopf](https://github.com/wiedehopf) for his continuous help, advice, and expertise
 - [@kevinelliott](https://github.com/kevinelliott) for his help during the design phase of the project, and to bounce ideas of
 - [@dziban303](https://github.com/dziban303) for his help testing the early releases and providing feedback
 - [@JohnEx](https://github.com/Johnex) for his ideas, research, testing, and feedback
