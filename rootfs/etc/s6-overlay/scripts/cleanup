@@ -121,7 +121,7 @@ rm -f "$VESSELDBLOCK"
 
 # clean up Mastodon toots:
 
-if [[ -n "$MASTODON_ACCESS_TOKEN" ]] && (( $(date +%s) -  $(</run/.last_mastodon_cleanup) > MASTODON_CLEANUP_EVERY )); then 
+if [[ -n "$MASTODON_ACCESS_TOKEN" ]] && (( $(date +%s) -  $(</run/.last_mastodon_cleanup) > MASTODON_CLEANUP_EVERY )); then
 	/usr/share/vesselalert/masto_expire delete || true
 fi
 

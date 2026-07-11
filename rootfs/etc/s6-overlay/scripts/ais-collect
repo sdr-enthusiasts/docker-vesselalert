@@ -136,7 +136,7 @@ do
     unset VESSELS
     unset SHIPTYPE
     unset SHIPSTATUS
-    unset COUNTRY 
+    unset COUNTRY
 
     rm -f "$VESSELDBLOCK"
 

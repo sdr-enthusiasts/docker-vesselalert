@@ -205,7 +205,7 @@ do
                 if ! grep -qe  ">" <<< "$d"; then d=">$d"; fi
                 d="${d// /}"
                 d="${d//US\^/}"
-                
+
                 d_org="$(sed -nE 's|^([A-Z0-9]{4,5})[<>]{1,2}.*$|\1|p' <<< "$d")"
                 if (( ${#d_org} == 5 )); then # UNLOCODE lookup
                     d_org_friendly="$(awk -F, -v country_bare="${d_org:0:2}" \
@@ -219,7 +219,7 @@ do
                     friendly_name=true
                 else d_org_friendly=""
                 fi
-                
+
                 d_dst="$(sed -nE 's|^.*[<>]{1,2}([A-Z0-9]{4,5})[^A-Z0-9]*$|\1|p' <<< "$d")"
                 if (( ${#d_dst} == 5 )); then # UNLOCODE lookup
                     d_dst_friendly="$(awk -F, -v country_bare="${d_dst:0:2}" \
@@ -233,7 +233,7 @@ do
                     friendly_name=true
                 else d_dst_friendly=""
                 fi
-            
+
                 if $friendly_name && [[ $d =~ '<>' ]]; then
                     destination_friendly="${NOTIF_TERM[BETWEEN]} $d_org_friendly ${NOTIF_TERM[AND],,} $d_dst_friendly"
                 elif $friendly_name && [[ $d =~ '>' ]]; then
@@ -290,7 +290,7 @@ do
     unset VESSELS
     unset SHIPTYPE
     unset SHIPSTATUS
-    unset COUNTRY 
+    unset COUNTRY
 
     # Sleep a bit
     sleep "$CHECK_INTERVAL"

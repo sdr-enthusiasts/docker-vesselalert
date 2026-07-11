@@ -27,7 +27,7 @@ if [[ "${AIS_URL:0:4}" != "http" ]]
 then
     if [[ -z "$AIS_URL" ]]; then
         "${s6wrap[@]}" echo -n "[FATAL] AIS_URL is empty; "
-    else 
+    else
         "${s6wrap[@]}" echo -n "[FATAL]  AIS_URL is set to \":$AIS_URL\"; expecting a URL starting with \"http://\" or \"https://\"."
     fi
     "${s6wrap[@]}" echo "[FATAL] Please correct and restart the container. Container execution is HALTED."
