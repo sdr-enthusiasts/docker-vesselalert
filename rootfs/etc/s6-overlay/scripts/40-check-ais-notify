@@ -31,5 +31,10 @@ then
         "${s6wrap[@]}" echo -n "[FATAL]  AIS_URL is set to \":$AIS_URL\"; expecting a URL starting with \"http://\" or \"https://\"."
     fi
     "${s6wrap[@]}" echo "[FATAL] Please correct and restart the container. Container execution is HALTED."
+    # Hanging keeps these logs readable for a user, but it also blocks s6-rc
+    # bringup, so nothing in the container starts and CI cannot inspect it.
+    # Under verification, declare the expected environmental failure instead.
+    # Users never set SDRE_VERIFY, so their behaviour is unchanged.
+    [[ -n "${SDRE_VERIFY:-}" ]] && exit 78
     exec sleep infinity & wait $!
 fi
