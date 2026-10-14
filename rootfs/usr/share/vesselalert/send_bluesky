@@ -66,7 +66,7 @@ fi
 links=""
 if chk_enabled "${BLUESKY_LINK_AISCATCHER:-on}"; then links+="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}\n"; fi
 if chk_enabled "$BLUESKY_LINK_SHIPXPLORER"; then links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n"; fi
-if chk_enabled "$BLUESKY_LINK_MARINETRAFFIC"; then links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n"; fi
+if chk_enabled "$BLUESKY_LINK_MARINETRAFFIC"; then links+="https://www.marinetraffic.com/en/ais/embed/mmsi:${VESSELS[$1:mmsi]}\n"; fi
 if chk_enabled "$BLUESKY_LINK_VESSELFINDER"; then links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n"; fi
 
 unset bsky_str

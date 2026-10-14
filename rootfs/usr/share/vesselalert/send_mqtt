@@ -85,7 +85,7 @@ fi
 # Add links
 mqtt_array[aiscatcher_link]="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}"
 mqtt_array[shipxplorer_link]="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}"
-mqtt_array[marinetraffic_link]="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}"
+mqtt_array[marinetraffic_link]="https://www.marinetraffic.com/en/ais/embed/mmsi:${VESSELS[$1:mmsi]}"
 mqtt_array[vesselfinder_link]="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}"
 
 # Add distance if we can find it out
@@ -95,7 +95,7 @@ if [[ -n "${mqtt_array[lat]}" ]] && [[ -n "${mqtt_array[lon]}" ]] && [[ -n "$LAT
 fi
 
 # Add image URL if available
-if [[ -f "$IMAGECACHE/$mmsi.jpg" ]]; then mqtt_array[image_link]="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=$mmsi"; fi
+if [[ -f "$IMAGECACHE/$mmsi.jpg" ]]; then mqtt_array[image_link]="$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sSL "https://www.vesselfinder.com/vessels/details/${VESSELS[${vessel}:mmsi]}" | sed -n 's|.*src="\(https://static\.vesselfinder\.net/ship-photo/[^"]*\)".*|\1|p')" ; fi
 
 # If needed, convert the dates into the desired format
 if [[ -n "$MQTT_DATETIME_FORMAT" ]]; then

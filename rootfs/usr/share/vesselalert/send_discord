@@ -141,6 +141,10 @@ notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
     notif_json="${notif_json//##TYPE##/${type//#/}}"
 }
 
+{   photolink="$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sSL "https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}" | sed -n 's|.*src="\(https://static\.vesselfinder\.net/ship-photo/[^"]*\)".*|\1|p')"
+    notif_json="${notif_json//##PHOTOLINK##/${photolink}}"
+}
+
 {  if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]
     then
         notif_json="${notif_json//##DESTINATION##/${VESSELS[$1:destination:friendly]//_/ }}"

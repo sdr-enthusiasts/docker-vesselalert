@@ -63,7 +63,7 @@ if [[ -n "${VESSELS[$1:destination]}" ]]; then VESSELS[$1:destination]="$(sed -e
 links=""
 chk_enabled "${MASTODON_LINK_AISCATCHER:-on}" && links+="https://aiscatcher.org/ship/details/${VESSELS[$1:mmsi]}\n" || true
 chk_enabled "$MASTODON_LINK_SHIPXPLORER" && links+="https://www.shipxplorer.com/data/vessels/IMO-MMSI-${VESSELS[$1:mmsi]}\n" || true
-chk_enabled "$MASTODON_LINK_MARINETRAFFIC" && links+="https://www.marinetraffic.com/en/ais/details/ships/${VESSELS[$1:mmsi]}\n" || true
+chk_enabled "$MASTODON_LINK_MARINETRAFFIC" && links+="https://www.marinetraffic.com/en/ais/embed/mmsi:${VESSELS[$1:mmsi]}\n" || true
 chk_enabled "$MASTODON_LINK_VESSELFINDER" && links+="https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}\n" || true
 
 unset mast_str
