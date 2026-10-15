@@ -131,10 +131,17 @@ fi
 # If the image still exists, then upload it to Mastodon:
 if [[ -f "$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg" ]]
 then
-    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg")"
-    [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
-    if [[ -n "${mast_id}" ]]; then media_id="-F media_ids[]=${mast_id} "; fi
-    "${s6wrap[@]}" echo "[INFO] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
+    response="$(curl -s -w $'\n%{http_code}' -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@$IMAGECACHE/${VESSELS[$1:mmsi]}.jpg")"
+    http_code="${response##*$'\n'}"
+    response="${response%$'\n'*}"
+    # Only parse if the server actually returned JSON; otherwise log the raw (HTML/text) error page
+    if jq -e . >/dev/null 2>&1 <<< "${response}" && [[ "$(jq -r '.id' <<< "${response}" | xargs)" != "null" ]]; then
+        mast_id="$(jq -r '.id' <<< "${response}" | xargs)"
+        media_id="-F media_ids[]=${mast_id} "
+        "${s6wrap[@]}" echo "[INFO] image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
+    else
+        "${s6wrap[@]}" echo "[ERROR] Failed to upload image for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) to Mastodon (HTTP ${http_code}). Server returned: ${response:0:200}"
+    fi
 else
     "${s6wrap[@]}" echo "[WARNING] no image available for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]})"
 fi
@@ -142,19 +149,29 @@ fi
 # If a screenshot exists, then upload it to Mastodon:
 if [[ -f "${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg" ]]
 then
-    response="$(curl -s -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg")"
-    [[ "$(jq '.id' <<< "${response}" | xargs)" != "null" ]] && mast_id="$(jq '.id' <<< "${response}" | xargs)" || mast_id=""
-    if [[ -n "${mast_id}" ]]; then media_id+="-F media_ids[]=${mast_id} "; fi
+    response="$(curl -s -w $'\n%{http_code}' -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -H "Content-Type: multipart/form-data" -X POST "${MASTODON_SERVER}/api/v1/media" --form file="@${IMAGECACHE}/screenshots/${VESSELS[$1:mmsi]}.jpg")"
+    http_code="${response##*$'\n'}"
+    response="${response%$'\n'*}"
+    # Only parse if the server actually returned JSON; otherwise log the raw (HTML/text) error page
+    if jq -e . >/dev/null 2>&1 <<< "${response}" && [[ "$(jq -r '.id' <<< "${response}" | xargs)" != "null" ]]; then
+        mast_id="$(jq -r '.id' <<< "${response}" | xargs)"
+        media_id+="-F media_ids[]=${mast_id} "
+        "${s6wrap[@]}" echo "[INFO] screenshot for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) uploaded to Mastodon"
+    else
+        "${s6wrap[@]}" echo "[ERROR] Failed to upload screenshot for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) to Mastodon (HTTP ${http_code}). Server returned: ${response:0:200}"
+    fi
 fi
 
 # Now send the toot:
 #shellcheck disable=SC2086
 
-response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s "${MASTODON_SERVER}/api/v1/statuses" -X POST ${media_id} -F "status=${mast_str}" -F "language=${LANGUAGE:0:2}" -F "visibility=${MASTODON_POST_VISIBILITY}")"
-# check if there was an error
-if [[ "$(jq '.error' <<< "${response}"|xargs)" == "null" ]]
+response="$(curl -H "Authorization: Bearer ${MASTODON_ACCESS_TOKEN}" -s -w $'\n%{http_code}' "${MASTODON_SERVER}/api/v1/statuses" -X POST ${media_id} -F "status=${mast_str}" -F "language=${LANGUAGE:0:2}" -F "visibility=${MASTODON_POST_VISIBILITY}")"
+http_code="${response##*$'\n'}"
+response="${response%$'\n'*}"
+# check if there was an error (only parse if the server actually returned JSON)
+if jq -e . >/dev/null 2>&1 <<< "${response}" && [[ "$(jq -r '.error' <<< "${response}"|xargs)" == "null" ]]
 then
-    "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq '.url' <<< "${response}"|xargs)"
+    "${s6wrap[@]}" echo "[INFO] Mastodon post for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}) generated successfully with visibility ${MASTODON_POST_VISIBILITY}. Mastodon post available at: $(jq -r '.url' <<< "${response}"|xargs)"
     if [[ -z "${VESSELS[$1:notification:last]}" ]]; then "${s6wrap[@]}" echo -n "[INFO] #NEW "; fi
     #shellcheck disable=SC2154
 if     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]]; then echo -n "#OLD "; fi
@@ -169,5 +186,5 @@ if     [[ "${notify_timing}" == "true" ]] && [[ -n "${VESSELS[$1:notification:la
 
     source /usr/share/vesselalert/save_databases
 else
-    "${s6wrap[@]}" echo "[ERROR] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). Mastodon returned this error: ${response}"
+    "${s6wrap[@]}" echo "[ERROR] Mastodon post error for ${VESSELS[$1:mmsi]} (${VESSELS[$1:shipname]}). HTTP ${http_code}. Mastodon returned this error: ${response:0:500}"
 fi
