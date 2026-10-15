@@ -249,7 +249,7 @@ I'm also active in a [Discord channel](https://discord.gg/sTf9uYF), feel free to
 
 ### VesselAlert
 
-Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+Copyright (C) 2022-2026, Ramon F. Kolb (kx1t)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -275,7 +275,7 @@ For license terms, see https://github.com/jeff-luszcz/AISTropoAlert/blob/1ed4837
 ```
 
 All improvements on AISTropoAlert version 1.0.0 are:
-Copyright (C) 2022-2025, Ramon F. Kolb (kx1t) and licenseable under GPLv3 in accordance with this summary:
+Copyright (C) 2022-2026, Ramon F. Kolb (kx1t) and licenseable under GPLv3 in accordance with this summary:
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

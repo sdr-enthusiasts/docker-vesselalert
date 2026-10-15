@@ -2,7 +2,7 @@
 ---------------------------------------------------------------------------------------------
 Copyright (C) 2002-2022, Chris Veness
 Adaptations Copyright (C) 2025, John Norrbin (JohnEx)
-Adaptations (C) 2025-2025, Ramon F. Kolb (kx1t)
+Adaptations (C) 2022-2026, Ramon F. Kolb (kx1t)
 
 MIT License:
 

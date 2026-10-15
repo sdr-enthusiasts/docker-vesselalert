@@ -49,7 +49,7 @@ For other parameters, see the included [sample `docker-compose.yml`](docker-comp
 
 ## Summary of License Terms
 
-Copyright (C) 2022-2025, Ramon F. Kolb (kx1t)
+Copyright (C) 2022-2026, Ramon F. Kolb (kx1t)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
