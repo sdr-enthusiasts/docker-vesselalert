@@ -21,11 +21,20 @@ where:
 '''
 
 import argparse
+import sys
+
 import paho.mqtt.client as mqtt # type: ignore
 
 def publish_message(broker, port, topic, qos, message, client_id, username=None, password=None):
-    # Create an MQTT client instance
-    client = mqtt.Client(client_id)
+    # Create an MQTT client instance.
+    # paho-mqtt >= 2.0 requires an explicit callback API version as the first
+    # (positional) argument; paho-mqtt 1.x takes the client_id positionally.
+    # Support both so the script works regardless of the installed version.
+    try:
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
+    except AttributeError:
+        # paho-mqtt 1.x
+        client = mqtt.Client(client_id=client_id)
 
     # Set username and password if provided
     if username and password:
@@ -34,13 +43,18 @@ def publish_message(broker, port, topic, qos, message, client_id, username=None,
     try:
         # Connect to the MQTT broker
         client.connect(broker, port)
-        # Publish the message
-        client.publish(topic, payload=message, qos=qos, retain=True)
+        # Start the network loop so the message actually gets transmitted
+        client.loop_start()
+        # Publish the message and wait until it has been sent
+        info = client.publish(topic, payload=message, qos=qos, retain=True)
+        info.wait_for_publish()
         print(f"Message '{message}' published to topic '{topic}' with QoS {qos}.")
         # Disconnect from the broker
+        client.loop_stop()
         client.disconnect()
     except Exception as e:
         print(f"Failed to publish message: {e}")
+        sys.exit(1)
 
 def main():
     # Set up command-line arguments
