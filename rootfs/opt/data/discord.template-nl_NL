@@ -77,10 +77,10 @@
                 }
             ],
             "timestamp": "##TIMESTAMP##",
-            "thumbnail":
+            ##PHOTO--"thumbnail":
             {
                 "url": "##PHOTOLINK##"
-            },
+            },--PHOTO##
             "footer":
             {
                 "text": "VesselAlert © 2022-2025 kx1t"

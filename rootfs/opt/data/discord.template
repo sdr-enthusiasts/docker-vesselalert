@@ -72,10 +72,10 @@
                 }
             ],
             "timestamp": "##TIMESTAMP##",
-            "thumbnail":
+            ##PHOTO--"thumbnail":
             {
                 "url": "##PHOTOLINK##"
-            },
+            },--PHOTO##
             "footer":
             {
                 "text": "VesselAlert by kx1t"

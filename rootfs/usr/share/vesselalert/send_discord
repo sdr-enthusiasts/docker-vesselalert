@@ -79,7 +79,10 @@ then
     exit 1
 fi
 
+# Split the comma-separated webhook list, dropping empty entries (e.g. from a trailing comma)
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
+webhooks=("${webhooks[@]//$'\n'/}")           # strip stray newlines
+webhooks=($(printf '%s\n' "${webhooks[@]}" | sed '/^[[:space:]]*$/d'))  # drop empty/whitespace-only entries
 
 # First do some clean up
 if [[ -n "${VESSELS[$1:shipname]}" ]]; then
@@ -99,7 +102,8 @@ then
     "${s6wrap[@]}" echo "[INFO] Discord notification for $1 (${VESSELS[$1:shipname]}) - screenshot found"
 else
     SCREENSHOTCURL=""
-    notif_json="${notif_json//##SCRSHT--*---SCRSHT##/}"
+    # No screenshot: remove the entire screenshot block (the image attachment) so the JSON stays valid
+    notif_json="$(sed '/##SCRSHT--/,/--SCRSHT##/d' <<< "${notif_json}")"
     "${s6wrap[@]}" echo "[INFO] Discord notification for $1 (${VESSELS[$1:shipname]}) - no screenshot found"
 fi
 
@@ -142,7 +146,15 @@ notif_json="${notif_json//##CALLSIGN##/${VESSELS[$1:callsign]}}"
 }
 
 {   photolink="$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sSL "https://www.vesselfinder.com/vessels/details/${VESSELS[$1:mmsi]}" | sed -n 's|.*src="\(https://static\.vesselfinder\.net/ship-photo/[^"]*\)".*|\1|p')"
-    notif_json="${notif_json//##PHOTOLINK##/${photolink}}"
+    if [[ -n "${photolink}" ]] && [[ "${photolink:0:4}" == "http" ]]; then
+        # Valid photo URL: drop the markers and substitute the URL
+        notif_json="${notif_json//##PHOTO--/}"
+        notif_json="${notif_json//--PHOTO##/}"
+        notif_json="${notif_json//##PHOTOLINK##/${photolink}}"
+    else
+        # No photo: remove the entire thumbnail block so Discord doesn't reject an invalid URL
+        notif_json="$(sed '/##PHOTO--/,/--PHOTO##/d' <<< "${notif_json}")"
+    fi
 }
 
 {  if chk_enabled "$USE_FRIENDLY_DESTINATION" && [[ -n "${VESSELS[$1:destination:friendly]}" ]]
@@ -213,20 +225,26 @@ fi
 for url in "${webhooks[@]}"
 do
     url="${url//$'\n'/}"    # remove any stray newlines from the URL
-    response="$(curl -sSL ${SCREENSHOTCURL} -F "payload_json=${notif_json}" ${url} 2>&1)"
+    # Capture the HTTP status code alongside the body. Discord returns 204 (empty body)
+    # by default, or 200 with a JSON message object when the URL has ?wait=true.
+    response="$(curl -sSL -w $'\n%{http_code}' ${SCREENSHOTCURL} -F "payload_json=${notif_json}" "${url}" 2>&1)"
+    http_code="${response##*$'\n'}"
+    body="${response%$'\n'*}"
 
-    # check if there was an error
-    result="$(jq '.id' <<< "${response}" 2>/dev/null | xargs)"
-    if [[ "${result}" != "null" ]]
+    # A 2xx status means the post was accepted. Parse the message id only if a JSON body is present.
+    if [[ "${http_code}" =~ ^2[0-9][0-9]$ ]]
     then
-        "${s6wrap[@]}" echo -n "[INFO] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8}. Post ID is ${result//$'\n'/}."
+        result=""
+        if jq -e . >/dev/null 2>&1 <<< "${body}"; then result="$(jq -r '.id // empty' <<< "${body}" | xargs)"; fi
+        "${s6wrap[@]}" echo -n "[INFO] Discord post for $1 (${VESSELS[$1:shipname]}) generated successfully for webhook ending in ${url: -8} (HTTP ${http_code})."
+        [[ -n "${result}" ]] && echo -n " Post ID is ${result//$'\n'/}."
         [[ -z "${VESSELS[$1:notification:last]}" ]] && echo -n " #NEW "
         #shellcheck disable=SC2154
         [[ -n "${notify_timing}" ]] && [[ -n "${VESSELS[$1:notification:last]}" ]] && echo -n " #OLD "
         [[ -n "${notify_distance}" ]] && echo -n " #ONTHEMOVE"
         echo ""
     else
-        "${s6wrap[@]}" echo "[ERROR] Discord post error for $1 (${VESSELS[$1:shipname]}). Discord returned this error: ${response}"
+        "${s6wrap[@]}" echo "[ERROR] Discord post error for $1 (${VESSELS[$1:shipname]}). HTTP ${http_code}. Discord returned this error: ${body:0:300}"
         notification_error="true"
     fi
 done
