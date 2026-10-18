@@ -32,6 +32,7 @@
 
           extraExcludes = [
             ".*\\.db"
+            ".*\\.pyc"
           ];
 
           # ── Feature toggles ─────────────────────────────

@@ -98,7 +98,7 @@ if [[ -n "${furthest_vessel[0]}" ]] && \
     "${s6wrap[@]}" echo "[INFO]                 Name=${VESSELS[${furthest_vessel[0]}:shipname]:-unknown}"
 
     # Get a vessel image:
-    image_link="$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sSL "https://www.vesselfinder.com/vessels/details/${furthest_vessel[0]}" | sed -n 's|.*src="\(https://static\.vesselfinder\.net/ship-photo/[^"]*\)".*|\1|p')" 
+    image_link="$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -sSL "https://www.vesselfinder.com/vessels/details/${furthest_vessel[0]}" | sed -n 's|.*src="\(https://static\.vesselfinder\.net/ship-photo/[^"]*\)".*|\1|p')"
     #image_link="https://photos.marinetraffic.com/ais/showphoto.aspx?mmsi=${furthest_vessel[0]}"
 
     # Try to get an image if there isn't already one:

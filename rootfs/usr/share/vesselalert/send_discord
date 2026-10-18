@@ -82,6 +82,7 @@ fi
 # Split the comma-separated webhook list, dropping empty entries (e.g. from a trailing comma)
 readarray -td, webhooks <<<"${DISCORD_WEBHOOKS}"
 webhooks=("${webhooks[@]//$'\n'/}")           # strip stray newlines
+#shellcheck disable=SC2207
 webhooks=($(printf '%s\n' "${webhooks[@]}" | sed '/^[[:space:]]*$/d'))  # drop empty/whitespace-only entries
 
 # First do some clean up
