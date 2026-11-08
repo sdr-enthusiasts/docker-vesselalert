@@ -18,7 +18,9 @@ RUN \
     branch="##BRANCH##" && \
     # Add Container Version
     if [[ "${branch:0:1}" == "#" ]]; then branch="main"; fi && \
-    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(curl -ssL "https://api.github.com/repos/$repo/commits/$branch" | awk '{if ($1=="\"sha\":") {print substr($2,2,7); exit}}')_$VERSION_BRANCH" > /.CONTAINER_VERSION
+    SHA="$(curl --fail --silent --show-error --location --retry 3 "https://api.github.com/repos/$repo/commits/$branch" | awk '$1=="\"sha\":" && !f {print substr($2,2,7); f=1}')" && \
+    [[ -n "$SHA" ]] && \
+    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_${SHA}_$VERSION_BRANCH" > /.CONTAINER_VERSION
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 
