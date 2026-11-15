@@ -1,7 +1,7 @@
 # hadolint global ignore=DL3003,DL3008,DL3015,SC2034,SC2068
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS build
 
-ARG repo="sdr-enthusiasts/docker-vesselalert"
+ARG VERSION_SHA
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 RUN \
@@ -18,7 +18,7 @@ RUN \
     branch="##BRANCH##" && \
     # Add Container Version
     if [[ "${branch:0:1}" == "#" ]]; then branch="main"; fi && \
-    SHA="$(curl --fail --silent --show-error --location --retry 3 "https://api.github.com/repos/$repo/commits/$branch" | awk '$1=="\"sha\":" && !f {print substr($2,2,7); f=1}')" && \
+    SHA="${VERSION_SHA:-local}" && SHA="${SHA:0:7}" && \
     [[ -n "$SHA" ]] && \
     echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_${SHA}_${branch}" > /.CONTAINER_VERSION
 
